@@ -17,29 +17,32 @@ export async function sendPushNotification(email: string, title: string, body: s
         }
 
         const notificationIcon = iconUrl || 'https://ourtab.vercel.app/icon-192.png';
+        const stringifiedData: { [key: string]: string } = {};
+        if (data) {
+            Object.keys(data).forEach(key => {
+                stringifiedData[key] = String(data[key]);
+            });
+        }
 
         const message: any = {
-            data: data || {},
+            notification: {
+                title,
+                body,
+            },
+            data: stringifiedData,
             token: fcmToken,
             android: {
                 priority: 'high',
                 notification: {
-                    title,
-                    body,
                     sound: 'default',
                     channelId: 'default',
                     color: '#6C63FF',
-                    icon: 'stock_ticker_update',
                     image: notificationIcon
                 },
             },
             apns: {
                 payload: {
                     aps: {
-                        alert: {
-                            title,
-                            body,
-                        },
                         sound: 'default',
                         contentAvailable: true,
                         mutableContent: true,
@@ -54,8 +57,6 @@ export async function sendPushNotification(email: string, title: string, body: s
                     Urgency: 'high'
                 },
                 notification: {
-                    title,
-                    body,
                     icon: notificationIcon,
                     badge: '/icon-192.png',
                     requireInteraction: true,
