@@ -81,13 +81,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [notificationPermission, setNotificationPermission] = useState<NotificationPermission>('default');
     const [isNotificationSupported, setIsNotificationSupported] = useState(false);
 
-    // Initial check for support and existing permission
     useEffect(() => {
         if (typeof window !== 'undefined') {
-            setIsNotificationSupported('Notification' in window && 'serviceWorker' in navigator && !!messaging);
-            setNotificationPermission(Notification.permission);
+            const isSupported = 'Notification' in window && 'serviceWorker' in navigator && !!messaging;
+            setIsNotificationSupported(isSupported);
+            if (isSupported) {
+                setNotificationPermission(window.Notification.permission);
+            }
         }
-    }, []);
+    }, [messaging]);
 
     const requestNotificationPermission = async () => {
         if (!user || !isNotificationSupported || !messaging) return false;
@@ -152,7 +154,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                     });
 
                     // If permission is already granted, try to refresh token silently
-                    if ('Notification' in window && Notification.permission === 'granted' && messaging) {
+                    if ('Notification' in window && window.Notification.permission === 'granted' && messaging) {
                         // We don't block login on this
                         requestNotificationPermission().catch(() => { });
                     }

@@ -14,10 +14,18 @@ firebase.initializeApp({
 
 const messaging = firebase.messaging();
 
-// Note: We DO NOT provide \`messaging.onBackgroundMessage\` here.
-// Omitting it allows the Firebase SDK to automatically display a notification
-// when the app is in the background, fully utilizing the 'notification' 
-// payload from the server. This fixes background push on all Web platforms.
+messaging.onBackgroundMessage((payload) => {
+    console.log('[firebase-messaging-sw.js] Received background message ', payload);
+    const notificationTitle = payload.notification?.title || 'OurTab';
+    const notificationOptions = {
+        body: payload.notification?.body || '',
+        icon: '/icon-192.png',
+        badge: '/icon-192.png',
+        data: payload.data || {}
+    };
+
+    self.registration.showNotification(notificationTitle, notificationOptions);
+});
 
 self.addEventListener('notificationclick', (event) => {
     event.notification.close();
