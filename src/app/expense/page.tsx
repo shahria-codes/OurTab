@@ -717,13 +717,14 @@ export default function ExpensePage() {
                 currentHouseData.members?.forEach((m: HouseMember) => {
                     const stats = accounting[m.email];
                     if (stats) {
-                        const netBalance = stats.deposits - (stats.rent + stats.utilities + stats.wage + stats.mealCost);
+                        const netBalance = stats.closingBalance;
                         fundTableData.push([
                             m.name || m.email.split('@')[0],
-                            `${stats.deposits.toFixed(2)}`,
-                            `- ${stats.rent.toFixed(2)}`,
-                            `- ${stats.utilities.toFixed(2)}`,
-                            `- ${stats.wage.toFixed(2)}`,
+                            `${stats.periodicDeposits.toFixed(2)}`,
+                            `- ${stats.periodicRent.toFixed(2)}`,
+                            `- ${stats.periodicUtilities.toFixed(2)}`,
+                            `- ${stats.periodicWage.toFixed(2)}`,
+                            `- ${stats.periodicMisc.toFixed(2)}`,
                             {
                                 content: `(${stats.periodicMealCount}) - ${stats.periodicMealCost.toFixed(2)}`,
                                 styles: { halign: 'right' }
@@ -737,20 +738,21 @@ export default function ExpensePage() {
                 });
 
                 autoTable(doc, {
-                    head: [['Member', 'Deposits', 'Rent', 'Utils', 'Wage', 'Meals Count: Cost', 'Balance']],
+                    head: [['Member', 'Deposits', 'Rent', 'Utils', 'Wage', 'Other', 'Meals Count: Cost', 'Balance']],
                     body: fundTableData,
                     startY: 35,
                     theme: 'grid',
-                    styles: { fontSize: 8, cellPadding: 4, valign: 'middle' },
-                    headStyles: { fillColor: [76, 175, 80] }, // Greenish header
+                    styles: { fontSize: 8, cellPadding: 3, valign: 'middle' },
+                    headStyles: { fillColor: [76, 175, 80], halign: 'center' },
                     columnStyles: {
                         0: { fontStyle: 'bold', cellWidth: 'auto' },
-                        1: { halign: 'right', cellWidth: 20 },
-                        2: { halign: 'right', cellWidth: 20 },
-                        3: { halign: 'right', cellWidth: 20 },
-                        4: { halign: 'right', cellWidth: 20 },
-                        5: { halign: 'right', cellWidth: 25 },
-                        6: { halign: 'right', cellWidth: 20 }
+                        1: { halign: 'right', cellWidth: 'auto' },
+                        2: { halign: 'right', cellWidth: 'auto' },
+                        3: { halign: 'right', cellWidth: 'auto' },
+                        4: { halign: 'right', cellWidth: 'auto' },
+                        5: { halign: 'right', cellWidth: 'auto' },
+                        6: { halign: 'right', cellWidth: 'auto' },
+                        7: { halign: 'right', cellWidth: 'auto' }
                     }
                 });
 
@@ -767,14 +769,21 @@ export default function ExpensePage() {
 
                 const summaryItems = [
                     { label: "Previous Months Remaining", value: `${summary.previousMonthsRemaining.toFixed(2)}`, color: summary.previousMonthsRemaining >= 0 ? [0, 100, 0] : [150, 0, 0] },
-                    { label: "Total Fund Collected", value: `${summary.totalDeposits.toFixed(2)}`, color: [0, 100, 0] },
-                    { label: "Total Rent Deducted", value: `- ${summary.totalRent.toFixed(2)}`, color: [150, 0, 0] },
-                    { label: "Total Utilities", value: `- ${summary.totalUtilities.toFixed(2)}`, color: [150, 0, 0] },
-                    { label: "Total Worker Wage", value: `- ${summary.totalWages.toFixed(2)}`, color: [150, 0, 0] },
-                    { label: "Total Grocery Cost", value: `- ${summary.totalGroceries.toFixed(2)}`, color: [150, 0, 0] },
-                    { label: "Meals in this Month", value: `${summary.periodicTotalMeals}`, color: [0, 0, 0] },
-                    { label: "Cost per Meal", value: `${summary.periodicCostPerMeal.toFixed(2)}`, color: [0, 0, 150] },
+                    { label: "Total Fund Collected", value: `${summary.periodicTotalDeposits.toFixed(2)}`, color: [0, 100, 0] },
+                    { label: "Total Rent Deducted", value: `- ${summary.periodicTotalRent.toFixed(2)}`, color: [150, 0, 0] },
+                    { label: "Total Utilities", value: `- ${summary.periodicTotalUtilities.toFixed(2)}`, color: [150, 0, 0] },
+                    { label: "Total Worker Wage", value: `- ${summary.periodicTotalWages.toFixed(2)}`, color: [150, 0, 0] },
+                    { label: "Total Grocery Cost", value: `- ${summary.periodicTotalGroceries.toFixed(2)}`, color: [150, 0, 0] },
                 ];
+
+                if (summary.periodicTotalMisc > 0) {
+                    summaryItems.push({ label: "Other/Misc Costs", value: `- ${summary.periodicTotalMisc.toFixed(2)}`, color: [150, 0, 0] });
+                }
+
+                summaryItems.push(
+                    { label: "Meals in this Month", value: `${summary.periodicTotalMeals}`, color: [0, 0, 0] },
+                    { label: "Cost per Meal", value: `${summary.periodicCostPerMeal.toFixed(2)}`, color: [0, 0, 150] }
+                );
 
                 summaryItems.forEach(item => {
                     doc.setTextColor(0, 0, 0);
