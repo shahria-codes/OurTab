@@ -97,17 +97,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             setNotificationPermission(permission);
 
             if (permission === 'granted') {
-                // Register service worker with config as query params
-                const configParams = new URLSearchParams({
-                    apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || '',
-                    authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN || '',
-                    projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || '',
-                    storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || '',
-                    messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || '',
-                    appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID || ''
-                }).toString();
+                // Clear out any old service workers to prevent conflicts (e.g. from next-pwa or old SWs with query params)
+                const existingRegistrations = await navigator.serviceWorker.getRegistrations();
+                for (const registration of existingRegistrations) {
+                    await registration.unregister();
+                }
 
-                const swRegistration = await navigator.serviceWorker.register(`/firebase-messaging-sw.js?${configParams}`);
+                const swRegistration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
 
                 const currentToken = await getToken(messaging, {
                     vapidKey: process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY,
