@@ -19,25 +19,27 @@ export async function sendPushNotification(email: string, title: string, body: s
         const notificationIcon = iconUrl || 'https://ourtab.vercel.app/icon-192.png';
 
         const message: any = {
-            notification: {
-                title,
-                body,
-            },
             data: data || {},
             token: fcmToken,
             android: {
                 priority: 'high',
                 notification: {
+                    title,
+                    body,
                     sound: 'default',
                     channelId: 'default',
                     color: '#6C63FF',
-                    icon: 'stock_ticker_update', // standard resource if fallback needed
+                    icon: 'stock_ticker_update',
                     image: notificationIcon
                 },
             },
             apns: {
                 payload: {
                     aps: {
+                        alert: {
+                            title,
+                            body,
+                        },
                         sound: 'default',
                         contentAvailable: true,
                         mutableContent: true,
@@ -52,6 +54,7 @@ export async function sendPushNotification(email: string, title: string, body: s
                     Urgency: 'high'
                 },
                 notification: {
+                    title,
                     body,
                     icon: notificationIcon,
                     badge: '/icon-192.png',
