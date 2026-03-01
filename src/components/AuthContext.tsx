@@ -49,17 +49,36 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [loading, setLoading] = useState(true);
     const router = useRouter();
 
+    // Helper for safe localStorage access
+    const getCachedData = (key: string) => {
+        if (typeof window === 'undefined') return undefined;
+        try {
+            const item = window.localStorage.getItem(key);
+            return item ? JSON.parse(item) : undefined;
+        } catch {
+            return undefined;
+        }
+    };
+
     // Use SWR to keep house data accessible globally in context
-    const { data: userData, mutate: mutateUser } = useSWR(
+    const { data: userData, mutate: mutateUser, isLoading: dbUserLoading } = useSWR(
         user?.email ? `/api/users?email=${user.email}` : null,
-        url => fetch(url).then(res => res.json())
+        url => fetch(url).then(res => res.json()),
+        {
+            fallbackData: getCachedData(`user_${user?.email}`),
+            onSuccess: (data) => typeof window !== 'undefined' && window.localStorage.setItem(`user_${user?.email}`, JSON.stringify(data))
+        }
     );
 
     // Use SWR to keep house details accessible
-    const { data: house, mutate: mutateHouse } = useSWR(
+    const { data: house, mutate: mutateHouse, isLoading: houseLoading } = useSWR(
         user?.email ? `/api/houses/my-house?email=${user.email}` : null,
         url => fetch(url).then(res => res.json()),
-        { refreshInterval: 5000 }
+        {
+            refreshInterval: 5000,
+            fallbackData: getCachedData(`house_${user?.email}`),
+            onSuccess: (data) => typeof window !== 'undefined' && window.localStorage.setItem(`house_${user?.email}`, JSON.stringify(data))
+        }
     );
 
     const updateCurrency = async (newCurrency: string) => {
