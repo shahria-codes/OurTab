@@ -16,10 +16,12 @@ const messaging = firebase.messaging();
 
 messaging.onBackgroundMessage((payload) => {
     console.log('[firebase-messaging-sw.js] Received background message ', payload);
-    const notificationTitle = payload.notification?.title || 'OurTab';
+    // Use title/body/icon from data (set by server) since we send data-only
+    // messages to avoid FCM showing a duplicate system notification.
+    const notificationTitle = payload.data?.title || payload.notification?.title || 'OurTab';
     const notificationOptions = {
-        body: payload.notification?.body || '',
-        icon: '/icon-192.png',
+        body: payload.data?.body || payload.notification?.body || '',
+        icon: payload.data?.icon || '/icon-192.png',
         badge: '/icon-192.png',
         data: payload.data || {}
     };
@@ -29,18 +31,18 @@ messaging.onBackgroundMessage((payload) => {
 
 self.addEventListener('notificationclick', (event) => {
     event.notification.close();
+    const targetUrl = '/notifications';
     event.waitUntil(
         clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
-            if (clientList.length > 0) {
-                let client = clientList[0];
-                for (let i = 0; i < clientList.length; i++) {
-                    if (clientList[i].focused) {
-                        client = clientList[i];
-                    }
+            // If a window is already open, navigate it to /notifications and focus it
+            for (let i = 0; i < clientList.length; i++) {
+                const client = clientList[i];
+                if ('navigate' in client) {
+                    return client.navigate(targetUrl).then((c) => c && c.focus());
                 }
-                return client.focus();
             }
-            return clients.openWindow('/');
+            // No open window — open a new one
+            return clients.openWindow(targetUrl);
         })
     );
 });
