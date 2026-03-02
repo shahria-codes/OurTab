@@ -24,16 +24,24 @@ export async function sendPushNotification(email: string, title: string, body: s
             });
         }
 
+        // Include icon in data so the service worker can use it
+        stringifiedData.icon = notificationIcon;
+        stringifiedData.title = title;
+        stringifiedData.body = body;
+
         const message: any = {
-            notification: {
-                title,
-                body,
-            },
+            // No top-level `notification` key: prevents FCM from showing a
+            // *second* system-level notification alongside the one the service
+            // worker shows in onBackgroundMessage (which would cause duplicates).
+            // Android & iOS still get their native notification via the
+            // platform-specific blocks below.
             data: stringifiedData,
             token: fcmToken,
             android: {
                 priority: 'high',
                 notification: {
+                    title,
+                    body,
                     sound: 'default',
                     channelId: 'default',
                     color: '#6C63FF',
@@ -43,6 +51,7 @@ export async function sendPushNotification(email: string, title: string, body: s
             apns: {
                 payload: {
                     aps: {
+                        alert: { title, body },
                         sound: 'default',
                         contentAvailable: true,
                         mutableContent: true,
@@ -56,13 +65,8 @@ export async function sendPushNotification(email: string, title: string, body: s
                 headers: {
                     Urgency: 'high'
                 },
-                notification: {
-                    icon: notificationIcon,
-                    badge: '/icon-192.png',
-                    requireInteraction: true,
-                },
                 fcmOptions: {
-                    link: '/'
+                    link: '/notifications'
                 }
             }
         };
