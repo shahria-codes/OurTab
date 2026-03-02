@@ -331,9 +331,12 @@ export default function ExpensePage() {
                 }
 
                 const grouped: { [key: string]: Expense[] } = {};
+                // Use YYYY-MM as key (locale-independent, safe on iOS Safari)
                 expensesData.forEach((exp: Expense) => {
                     const date = new Date(exp.date);
-                    const monthKey = date.toLocaleString(undefined, { month: 'long', year: 'numeric' });
+                    const yr = date.getFullYear();
+                    const mo = String(date.getMonth() + 1).padStart(2, '0');
+                    const monthKey = `${yr}-${mo}`;
                     if (!grouped[monthKey]) grouped[monthKey] = [];
                     grouped[monthKey].push(exp);
                 });
@@ -351,9 +354,19 @@ export default function ExpensePage() {
         }
     };
 
+    // Convert a YYYY-MM key to a human-readable label like "March 2026"
+    const formatMonthDisplay = (yyyymm: string) => {
+        const [yr, mo] = yyyymm.split('-');
+        const d = new Date(Number(yr), Number(mo) - 1, 1);
+        return d.toLocaleString('en-US', { month: 'long', year: 'numeric' });
+    };
+
     const downloadPDF = async (month: string) => {
         try {
             console.log('Starting PDF generation for:', month);
+            // month is YYYY-MM — parse it safely (no locale parsing issues on iOS)
+            const targetMonth = month; // Already in YYYY-MM format
+            const monthDisplayLabel = formatMonthDisplay(month);
             const currentHouseData = house;
 
 
@@ -371,6 +384,18 @@ export default function ExpensePage() {
 
             const totalGroupExpense = expenses.reduce((sum: number, exp: Expense) => sum + exp.amount, 0);
             void totalGroupExpense;
+
+            // For meals_and_expenses houses, fetch fresh data (don't rely on stale React state)
+            let freshMealsList: any[] = [];
+            let freshFundsList: any[] = [];
+            if (currentHouseData?.typeOfHouse === 'meals_and_expenses' && currentHouseData?.id) {
+                const [freshMealsRes, freshFundsRes] = await Promise.all([
+                    fetch(`/api/meals?houseId=${currentHouseData.id}`),
+                    fetch(`/api/fund-deposits?houseId=${currentHouseData.id}`)
+                ]);
+                freshMealsList = await freshMealsRes.json();
+                freshFundsList = await freshFundsRes.json();
+            }
 
             // --- SETTLEMENT LOGIC --- (Follows Dashboard logic using allExpenses)
             if (currentHouseData?.typeOfHouse !== 'meals_and_expenses') {
@@ -420,17 +445,12 @@ export default function ExpensePage() {
                 });
             }
             else {
-                // Determine the month matching exactly the pdf bounds
-                const mealsRes = await fetch(`/api/meals?houseId=${currentHouseData.id}`);
-                const mealsList = await mealsRes.json();
-
-                const fundsRes = await fetch(`/api/fund-deposits?houseId=${currentHouseData.id}`);
-                const fundsList = await fundsRes.json();
+                // Use the already-fetched fresh data (no need to re-fetch)
+                const mealsList = freshMealsList;
+                const fundsList = freshFundsList;
 
                 const getYYYYMM = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-                // 'month' is formatted as "October 2025", so we parse it:
-                const parsedDate = new Date(`${month} 1`);
-                const targetMonth = getYYYYMM(parsedDate);
+                // month is already in YYYY-MM format — no unsafe string parsing needed
 
                 const months = new Set<string>();
                 allExpenses.forEach((e: Expense) => months.add(getYYYYMM(new Date(e.date))));
@@ -623,7 +643,7 @@ export default function ExpensePage() {
             const titleY = Math.max(leftY, 45) + 5;
             doc.setFontSize(14);
             doc.setFont('abril', 'bold');
-            doc.text(`Expense Report: ${month}`, pageWidth / 2, titleY, { align: 'center' });
+            doc.text(`Expense Report: ${monthDisplayLabel}`, pageWidth / 2, titleY, { align: 'center' });
 
             // --- TABLE ---
             // Sort expenses by date (latest first)
@@ -697,10 +717,10 @@ export default function ExpensePage() {
             // --- HOUSE FUND - MEMBER BREAKDOWN SECTION (For Meals and Expenses Houses) ---
             if (currentHouseData?.typeOfHouse === 'meals_and_expenses') {
                 const getYYYYMM = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-                const parsedDate = new Date(`${month} 1`);
-                const targetMonth = getYYYYMM(parsedDate);
+                // month is already in YYYY-MM format — use targetMonth directly
 
-                const accountingResult = calculateMemberFundAccounting(currentHouseData, allExpenses, fundDeposits, meals, targetMonth);
+                // Use freshly fetched data instead of stale React state (fixes iOS issue)
+                const accountingResult = calculateMemberFundAccounting(currentHouseData, allExpenses, freshFundsList, freshMealsList, targetMonth);
                 const accounting = accountingResult.members;
                 const summary = accountingResult.summary;
                 const finalY = (doc as any).lastAutoTable?.finalY || titleY + 20;
@@ -711,7 +731,7 @@ export default function ExpensePage() {
                 doc.text("House Fund — Member Breakdown", pageWidth / 2, 20, { align: 'center' });
                 doc.setFontSize(10);
                 doc.setFont('helvetica', 'normal');
-                doc.text(`Report Period: ${month}`, pageWidth / 2, 28, { align: 'center' });
+                doc.text(`Report Period: ${monthDisplayLabel}`, pageWidth / 2, 28, { align: 'center' });
 
                 const fundTableData: any[] = [];
                 currentHouseData.members?.forEach((m: HouseMember) => {
@@ -1200,7 +1220,7 @@ export default function ExpensePage() {
                                     </IconButton>
                                 }>
                                     <ListItemText
-                                        primary={month}
+                                        primary={formatMonthDisplay(month)}
                                         secondary={`Total: ${getCurrencySymbol()}${monthlyExpenses[month].filter((e: Expense) => !e.isSettlementPayment).reduce((sum, e: Expense) => sum + e.amount, 0).toFixed(2)}`}
                                     />
                                 </ListItem>
