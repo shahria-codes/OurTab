@@ -24,7 +24,7 @@ export async function POST(request: Request) {
             fcmToken?: string;
         }
 
-        let userData: UserRecord = { email };
+        const userData: UserRecord = { email };
 
         if (name !== undefined) userData.name = name;
         if (photoUrl !== undefined) userData.photoUrl = photoUrl;

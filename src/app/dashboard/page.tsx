@@ -518,7 +518,7 @@ export default function Dashboard() {
     return (
         <AuthGuard>
             <main>
-                <Container maxWidth="lg" sx={{ mt: 4 }}>
+                <Container maxWidth="lg" sx={{ mt: 4, mb: 5 }}>
                     <Box className="glass-nav" sx={{
                         position: 'sticky',
                         top: 0,

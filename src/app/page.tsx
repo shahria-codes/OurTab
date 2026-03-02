@@ -70,7 +70,7 @@ export default function Home() {
         >
           <Box
             component="img"
-            src="/icon.svg"
+            src="/icon.png"
             alt="OurTab Icon"
             sx={{
               width: { xs: 80, md: 100 },

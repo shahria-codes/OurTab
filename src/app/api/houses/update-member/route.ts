@@ -46,7 +46,7 @@ export async function POST(request: Request) {
 
         // Rule: If a manager (without creator) promotes another member to manager,
         // they should lose their role as a manager and become a member again.
-        let promoNotificationSent = false;
+        const promoNotificationSent = false;
         if (role === 'manager' && !isCreator && isManager && targetEmail !== userEmail) {
             // Check if target is not already a manager
             const isTargetAlreadyManager = houseData.memberDetails?.[targetEmail]?.role === 'manager';

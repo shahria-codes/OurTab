@@ -587,7 +587,7 @@ export default function ExpensePage() {
             // Pre-load assets
             // Use SVG icon if PNG is missing or problematic, but ideally convert to PNG
             // Since we have a helper that converts images to PNG data URLs via canvas, we can use that on the SVG.
-            const logoDataUrl = await loadImage('/icon.svg');
+            const logoDataUrl = await loadImage('/icon.png');
 
             // We no longer fetch member photos for the PDF to prevent 429 rate limit errors 
 

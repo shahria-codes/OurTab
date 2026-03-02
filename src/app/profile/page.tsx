@@ -450,7 +450,7 @@ export default function Profile() {
                     }} />
                 </Box>
 
-                <Container maxWidth="sm" sx={{ mt: 3, mb: 10, display: 'flex', flexDirection: 'column', gap: 3 }}>
+                <Container maxWidth="sm" sx={{ mt: 3, mb: 5, display: 'flex', flexDirection: 'column', gap: 3 }}>
 
                     {/* ── Card 1: User Info (Premium Header) ── */}
                     <Paper className="glass animate-stagger" sx={{ p: 0, overflow: 'hidden', background: 'transparent', transitionDelay: '0.1s' }}>
@@ -1320,6 +1320,12 @@ export default function Profile() {
                         >
                             <FeedbackIcon sx={{ fontSize: 16 }} />
                             Send Feedback & Suggestions
+                        </Typography>
+                    </Box>
+
+                    <Box className="animate-stagger" sx={{ textAlign: 'center', mt: 3, mb: 1, transitionDelay: '0.6s' }}>
+                        <Typography variant="caption" sx={{ color: 'text.disabled', fontWeight: 600, letterSpacing: '0.05em' }}>
+                            App Version 1.2.0
                         </Typography>
                     </Box>
 
