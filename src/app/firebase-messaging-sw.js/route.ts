@@ -19,10 +19,15 @@ messaging.onBackgroundMessage((payload) => {
     // Use title/body/icon from data (set by server) since we send data-only
     // messages to avoid FCM showing a duplicate system notification.
     const notificationTitle = payload.data?.title || payload.notification?.title || 'OurTab';
+    const iconUrl = payload.data?.icon || '/icon-192.png';
+    console.log('[firebase-messaging-sw.js] Icon URL:', iconUrl);
+
     const notificationOptions = {
         body: payload.data?.body || payload.notification?.body || '',
-        icon: payload.data?.icon || '/icon-192.png',
+        icon: iconUrl,
+        image: iconUrl, // Large picture — supported on Android Chrome
         badge: '/icon-192.png',
+        requireInteraction: true,
         data: payload.data || {}
     };
 
