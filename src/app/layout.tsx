@@ -8,9 +8,23 @@ const outfit = Outfit({ subsets: ['latin'] });
 const abril = Abril_Fatface({ weight: '400', subsets: ['latin'], variable: '--font-abril' });
 
 export const metadata: Metadata = {
-  title: 'OurTab',
-  description: 'Split grocery bills and track shared expenses with ease.',
+  title: 'OurTab - Shared Grocery Tracker & Expense Manager',
+  description: 'Split grocery bills and track shared expenses with ease. The perfect companion for flatmates and families to manage common costs.',
+  keywords: ['grocery tracker', 'expense manager', 'bill splitter', 'shared expenses', 'meal tracker', 'flatmate expenses'],
   manifest: '/manifest.json',
+  openGraph: {
+    title: 'OurTab - Shared Grocery Tracker & Expense Manager',
+    description: 'Split grocery bills and track shared expenses with ease.',
+    url: 'https://ourtab.online',
+    siteName: 'OurTab',
+    locale: 'en_US',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'OurTab - Shared Grocery Tracker & Expense Manager',
+    description: 'Split grocery bills and track shared expenses with ease.',
+  },
 };
 
 export const viewport: Viewport = {
