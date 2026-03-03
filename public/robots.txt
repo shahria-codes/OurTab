@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://ourtab.online/sitemap.xml
+Sitemap: https://app.ourtab.online/sitemap.xml
