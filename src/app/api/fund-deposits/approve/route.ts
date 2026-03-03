@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { adminDb } from '@/lib/firebaseAdmin';
 import { createNotification } from '@/lib/notifications';
+import { getCurrencySymbol } from '@/utils/currency';
 
 export async function POST(request: Request) {
     try {
@@ -47,7 +48,7 @@ export async function POST(request: Request) {
         const managerName = managerSnap.exists ? (managerSnap.data()?.name || managerEmail.split('@')[0]) : managerEmail.split('@')[0];
         const managerPhotoUrl = managerSnap.exists ? managerSnap.data()?.photoUrl : undefined;
 
-        const currencySymbol = houseData.currency === 'EUR' ? '€' : (houseData.currency === 'GBP' ? '£' : '$');
+        const currencySymbol = getCurrencySymbol(houseData.currency);
 
         if (action === 'reject') {
             // Find and delete all pending notifications for this deposit

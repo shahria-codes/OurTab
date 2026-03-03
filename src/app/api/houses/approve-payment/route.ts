@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { adminDb } from '@/lib/firebaseAdmin';
 import { createNotification } from '@/lib/notifications';
+import { getCurrencySymbol } from '@/utils/currency';
 
 interface PendingPayment {
     id: string;
@@ -76,7 +77,7 @@ export async function POST(request: Request) {
         try {
             const houseSnap = await adminDb.collection('houses').doc(houseId).get();
             const houseData = houseSnap.data();
-            const currencySymbol = houseData?.currency === 'EUR' ? '€' : (houseData?.currency === 'GBP' ? '£' : '$');
+            const currencySymbol = getCurrencySymbol(houseData?.currency);
 
             const approverSnap = await adminDb.collection('users').doc(approverEmail).get();
             const approverName = approverSnap.exists ? (approverSnap.data()?.name || approverEmail.split('@')[0]) : approverEmail.split('@')[0];
