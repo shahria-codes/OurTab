@@ -1241,6 +1241,9 @@ export default function Dashboard() {
                                                     const md = isTakingMeal(member.email, summaryStr, 'dinner', house, meals);
                                                     const hasAny = (mealsPerDay === 3 ? mb : false) || ml || md;
 
+                                                    // Hide members who are not taking any meal
+                                                    if (!hasAny) return null;
+
                                                     return (
                                                         <Box key={member.email} sx={{
                                                             minWidth: 90,
