@@ -10,6 +10,37 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
         }
 
+        // 1. Fetch house data to check update window
+        const houseRef = adminDb.collection('houses').doc(houseId);
+        const houseSnap = await houseRef.get();
+        if (!houseSnap.exists) {
+            return NextResponse.json({ error: 'House not found' }, { status: 404 });
+        }
+        const houseData = houseSnap.data()!;
+
+        // 2. Server-side time validation
+        const now = new Date();
+        const serverTodayStr = now.toISOString().split('T')[0];
+
+        // Prevent updates for past days
+        if (date < serverTodayStr) {
+            return NextResponse.json({ error: 'Cannot update meals for past dates' }, { status: 403 });
+        }
+
+        // If updating for today, check the window
+        if (date === serverTodayStr) {
+            const windowEnd = houseData.mealUpdateWindowEnd || '05:00';
+            const [endHour, endMin] = windowEnd.split(':').map(Number);
+            const todayEnd = new Date(now);
+            todayEnd.setHours(endHour, endMin, 0, 0);
+
+            if (now > todayEnd) {
+                return NextResponse.json({
+                    error: `Today's meal update window closed at ${windowEnd}.`
+                }, { status: 403 });
+            }
+        }
+
         // The document ID is a combination of houseId and date, e.g., "house123_2023-10-27"
         const docId = `${houseId}_${date}`;
         const mealRef = adminDb.collection('mealStatuses').doc(docId);
