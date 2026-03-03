@@ -83,10 +83,18 @@ export async function POST(request: Request) {
 
             // Notify partial approval
             try {
+                const approverSnap = await adminDb.collection('users').doc(userEmail).get();
+                const approverName = approverSnap.exists
+                    ? (approverSnap.data()?.name || userEmail.split('@')[0])
+                    : userEmail.split('@')[0];
+                const approverPhotoUrl = approverSnap.exists ? approverSnap.data()?.photoUrl : undefined;
+
                 await createNotification({
                     userId: userToApprove,
                     type: 'house',
-                    message: `${userEmail} approved your request to leave.`
+                    message: `approved your request to leave.`,
+                    senderName: approverName,
+                    senderPhotoUrl: approverPhotoUrl
                 });
             } catch (e) { console.error('Error notif partial approval', e); }
 
