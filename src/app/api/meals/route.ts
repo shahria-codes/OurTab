@@ -21,10 +21,16 @@ export async function POST(request: Request) {
         // 2. Server-side time validation
         const now = new Date();
         const serverTodayStr = now.toISOString().split('T')[0];
+        const tomorrow = new Date(now);
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        const tomorrowStr = tomorrow.toISOString().split('T')[0];
 
-        // Prevent updates for past days
+        // Prevent updates for past days or far future days
         if (date < serverTodayStr) {
             return NextResponse.json({ error: 'Cannot update meals for past dates' }, { status: 403 });
+        }
+        if (date > tomorrowStr) {
+            return NextResponse.json({ error: 'Cannot update meals for dates beyond tomorrow' }, { status: 403 });
         }
 
         // If updating for today, check the window

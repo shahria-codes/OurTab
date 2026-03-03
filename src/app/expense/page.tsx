@@ -251,7 +251,8 @@ export default function ExpensePage() {
                     category: house?.typeOfHouse === 'meals_and_expenses' ? expenseCategory : 'groceries',
                     userId: user.email, // Use email as ID concept
                     houseId: dbUser.houseId,
-                    contributors: contributorsList.length > 0 ? contributorsList : undefined
+                    contributors: contributorsList.length > 0 ? contributorsList : undefined,
+                    clientTimestamp: new Date().toISOString()
                 })
             });
 
