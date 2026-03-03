@@ -6,7 +6,20 @@ import { getCurrencySymbol } from '@/utils/currency';
 export async function POST(request: Request) {
     try {
         const body = await request.json();
-        const { amount, description, category, userId, houseId, contributors } = body;
+        const { amount, description, category, userId, houseId, contributors, clientTimestamp } = body;
+
+        // Time drift validation
+        if (clientTimestamp) {
+            const clientTime = new Date(clientTimestamp).getTime();
+            const serverTime = new Date().getTime();
+            const driftMinutes = Math.abs(serverTime - clientTime) / (1000 * 60);
+
+            if (driftMinutes > 5) {
+                return NextResponse.json({
+                    error: 'Device time is out of sync. Please correct your device time to add expenses.'
+                }, { status: 403 });
+            }
+        }
 
         if (!amount || !description || !userId || !houseId) {
             return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
