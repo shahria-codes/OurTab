@@ -20,6 +20,10 @@ export const metadata: Metadata = {
     locale: 'en_US',
     type: 'website',
   },
+  icons: {
+    icon: '/icon.png',
+    apple: '/apple-icon.png',
+  },
   twitter: {
     card: 'summary_large_image',
     title: 'OurTab - Shared Grocery Tracker & Expense Manager',
