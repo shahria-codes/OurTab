@@ -17,6 +17,14 @@ export const metadata: Metadata = {
     description: 'Split grocery bills and track shared expenses with ease.',
     url: 'https://app.ourtab.online',
     siteName: 'OurTab',
+    images: [
+      {
+        url: '/images/icon.png',
+        width: 1200,
+        height: 630,
+        alt: 'OurTab Preview',
+      },
+    ],
     locale: 'en_US',
     type: 'website',
   },
@@ -28,6 +36,18 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'OurTab - Shared Grocery Tracker & Expense Manager',
     description: 'Split grocery bills and track shared expenses with ease.',
+    images: ['/images/icon.png'],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
   },
 };
 
