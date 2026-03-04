@@ -19,7 +19,7 @@ export const metadata: Metadata = {
     siteName: 'OurTab',
     images: [
       {
-        url: '/images/icon.png',
+        url: '/icon.png',
         width: 1200,
         height: 630,
         alt: 'OurTab Preview',
@@ -36,7 +36,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'OurTab - Shared Grocery Tracker & Expense Manager',
     description: 'Split grocery bills and track shared expenses with ease.',
-    images: ['/images/icon.png'],
+    images: ['/icon.png'],
   },
   robots: {
     index: true,
