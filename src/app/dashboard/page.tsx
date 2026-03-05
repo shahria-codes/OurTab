@@ -55,10 +55,13 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import HowToVoteIcon from '@mui/icons-material/HowToVote';
 import FormatListBulletedIcon from '@mui/icons-material/FormatListBulleted';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import ShareIcon from '@mui/icons-material/Share';
 import WorkIcon from '@mui/icons-material/Work';
 import CakeIcon from '@mui/icons-material/Cake';
 import WhatsAppIcon from '@mui/icons-material/WhatsApp';
 import FacebookIcon from '@mui/icons-material/Facebook';
+import TelegramIcon from '@mui/icons-material/Telegram';
+import SendIcon from '@mui/icons-material/Send';
 import NotificationBell from '@/components/NotificationBell';
 import InputAdornment from '@mui/material/InputAdornment';
 import EmailIcon from '@mui/icons-material/Email';
@@ -150,6 +153,7 @@ export default function Dashboard() {
 
     const { showToast } = useToast();
     const [openAddMember, setOpenAddMember] = useState(false);
+    const [openShareDialog, setOpenShareDialog] = useState(false);
     const [newMemberEmail, setNewMemberEmail] = useState('');
 
     const [openEditExpense, setOpenEditExpense] = useState(false);
@@ -207,6 +211,18 @@ export default function Dashboard() {
     const handleCopy = (text: string) => {
         navigator.clipboard.writeText(text);
         showToast('Copied to clipboard!', 'success');
+    };
+
+    const handleShareHouse = async () => {
+        if (!house?.id) return;
+        setOpenShareDialog(true);
+    };
+
+    const getShareLinks = () => {
+        if (!house) return { url: '', text: '' };
+        const url = `${window.location.origin}/join?houseId=${house.id}`;
+        const text = `Join my house "${house.name}" on OurTab to track our shared expenses!`;
+        return { url, text };
     };
 
 
@@ -843,9 +859,25 @@ export default function Dashboard() {
                                 </Box>
                                 {house ? (
                                     <Box sx={{ position: 'relative', zIndex: 1 }}>
-                                        <Typography variant="subtitle2" sx={{ fontWeight: 800, color: 'info.main', textTransform: 'uppercase', letterSpacing: '0.1em', mb: 1 }}>
-                                            Household
-                                        </Typography>
+                                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>
+                                            <Typography variant="subtitle2" sx={{ fontWeight: 800, color: 'info.main', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+                                                Household
+                                            </Typography>
+                                            <Tooltip title="Share Invitation Link">
+                                                <IconButton
+                                                    onClick={handleShareHouse}
+                                                    size="small"
+                                                    sx={{
+                                                        bgcolor: 'rgba(255, 101, 132, 0.1)',
+                                                        color: '#FF6584',
+                                                        transition: 'all 0.2s',
+                                                        '&:hover': { bgcolor: 'rgba(255, 101, 132, 0.2)', transform: 'scale(1.1)' }
+                                                    }}
+                                                >
+                                                    <ShareIcon fontSize="small" />
+                                                </IconButton>
+                                            </Tooltip>
+                                        </Box>
 
                                         <Typography variant="h4" sx={{
                                             fontWeight: 900,
@@ -886,15 +918,16 @@ export default function Dashboard() {
                                                     sx={{
                                                         width: 40,
                                                         height: 40,
-                                                        bgcolor: 'rgba(2, 136, 209, 0.1)',
-                                                        color: 'info.main',
+                                                        bgcolor: 'rgba(2, 136, 175, 0.1)',
+                                                        color: '#0288d1',
                                                         transition: 'all 0.2s',
-                                                        '&:hover': { bgcolor: 'rgba(2, 136, 209, 0.2)', transform: 'scale(1.1)' }
+                                                        '&:hover': { bgcolor: 'rgba(2, 136, 175, 0.2)', transform: 'scale(1.1)' }
                                                     }}
                                                 >
                                                     <PersonAddIcon />
                                                 </IconButton>
                                             </Tooltip>
+
                                         </Box>
                                         <Button
                                             variant="contained"
@@ -2458,6 +2491,187 @@ export default function Dashboard() {
                     </DialogActions>
                 </Dialog>
             </main>
-        </AuthGuard >
+            {/* Premium Share Dialog */}
+            <Dialog
+                open={openShareDialog}
+                onClose={() => setOpenShareDialog(false)}
+                fullWidth
+                maxWidth="xs"
+                PaperProps={{
+                    sx: {
+                        borderRadius: 2,
+                        overflow: 'hidden',
+                        background: 'rgba(255, 255, 255, 0.85)',
+                        backdropFilter: 'blur(25px) saturate(180%)',
+                        border: '1px solid rgba(255, 255, 255, 0.4)',
+                        boxShadow: '0 30px 60px rgba(0,0,0,0.12)',
+                    }
+                }}
+            >
+                <Box sx={{
+                    height: 80,
+                    background: 'linear-gradient(135deg, #6C63FF 0%, #FF6584 100%)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    position: 'relative'
+                }}>
+                    <Typography variant="h6" sx={{ color: 'white', fontWeight: 900, letterSpacing: '0.05em' }}>
+                        SHARE INVITE
+                    </Typography>
+                    <IconButton
+                        onClick={() => setOpenShareDialog(false)}
+                        sx={{ position: 'absolute', top: 10, right: 10, color: 'white', opacity: 0.8 }}
+                    >
+                        <CloseIcon />
+                    </IconButton>
+                </Box>
+
+                <DialogContent sx={{ p: 4 }}>
+                    <Box sx={{ textAlign: 'center', mb: 4 }}>
+                        <Avatar sx={{
+                            width: 64,
+                            height: 64,
+                            bgcolor: 'rgba(108, 99, 255, 0.1)',
+                            color: '#6C63FF',
+                            mx: 'auto',
+                            mb: 2,
+                            boxShadow: '0 10px 20px rgba(108, 99, 255, 0.1)'
+                        }}>
+                            <GroupIcon sx={{ fontSize: 32 }} />
+                        </Avatar>
+                        <Typography variant="h5" sx={{ fontWeight: 900, color: '#1a202c', mb: 1 }}>
+                            Invite to {house?.name}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 600, opacity: 0.7 }}>
+                            Grow your household and manage expenses together
+                        </Typography>
+                    </Box>
+
+                    <Box sx={{
+                        p: 2,
+                        bgcolor: 'rgba(0,0,0,0.03)',
+                        borderRadius: 4,
+                        mb: 4,
+                        display: 'flex',
+                        alignItems: 'center',
+                        border: '1px dashed rgba(0,0,0,0.1)'
+                    }}>
+                        <Typography variant="caption" sx={{
+                            flex: 1,
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap',
+                            fontWeight: 700,
+                            color: 'primary.main',
+                            px: 1
+                        }}>
+                            {getShareLinks().url}
+                        </Typography>
+                        <Button
+                            size="small"
+                            onClick={() => handleCopy(getShareLinks().url)}
+                            sx={{ minWidth: 'auto', fontWeight: 800, textTransform: 'none' }}
+                        >
+                            Copy
+                        </Button>
+                    </Box>
+
+                    <Grid container spacing={2}>
+                        <Grid item xs={4}>
+                            <Stack alignItems="center" spacing={1}>
+                                <IconButton
+                                    onClick={() => {
+                                        const { url, text } = getShareLinks();
+                                        window.open(`https://wa.me/?text=${encodeURIComponent(text + ' ' + url)}`, '_blank');
+                                    }}
+                                    sx={{
+                                        width: 56,
+                                        height: 56,
+                                        bgcolor: '#25D366',
+                                        color: 'white',
+                                        boxShadow: '0 8px 15px rgba(37, 211, 102, 0.3)',
+                                        '&:hover': { bgcolor: '#128C7E', transform: 'translateY(-3px)' },
+                                        transition: 'all 0.3s ease'
+                                    }}
+                                >
+                                    <WhatsAppIcon />
+                                </IconButton>
+                                <Typography variant="caption" sx={{ fontWeight: 700 }}>WhatsApp</Typography>
+                            </Stack>
+                        </Grid>
+
+                        <Grid item xs={4}>
+                            <Stack alignItems="center" spacing={1}>
+                                <IconButton
+                                    onClick={() => {
+                                        const { url } = getShareLinks();
+                                        window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`, '_blank');
+                                    }}
+                                    sx={{
+                                        width: 56,
+                                        height: 56,
+                                        bgcolor: '#1877F2',
+                                        color: 'white',
+                                        boxShadow: '0 8px 15px rgba(24, 119, 242, 0.3)',
+                                        '&:hover': { bgcolor: '#0d65d9', transform: 'translateY(-3px)' },
+                                        transition: 'all 0.3s ease'
+                                    }}
+                                >
+                                    <FacebookIcon />
+                                </IconButton>
+                                <Typography variant="caption" sx={{ fontWeight: 700 }}>Messenger</Typography>
+                            </Stack>
+                        </Grid>
+
+                        <Grid item xs={4}>
+                            <Stack alignItems="center" spacing={1}>
+                                <IconButton
+                                    onClick={() => {
+                                        const { url, text } = getShareLinks();
+                                        window.open(`https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text)}`, '_blank');
+                                    }}
+                                    sx={{
+                                        width: 56,
+                                        height: 56,
+                                        bgcolor: '#0088cc',
+                                        color: 'white',
+                                        boxShadow: '0 8px 15px rgba(0, 136, 204, 0.3)',
+                                        '&:hover': { bgcolor: '#0077b3', transform: 'translateY(-3px)' },
+                                        transition: 'all 0.3s ease'
+                                    }}
+                                >
+                                    <TelegramIcon />
+                                </IconButton>
+                                <Typography variant="caption" sx={{ fontWeight: 700 }}>Telegram</Typography>
+                            </Stack>
+                        </Grid>
+                    </Grid>
+
+                    {navigator.share && (
+                        <Button
+                            fullWidth
+                            variant="outlined"
+                            startIcon={<ShareIcon />}
+                            onClick={async () => {
+                                const { url, text } = getShareLinks();
+                                try {
+                                    await navigator.share({
+                                        title: 'Join my House on OurTab',
+                                        text: text,
+                                        url: url,
+                                    });
+                                } catch (err) {
+                                    if ((err as Error).name !== 'AbortError') handleCopy(url);
+                                }
+                            }}
+                            sx={{ mt: 4, borderRadius: 3, py: 1.5, textTransform: 'none', fontWeight: 800, border: '2px solid' }}
+                        >
+                            Open System Share
+                        </Button>
+                    )}
+                </DialogContent>
+            </Dialog>
+        </AuthGuard>
     );
 }
