@@ -55,7 +55,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import HowToVoteIcon from '@mui/icons-material/HowToVote';
 import FormatListBulletedIcon from '@mui/icons-material/FormatListBulleted';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
-import ShareIcon from '@mui/icons-material/Share';
+import IosShareIcon from '@mui/icons-material/IosShare';
 import WorkIcon from '@mui/icons-material/Work';
 import CakeIcon from '@mui/icons-material/Cake';
 import WhatsAppIcon from '@mui/icons-material/WhatsApp';
@@ -884,13 +884,18 @@ export default function Dashboard() {
                                                     onClick={handleShareHouse}
                                                     size="small"
                                                     sx={{
-                                                        bgcolor: 'rgba(255, 101, 132, 0.1)',
-                                                        color: '#FF6584',
-                                                        transition: 'all 0.2s',
-                                                        '&:hover': { bgcolor: 'rgba(255, 101, 132, 0.2)', transform: 'scale(1.1)' }
+                                                        background: 'linear-gradient(135deg, #6C63FF 0%, #FF6584 100%)',
+                                                        color: 'white',
+                                                        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                                                        boxShadow: '0 4px 10px rgba(108, 99, 255, 0.3)',
+                                                        '&:hover': {
+                                                            transform: 'scale(1.15) rotate(5deg)',
+                                                            boxShadow: '0 6px 15px rgba(108, 99, 255, 0.4)',
+                                                            filter: 'brightness(1.1)'
+                                                        }
                                                     }}
                                                 >
-                                                    <ShareIcon fontSize="small" />
+                                                    <IosShareIcon fontSize="small" />
                                                 </IconButton>
                                             </Tooltip>
                                         </Box>
@@ -2531,7 +2536,7 @@ export default function Dashboard() {
                 }}
             >
                 <Box sx={{
-                    height: 80,
+                    height: 60,
                     background: 'linear-gradient(135deg, #6C63FF 0%, #FF6584 100%)',
                     display: 'flex',
                     alignItems: 'center',
@@ -2549,20 +2554,20 @@ export default function Dashboard() {
                     </IconButton>
                 </Box>
 
-                <DialogContent sx={{ p: 4 }}>
-                    <Box sx={{ textAlign: 'center', mb: 4 }}>
+                <DialogContent sx={{ p: 3 }}>
+                    <Box sx={{ textAlign: 'center', mb: 2.5 }}>
                         <Avatar sx={{
-                            width: 64,
-                            height: 64,
+                            width: 52,
+                            height: 52,
                             bgcolor: 'rgba(108, 99, 255, 0.1)',
                             color: '#6C63FF',
                             mx: 'auto',
-                            mb: 2,
+                            mb: 1.5,
                             boxShadow: '0 10px 20px rgba(108, 99, 255, 0.1)'
                         }}>
-                            <GroupIcon sx={{ fontSize: 32 }} />
+                            <GroupIcon sx={{ fontSize: 26 }} />
                         </Avatar>
-                        <Typography variant="h5" sx={{ fontWeight: 900, color: '#1a202c', mb: 1 }}>
+                        <Typography variant="h6" sx={{ fontWeight: 900, color: '#1a202c', mb: 0.5 }}>
                             Invite to {house?.name}
                         </Typography>
                         <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 600, opacity: 0.7 }}>
@@ -2571,10 +2576,10 @@ export default function Dashboard() {
                     </Box>
 
                     <Box sx={{
-                        p: 2,
+                        p: 1.5,
                         bgcolor: 'rgba(0,0,0,0.03)',
-                        borderRadius: 4,
-                        mb: 4,
+                        borderRadius: 3,
+                        mb: 3,
                         display: 'flex',
                         alignItems: 'center',
                         border: '1px dashed rgba(0,0,0,0.1)'
@@ -2673,8 +2678,8 @@ export default function Dashboard() {
                     {navigator.share && (
                         <Button
                             fullWidth
-                            variant="outlined"
-                            startIcon={<ShareIcon />}
+                            variant="contained"
+                            startIcon={<IosShareIcon />}
                             onClick={async () => {
                                 const { url, text } = getShareLinks();
                                 try {
@@ -2687,7 +2692,21 @@ export default function Dashboard() {
                                     if ((err as Error).name !== 'AbortError') handleCopy(url);
                                 }
                             }}
-                            sx={{ mt: 4, borderRadius: 3, py: 1.5, textTransform: 'none', fontWeight: 800, border: '2px solid' }}
+                            sx={{
+                                mt: 3,
+                                borderRadius: 3,
+                                py: 1.2,
+                                textTransform: 'none',
+                                fontWeight: 800,
+                                background: 'linear-gradient(135deg, #6C63FF 0%, #FF6584 100%)',
+                                color: 'white',
+                                boxShadow: '0 8px 20px rgba(108, 99, 255, 0.2)',
+                                border: 'none',
+                                '&:hover': {
+                                    boxShadow: '0 12px 25px rgba(108, 99, 255, 0.3)',
+                                    filter: 'brightness(1.05)'
+                                }
+                            }}
                         >
                             Open System Share
                         </Button>
