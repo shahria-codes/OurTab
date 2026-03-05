@@ -912,45 +912,31 @@ export default function Dashboard() {
                                                     />
                                                 </Tooltip>
                                             ))}
-                                            <Tooltip title="Add Member">
-                                                <IconButton
-                                                    onClick={() => setOpenAddMember(true)}
-                                                    sx={{
-                                                        width: 40,
-                                                        height: 40,
-                                                        bgcolor: 'rgba(2, 136, 175, 0.1)',
-                                                        color: '#0288d1',
-                                                        transition: 'all 0.2s',
-                                                        '&:hover': { bgcolor: 'rgba(2, 136, 175, 0.2)', transform: 'scale(1.1)' }
-                                                    }}
-                                                >
-                                                    <PersonAddIcon />
-                                                </IconButton>
-                                            </Tooltip>
-
                                         </Box>
+
                                         <Button
                                             variant="contained"
-                                            color="primary"
+                                            color="info"
                                             fullWidth
-                                            startIcon={<AddIcon />}
-                                            onClick={() => router.push('/expense')}
+                                            startIcon={<PersonAddIcon />}
+                                            onClick={() => setOpenAddMember(true)}
                                             sx={{
+                                                mt: 'auto',
                                                 borderRadius: 3,
                                                 py: 1.2,
                                                 textTransform: 'none',
                                                 fontWeight: 700,
-                                                boxShadow: '0 4px 15px rgba(108, 99, 255, 0.2)',
-                                                bgcolor: '#6C63FF',
+                                                boxShadow: '0 4px 15px rgba(2, 136, 209, 0.2)',
+                                                bgcolor: 'rgba(2, 136, 209, 0.1)',
+                                                color: 'info.main',
                                                 '&:hover': {
-                                                    bgcolor: '#5a52e0',
-                                                    boxShadow: '0 6px 20px rgba(108, 99, 255, 0.3)',
+                                                    bgcolor: 'rgba(2, 136, 209, 0.2)',
                                                     transform: 'translateY(-2px)'
                                                 },
                                                 transition: 'all 0.2s ease'
                                             }}
                                         >
-                                            Add Expense
+                                            Add Member
                                         </Button>
                                     </Box>
                                 ) : (
@@ -1000,9 +986,29 @@ export default function Dashboard() {
                                 <Box className="stat-icon" sx={{ transition: 'all 0.3s ease', position: 'absolute', top: -15, right: -15, opacity: 0.15, color: 'warning.main' }}>
                                     <FormatListBulletedIcon sx={{ fontSize: 110 }} />
                                 </Box>
-                                <Typography variant="subtitle2" sx={{ fontWeight: 800, color: 'warning.main', textTransform: 'uppercase', letterSpacing: '0.1em', mb: 2 }}>
-                                    Buy List ({pendingTodos.length})
-                                </Typography>
+                                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                                    <Typography variant="subtitle2" sx={{ fontWeight: 800, color: 'warning.main', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+                                        Buy List ({pendingTodos.length})
+                                    </Typography>
+                                    <Button
+                                        variant="contained"
+                                        size="small"
+                                        startIcon={<AddIcon />}
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            router.push('/expense');
+                                        }}
+                                        sx={{
+                                            borderRadius: 2,
+                                            textTransform: 'none',
+                                            fontWeight: 700,
+                                            bgcolor: '#6C63FF',
+                                            '&:hover': { bgcolor: '#5a52e0' }
+                                        }}
+                                    >
+                                        Expense
+                                    </Button>
+                                </Box>
 
                                 <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 1.5, position: 'relative', zIndex: 1 }}>
                                     {pendingTodos.length === 0 ? (
