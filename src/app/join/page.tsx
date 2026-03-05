@@ -88,7 +88,7 @@ function JoinContent() {
     }
 
     return (
-        <main style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', background: '#f8fafc', py: 4 }}>
+        <Box component="main" sx={{ minHeight: '100vh', display: 'flex', alignItems: 'center', background: '#f8fafc', py: 4 }}>
             <Container maxWidth="sm">
                 <Paper className="glass" sx={{
                     p: { xs: 4, md: 6 },
@@ -180,7 +180,7 @@ function JoinContent() {
                     </Box>
                 </Paper>
             </Container>
-        </main>
+        </Box>
     );
 }
 

@@ -2584,7 +2584,7 @@ export default function Dashboard() {
                     </Box>
 
                     <Grid container spacing={2}>
-                        <Grid item xs={4}>
+                        <Grid size={4}>
                             <Stack alignItems="center" spacing={1}>
                                 <IconButton
                                     onClick={() => {
@@ -2607,7 +2607,7 @@ export default function Dashboard() {
                             </Stack>
                         </Grid>
 
-                        <Grid item xs={4}>
+                        <Grid size={4}>
                             <Stack alignItems="center" spacing={1}>
                                 <IconButton
                                     onClick={() => {
@@ -2630,7 +2630,7 @@ export default function Dashboard() {
                             </Stack>
                         </Grid>
 
-                        <Grid item xs={4}>
+                        <Grid size={4}>
                             <Stack alignItems="center" spacing={1}>
                                 <IconButton
                                     onClick={() => {
