@@ -1,6 +1,8 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import useSWR from 'swr';
 import Container from '@mui/material/Container';
 import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
@@ -39,6 +41,7 @@ import { MessengerIcon } from '@/components/Icons';
 import WorkIcon from '@mui/icons-material/Work';
 import ContactSupportIcon from '@mui/icons-material/ContactSupport';
 import AccountTreeIcon from '@mui/icons-material/AccountTree';
+import HourglassEmptyIcon from '@mui/icons-material/HourglassEmpty';
 import NotificationsIcon from '@mui/icons-material/Notifications';
 import Dialog from '@mui/material/Dialog';
 import DialogTitle from '@mui/material/DialogTitle';
@@ -111,6 +114,89 @@ export default function Profile() {
     }, [dbUser]);
 
     const { showToast } = useToast();
+    const router = useRouter();
+
+    const handleCancelJoinRequest = async () => {
+        if (!user?.email || !dbUser?.pendingHouseId) return;
+        setLoading(true);
+        try {
+            const res = await fetch('/api/houses/join-requests', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    houseId: dbUser.pendingHouseId,
+                    email: user.email,
+                    action: 'cancel'
+                })
+            });
+            if (res.ok) {
+                showToast('Join request cancelled successfully.', 'success');
+                mutateUser();
+            } else {
+                showToast('Failed to cancel request.', 'error');
+            }
+        } catch (err) {
+            console.error('Error cancelling join request:', err);
+            showToast('An error occurred.', 'error');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleAcceptInvite = async () => {
+        if (!user?.email || !dbUser?.pendingHouseId) return;
+        setLoading(true);
+        try {
+            const res = await fetch('/api/houses/join-requests', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    houseId: dbUser.pendingHouseId,
+                    email: user.email,
+                    action: 'accept_invite'
+                })
+            });
+            if (res.ok) {
+                showToast('Welcome to the house!', 'success');
+                mutateUser();
+                mutateHouse();
+            } else {
+                showToast('Failed to accept invitation.', 'error');
+            }
+        } catch (err) {
+            console.error('Error accepting invite:', err);
+            showToast('An error occurred.', 'error');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleDeclineInvite = async () => {
+        if (!user?.email || !dbUser?.pendingHouseId) return;
+        setLoading(true);
+        try {
+            const res = await fetch('/api/houses/join-requests', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    houseId: dbUser.pendingHouseId,
+                    email: user.email,
+                    action: 'decline_invite'
+                })
+            });
+            if (res.ok) {
+                showToast('Invitation declined.', 'info');
+                mutateUser();
+            } else {
+                showToast('Failed to decline invitation.', 'error');
+            }
+        } catch (err) {
+            console.error('Error declining invite:', err);
+            showToast('An error occurred.', 'error');
+        } finally {
+            setLoading(false);
+        }
+    };
 
     // Derived state
     interface HouseDetails {
@@ -1243,30 +1329,155 @@ export default function Profile() {
                             </Box>
                         ) : (
                             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                                <Typography variant="body2" color="text.secondary">
-                                    You&apos;re not in a house yet. Create one below, or share your email — <strong>{user?.email}</strong> — so a housemate can add you.
-                                </Typography>
-                                <form onSubmit={handleCreateHouse}>
-                                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-                                        <TextField label="House Name" fullWidth size="small" value={houseName} onChange={(e) => setHouseName(e.target.value)} required />
-                                        <TextField select label="House Type" value={typeOfHouse} onChange={(e) => setTypeOfHouse(e.target.value as 'expenses' | 'meals_and_expenses')} fullWidth size="small">
-                                            <MenuItem value="expenses">Expenses Tracking Only</MenuItem>
-                                            <MenuItem value="meals_and_expenses">Meal and Expenses Tracking</MenuItem>
-                                        </TextField>
-                                        {typeOfHouse === 'meals_and_expenses' && (
-                                            <TextField select label="Meals Per Day" value={mealsPerDay} onChange={(e) => setMealsPerDay(e.target.value as any)} fullWidth size="small">
-                                                <MenuItem value={2}>Two Meals (Lunch, Dinner)</MenuItem>
-                                                <MenuItem value={3}>Three Meals (Breakfast, Lunch, Dinner)</MenuItem>
-                                            </TextField>
+                                {dbUser?.pendingHouseId && (
+                                    <Box sx={{
+                                        p: 2.5,
+                                        borderRadius: '16px',
+                                        background: dbUser.pendingHouseStatus === 'invited' ? 'rgba(108, 99, 255, 0.05)' : 'rgba(255, 152, 0, 0.05)',
+                                        border: `1px solid ${dbUser.pendingHouseStatus === 'invited' ? 'rgba(108, 99, 255, 0.2)' : 'rgba(255, 152, 0, 0.2)'}`,
+                                        mb: 1
+                                    }}>
+                                        <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2, mb: 2 }}>
+                                            <Box sx={{
+                                                p: 1,
+                                                borderRadius: '12px',
+                                                background: dbUser.pendingHouseStatus === 'invited' ? 'rgba(108, 99, 255, 0.1)' : 'rgba(255, 152, 0, 0.1)',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center'
+                                            }}>
+                                                {dbUser.pendingHouseStatus === 'invited' ? (
+                                                    <NotificationsIcon sx={{ color: '#6C63FF', fontSize: 24 }} />
+                                                ) : (
+                                                    <HourglassEmptyIcon sx={{ color: '#ff9800', fontSize: 24 }} />
+                                                )}
+                                            </Box>
+                                            <Box sx={{ flex: 1 }}>
+                                                <Typography variant="subtitle2" sx={{
+                                                    fontWeight: 900,
+                                                    color: dbUser.pendingHouseStatus === 'invited' ? '#6C63FF' : '#ff9800',
+                                                    textTransform: 'uppercase',
+                                                    letterSpacing: '0.1em',
+                                                    mb: 0.5
+                                                }}>
+                                                    {dbUser.pendingHouseStatus === 'invited' ? 'New Invitation' : 'Request Pending'}
+                                                </Typography>
+                                                <Typography variant="body2" sx={{ fontWeight: 700 }}>
+                                                    {dbUser.pendingHouseStatus === 'invited'
+                                                        ? `You have been invited to join ${dbUser.pendingHouseName || 'a house'}.`
+                                                        : `Waiting for ${dbUser.pendingHouseName || 'the house'} to approve your join request.`
+                                                    }
+                                                </Typography>
+                                            </Box>
+                                        </Box>
+
+                                        {dbUser.pendingHouseStatus === 'invited' ? (
+                                            <Box sx={{ display: 'flex', gap: 1 }}>
+                                                <Button
+                                                    fullWidth
+                                                    variant="contained"
+                                                    color="primary"
+                                                    size="small"
+                                                    onClick={handleAcceptInvite}
+                                                    disabled={loading}
+                                                    sx={{
+                                                        borderRadius: '12px',
+                                                        textTransform: 'none',
+                                                        fontWeight: 800,
+                                                        bgcolor: '#6C63FF',
+                                                        '&:hover': { bgcolor: '#5b54e6' }
+                                                    }}
+                                                >
+                                                    {loading ? 'Processing...' : 'Accept'}
+                                                </Button>
+                                                <Button
+                                                    fullWidth
+                                                    variant="outlined"
+                                                    color="inherit"
+                                                    size="small"
+                                                    onClick={handleDeclineInvite}
+                                                    disabled={loading}
+                                                    sx={{
+                                                        borderRadius: '12px',
+                                                        textTransform: 'none',
+                                                        fontWeight: 800,
+                                                        borderColor: 'rgba(255,255,255,0.1)',
+                                                        '&:hover': { borderColor: 'rgba(255,255,255,0.2)', bgcolor: 'rgba(255,255,255,0.02)' }
+                                                    }}
+                                                >
+                                                    Decline
+                                                </Button>
+                                            </Box>
+                                        ) : (
+                                            <Button
+                                                fullWidth
+                                                variant="outlined"
+                                                color="error"
+                                                size="small"
+                                                onClick={handleCancelJoinRequest}
+                                                disabled={loading}
+                                                sx={{
+                                                    borderRadius: '12px',
+                                                    textTransform: 'none',
+                                                    fontWeight: 800,
+                                                    borderColor: 'rgba(211, 47, 47, 0.3)',
+                                                    bgcolor: 'rgba(211, 47, 47, 0.02)',
+                                                    '&:hover': {
+                                                        bgcolor: 'rgba(211, 47, 47, 0.05)',
+                                                        borderColor: 'rgba(211, 47, 47, 0.5)'
+                                                    }
+                                                }}
+                                            >
+                                                {loading ? 'Cancelling...' : 'Cancel Request'}
+                                            </Button>
                                         )}
-                                        <TextField select label="Default Currency" value={newHouseCurrency} onChange={(e) => setNewHouseCurrency(e.target.value)} fullWidth size="small">
-                                            <MenuItem value="USD">Dollar ($)</MenuItem>
-                                            <MenuItem value="EUR">Euro (€)</MenuItem>
-                                            <MenuItem value="BDT">Bangladeshi Taka (৳)</MenuItem>
-                                        </TextField>
-                                        <Button type="submit" variant="contained" disabled={loading} sx={{ alignSelf: 'flex-start' }}>Create House</Button>
                                     </Box>
-                                </form>
+                                )}
+
+                                {!dbUser?.pendingHouseId && (
+                                    <>
+                                        <Typography variant="body2" color="text.secondary">
+                                            You&apos;re not in a house yet. Create one below, or share your email — <strong>{user?.email}</strong> — so a housemate can add you.
+                                        </Typography>
+                                        <form onSubmit={handleCreateHouse}>
+                                            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+                                                <TextField label="House Name" fullWidth size="small" value={houseName} onChange={(e) => setHouseName(e.target.value)} required />
+                                                <TextField select label="House Type" value={typeOfHouse} onChange={(e) => setTypeOfHouse(e.target.value as 'expenses' | 'meals_and_expenses')} fullWidth size="small">
+                                                    <MenuItem value="expenses">Expenses Tracking Only</MenuItem>
+                                                    <MenuItem value="meals_and_expenses">Meal and Expenses Tracking</MenuItem>
+                                                </TextField>
+                                                {typeOfHouse === 'meals_and_expenses' && (
+                                                    <TextField select label="Meals Per Day" value={mealsPerDay} onChange={(e) => setMealsPerDay(e.target.value as any)} fullWidth size="small">
+                                                        <MenuItem value={2}>Two Meals (Lunch, Dinner)</MenuItem>
+                                                        <MenuItem value={3}>Three Meals (Breakfast, Lunch, Dinner)</MenuItem>
+                                                    </TextField>
+                                                )}
+                                                <TextField select label="Default Currency" value={newHouseCurrency} onChange={(e) => setNewHouseCurrency(e.target.value)} fullWidth size="small">
+                                                    <MenuItem value="USD">Dollar ($)</MenuItem>
+                                                    <MenuItem value="EUR">Euro (€)</MenuItem>
+                                                    <MenuItem value="BDT">Bangladeshi Taka (৳)</MenuItem>
+                                                </TextField>
+                                                <Button
+                                                    type="submit"
+                                                    variant="contained"
+                                                    fullWidth
+                                                    disabled={loading}
+                                                    startIcon={<HomeIcon />}
+                                                    sx={{
+                                                        mt: 1,
+                                                        borderRadius: '12px',
+                                                        py: 1,
+                                                        fontWeight: 800,
+                                                        textTransform: 'none',
+                                                        background: 'linear-gradient(45deg, #6C63FF 30%, #FF6584 90%)',
+                                                    }}
+                                                >
+                                                    {loading ? 'Creating...' : 'Create House'}
+                                                </Button>
+                                            </Box>
+                                        </form>
+                                    </>
+                                )}
                             </Box>
                         )}
                     </Paper>

@@ -31,17 +31,12 @@ export async function POST(request: Request) {
         }
         const houseData = houseSnap.data()!;
 
-        await houseRef.set({
-            members: FieldValue.arrayUnion(email),
-            memberDetails: {
-                [email]: {
-                    role: 'member',
-                    rentAmount: 0
-                }
-            }
-        }, { merge: true });
-
-        await userRef.update({ houseId: houseId });
+        // Create an invitation status on the user document instead of adding directly
+        await userRef.update({
+            pendingHouseId: houseId,
+            pendingHouseName: houseData.name || 'Anonymous House',
+            pendingHouseStatus: 'invited'
+        });
 
         // Notify the user who was added and existing members
         try {
@@ -61,7 +56,7 @@ export async function POST(request: Request) {
             await createNotification({
                 userId: email,
                 type: 'house',
-                message: `added you to ${houseData.name || 'the house'}.`,
+                message: `invited you to join ${houseData.name || 'the house'}.`,
                 senderName,
                 senderPhotoUrl
             });

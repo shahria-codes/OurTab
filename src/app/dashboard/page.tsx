@@ -18,6 +18,7 @@ import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
 import EuroIcon from '@mui/icons-material/Euro';
 import CurrencyExchangeIcon from '@mui/icons-material/CurrencyExchange';
 import GroupIcon from '@mui/icons-material/Group';
+import GroupAddIcon from '@mui/icons-material/GroupAdd';
 import RestaurantIcon from '@mui/icons-material/Restaurant';
 import TimerOffIcon from '@mui/icons-material/TimerOff';
 import ArrowBackIosIcon from '@mui/icons-material/ArrowBackIos';
@@ -370,6 +371,7 @@ export default function Dashboard() {
             showToast('Error cancelling deposit', 'error');
         }
     };
+
 
 
     const handlePreviousMonth = () => {
@@ -1061,6 +1063,7 @@ export default function Dashboard() {
                             </Paper>
                         </Grid>
                     </Grid>
+
 
                     {/* Pending Payment Requests (Receiver View) */}
                     {house?.typeOfHouse !== 'meals_and_expenses' && house && (() => {
