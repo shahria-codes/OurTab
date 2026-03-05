@@ -215,7 +215,22 @@ export default function Dashboard() {
 
     const handleShareHouse = async () => {
         if (!house?.id) return;
-        setOpenShareDialog(true);
+        const { url, text } = getShareLinks();
+        if (navigator.share) {
+            try {
+                await navigator.share({
+                    title: `Join ${house.name} on OurTab`,
+                    text: text,
+                    url: url
+                });
+            } catch (err) {
+                if ((err as Error).name !== 'AbortError') {
+                    setOpenShareDialog(true);
+                }
+            }
+        } else {
+            setOpenShareDialog(true);
+        }
     };
 
     const getShareLinks = () => {
