@@ -35,6 +35,7 @@ import FeedbackIcon from '@mui/icons-material/Feedback';
 import SendIcon from '@mui/icons-material/Send';
 import WhatsAppIcon from '@mui/icons-material/WhatsApp';
 import FacebookIcon from '@mui/icons-material/Facebook';
+import { MessengerIcon } from '@/components/Icons';
 import WorkIcon from '@mui/icons-material/Work';
 import ContactSupportIcon from '@mui/icons-material/ContactSupport';
 import AccountTreeIcon from '@mui/icons-material/AccountTree';
@@ -758,7 +759,7 @@ export default function Profile() {
                                     transition: 'all 0.3s ease',
                                     '&:hover': { transform: 'scale(1.05)', background: 'rgba(0, 132, 255, 0.08)' }
                                 }}>
-                                    <FacebookIcon sx={{ color: '#0084FF', fontSize: 24 }} />
+                                    <MessengerIcon sx={{ color: '#0084FF', fontSize: 24 }} />
                                     <Typography variant="caption" sx={{ fontWeight: 800, opacity: 0.5 }}>Messenger</Typography>
                                     <Typography variant="body2" noWrap sx={{ fontWeight: 700 }}>
                                         {dbUser?.messenger ? (

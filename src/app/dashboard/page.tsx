@@ -62,6 +62,7 @@ import WhatsAppIcon from '@mui/icons-material/WhatsApp';
 import FacebookIcon from '@mui/icons-material/Facebook';
 import TelegramIcon from '@mui/icons-material/Telegram';
 import SendIcon from '@mui/icons-material/Send';
+import { MessengerIcon } from '@/components/Icons';
 import NotificationBell from '@/components/NotificationBell';
 import InputAdornment from '@mui/material/InputAdornment';
 import EmailIcon from '@mui/icons-material/Email';
@@ -2407,7 +2408,7 @@ export default function Dashboard() {
                                         </Button>
                                         <Button
                                             variant="outlined"
-                                            startIcon={<FacebookIcon />}
+                                            startIcon={<MessengerIcon />}
                                             disabled={!selectedMember.messenger}
                                             onClick={() => selectedMember.messenger && window.open(selectedMember.messenger.startsWith('http') ? selectedMember.messenger : `https://m.me/${selectedMember.messenger}`, '_blank')}
                                             sx={{ borderRadius: 3, textTransform: 'none', fontWeight: 700 }}
@@ -2639,7 +2640,7 @@ export default function Dashboard() {
                                         transition: 'all 0.3s ease'
                                     }}
                                 >
-                                    <FacebookIcon />
+                                    <MessengerIcon />
                                 </IconButton>
                                 <Typography variant="caption" sx={{ fontWeight: 700 }}>Messenger</Typography>
                             </Stack>
