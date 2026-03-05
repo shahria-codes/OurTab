@@ -201,6 +201,18 @@ export default function NotificationsPage() {
                         })
                     });
                     break;
+
+                case 'approve_join':
+                    res = await fetch('/api/houses/join-requests', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            houseId: meta.houseId,
+                            email: meta.senderEmail,
+                            action: action === 'approve' ? 'approve' : 'reject'
+                        })
+                    });
+                    break;
             }
 
             if (res && res.ok) {
@@ -226,7 +238,8 @@ export default function NotificationsPage() {
 
         const showReject =
             notification.actionType === 'approve_payment' ||
-            notification.actionType === 'approve_fund_deposit';
+            notification.actionType === 'approve_fund_deposit' ||
+            notification.actionType === 'approve_join';
 
         return (
             <Box sx={{ mt: 1.5, display: 'flex', gap: 1, flexWrap: 'wrap' }} onClick={e => e.stopPropagation()}>

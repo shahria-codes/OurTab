@@ -13,6 +13,9 @@ export interface UserData {
     iban?: string;
     birthday?: string; // Format: "MM-DD"
     wallet?: string;
+    pendingHouseId?: string;
+    pendingHouseName?: string;
+    pendingHouseStatus?: 'requested' | 'invited';
 }
 
 const fetcher = (url: string) => fetch(url).then((res) => {

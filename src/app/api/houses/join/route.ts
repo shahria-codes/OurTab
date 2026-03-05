@@ -56,22 +56,26 @@ export async function POST(request: Request) {
         }
         const houseData = houseSnap.data()!;
 
-        await houseRef.set({
-            members: FieldValue.arrayUnion(email),
-            memberDetails: {
-                [email]: {
-                    role: 'member',
-                    rentAmount: 0,
-                    mealsEnabled: true
-                }
-            }
-        }, { merge: true });
+        // Create a Join Request instead of adding directly
+        const requestRef = houseRef.collection('joinRequests').doc(email);
+        await requestRef.set({
+            email,
+            name: userData.name || email.split('@')[0],
+            photoUrl: userData.photoUrl || '',
+            requestedAt: FieldValue.serverTimestamp(),
+            status: 'pending'
+        });
 
-        await userRef.update({ houseId: houseId });
+        // Store pendingHouseId and status in user document for easier status check on profile
+        await adminDb.collection('users').doc(email).update({
+            pendingHouseId: houseId,
+            pendingHouseName: houseData.name || 'Anonymous House',
+            pendingHouseStatus: 'requested'
+        });
 
-        // Notify existing members
+        // Notify existing members about the request
         try {
-            const newMemberName = userData.name || email.split('@')[0];
+            const requesterName = userData.name || email.split('@')[0];
             const senderPhotoUrl = userData.photoUrl || '';
 
             const existingMembers = houseData.members || [];
@@ -79,16 +83,21 @@ export async function POST(request: Request) {
                 createNotification({
                     userId: m,
                     type: 'house',
-                    message: `has joined ${houseData.name || 'the house'} via invitation link.`,
-                    senderName: newMemberName,
-                    senderPhotoUrl
+                    message: `has requested to join ${houseData.name || 'the house'}.`,
+                    senderName: requesterName,
+                    senderPhotoUrl,
+                    actionType: 'approve_join',
+                    metadata: {
+                        houseId: houseId,
+                        senderEmail: email // The requester's email
+                    }
                 })
             );
             await Promise.all(notifications);
 
-        } catch (notifErr) { console.error('Error sending join notifications:', notifErr); }
+        } catch (notifErr) { console.error('Error sending join request notifications:', notifErr); }
 
-        return NextResponse.json({ success: true });
+        return NextResponse.json({ success: true, message: 'Join request sent. Waiting for approval.' });
     } catch (error) {
         console.error('Error joining house:', error);
         return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
