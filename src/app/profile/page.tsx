@@ -54,8 +54,17 @@ import { formatDetailedDateTime } from '@/utils/date';
 
 export default function Profile() {
     const { user, currency, updateCurrency, loading: authLoading, dbUser, house, mutateUser, mutateHouse, logout, isNotificationSupported, notificationPermission, requestNotificationPermission } = useAuth();
-    const [newHouseCurrency, setNewHouseCurrency] = useState('USD'); // local picker for Create House form
-    const [typeOfHouse, setTypeOfHouse] = useState<'expenses' | 'meals_and_expenses'>('expenses');
+    const [newHouseCurrency, setNewHouseCurrency] = useState('BDT'); // local picker for Create House form
+    const [typeOfHouse, setTypeOfHouse] = useState<'expenses' | 'meals_and_expenses'>('meals_and_expenses');
+
+    // Sync default currency when house type changes
+    React.useEffect(() => {
+        if (typeOfHouse === 'meals_and_expenses') {
+            setNewHouseCurrency('BDT');
+        } else {
+            setNewHouseCurrency('EUR');
+        }
+    }, [typeOfHouse]);
     const [mealsPerDay, setMealsPerDay] = useState<2 | 3>(3);
     const [houseName, setHouseName] = useState('');
     const [loading, setLoading] = useState(false);
@@ -574,19 +583,19 @@ export default function Profile() {
                     {/* ── Card 1: User Info (Premium Header) ── */}
                     <Paper className="glass animate-stagger" sx={{ p: 0, overflow: 'hidden', background: 'transparent', transitionDelay: '0.1s' }}>
                         <Box sx={{
-                            p: 3,
+                            p: 2,
                             background: 'linear-gradient(135deg, rgba(255,255,255,0.05) 0%, transparent 100%)',
                             position: 'relative'
                         }}>
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                                 <Box sx={{ position: 'relative' }}>
                                     <Avatar
                                         src={user.photoURL || ''}
                                         sx={{
-                                            width: 86,
-                                            height: 86,
-                                            border: '3px solid rgba(255,255,255,0.2)',
-                                            boxShadow: '0 8px 16px rgba(0,0,0,0.2)'
+                                            width: 60,
+                                            height: 60,
+                                            border: '2px solid rgba(255,255,255,0.2)',
+                                            boxShadow: '0 4px 12px rgba(0,0,0,0.2)'
                                         }}
                                     />
                                     <Box className="shimmer" sx={{
@@ -601,14 +610,14 @@ export default function Profile() {
                                     }} />
                                 </Box>
                                 <Box sx={{ flex: 1, overflow: 'hidden' }}>
-                                    <Typography variant="h5" sx={{ fontWeight: 900, mb: 0.5, letterSpacing: '-0.02em', color: 'text.primary' }}>
+                                    <Typography variant="h6" sx={{ fontWeight: 900, mb: 0, letterSpacing: '-0.02em', color: 'text.primary' }}>
                                         {user.displayName}
                                     </Typography>
-                                    <Typography variant="body2" sx={{ opacity: 0.6, mb: 2, fontWeight: 500 }}>
+                                    <Typography variant="caption" sx={{ opacity: 0.6, mb: 1, fontWeight: 500, display: 'block' }}>
                                         {user.email}
                                     </Typography>
 
-                                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.8 }}>
                                         {/* Profession Badge */}
                                         {editingProfession ? (
                                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -637,9 +646,9 @@ export default function Profile() {
                                                     display: 'inline-flex',
                                                     alignItems: 'center',
                                                     gap: 1,
-                                                    px: 1.5,
-                                                    py: 0.5,
-                                                    borderRadius: '20px',
+                                                    px: 1,
+                                                    py: 0.25,
+                                                    borderRadius: '16px',
                                                     background: 'rgba(124, 77, 255, 0.1)',
                                                     border: '1px solid rgba(124, 77, 255, 0.2)',
                                                     width: 'fit-content',
@@ -715,9 +724,9 @@ export default function Profile() {
                                                     display: 'inline-flex',
                                                     alignItems: 'center',
                                                     gap: 1,
-                                                    px: 1.5,
-                                                    py: 0.5,
-                                                    borderRadius: '20px',
+                                                    px: 1,
+                                                    py: 0.25,
+                                                    borderRadius: '16px',
                                                     background: 'rgba(255, 105, 180, 0.1)',
                                                     border: '1px solid rgba(255, 105, 180, 0.2)',
                                                     width: 'fit-content',
@@ -755,8 +764,9 @@ export default function Profile() {
                                                 display: 'flex',
                                                 alignItems: 'center',
                                                 gap: 1,
-                                                mt: 1,
-                                                opacity: 0.8
+                                                mt: 0.5,
+                                                opacity: 0.8,
+                                                width: '100%'
                                             }}>
                                                 <HomeIcon sx={{ fontSize: 16, color: 'primary.main' }} />
                                                 {editingHouseName ? (
@@ -796,209 +806,179 @@ export default function Profile() {
                         </Box>
                     </Paper>
 
-                    {/* ── Card 2: Social Records (Premium Grid) ── */}
-                    <Paper className="glass animate-stagger" sx={{ p: 3, background: 'transparent', transitionDelay: '0.2s' }}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
-                            <Typography variant="subtitle2" sx={{ fontWeight: 900, fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.1em', opacity: 0.5 }}>
-                                Social Network
-                            </Typography>
-                            {!editingSocial && (
-                                <IconButton size="small" onClick={() => setEditingSocial(true)} sx={{ background: 'rgba(255,255,255,0.05)', '&:hover': { background: 'rgba(255,255,255,0.1)' } }}>
-                                    <EditIcon sx={{ fontSize: 14 }} />
-                                </IconButton>
-                            )}
-                        </Box>
-
-                        {editingSocial ? (
-                            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
-                                <TextField
-                                    label="WhatsApp Number"
-                                    size="small"
-                                    placeholder="+8801..."
-                                    value={whatsappValue}
-                                    onChange={(e) => setWhatsappValue(e.target.value)}
-                                    fullWidth
-                                    sx={{ '& .MuiInputBase-root': { borderRadius: '12px' } }}
-                                />
-                                <TextField
-                                    label="Messenger Username/Link"
-                                    size="small"
-                                    placeholder="fb.com/username"
-                                    value={messengerValue}
-                                    onChange={(e) => setMessengerValue(e.target.value)}
-                                    fullWidth
-                                    sx={{ '& .MuiInputBase-root': { borderRadius: '12px' } }}
-                                />
-                                <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
-                                    <Button size="small" sx={{ borderRadius: '20px' }} onClick={() => {
-                                        setEditingSocial(false);
-                                        setWhatsappValue(dbUser?.whatsapp || '');
-                                        setMessengerValue(dbUser?.messenger || '');
-                                    }}>Cancel</Button>
-                                    <Button size="small" variant="contained" sx={{ borderRadius: '20px', px: 3 }} disabled={savingFields} onClick={async () => {
-                                        if (await handleSaveFields({ whatsapp: whatsappValue.trim(), messenger: messengerValue.trim() })) {
-                                            setEditingSocial(false);
-                                        }
-                                    }}>Save Links</Button>
-                                </Box>
-                            </Box>
-                        ) : (
-                            <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2 }}>
-                                <Box sx={{
-                                    p: 2,
-                                    borderRadius: '16px',
-                                    background: 'rgba(37, 211, 102, 0.05)',
-                                    border: '1px solid rgba(37, 211, 102, 0.1)',
-                                    display: 'flex',
-                                    flexDirection: 'column',
-                                    gap: 1,
-                                    transition: 'all 0.3s ease',
-                                    '&:hover': { transform: 'scale(1.05)', background: 'rgba(37, 211, 102, 0.08)' }
-                                }}>
-                                    <WhatsAppIcon sx={{ color: '#25D366', fontSize: 24 }} />
-                                    <Typography variant="caption" sx={{ fontWeight: 800, opacity: 0.5 }}>WhatsApp</Typography>
-                                    <Typography variant="body2" noWrap sx={{ fontWeight: 700 }}>
-                                        {dbUser?.whatsapp ? (
-                                            <a href={`https://wa.me/${dbUser.whatsapp.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none', color: 'inherit' }}>
-                                                {dbUser.whatsapp}
-                                            </a>
-                                        ) : 'Not linked'}
+                    {/* ── Card 2: Personal Details & Preferences (Combined Card) ── */}
+                    <Paper className="glass animate-stagger" sx={{ p: 2, background: 'transparent', transitionDelay: '0.2s', mt: 1.5 }}>
+                        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2 }}>
+                            {/* Social Section */}
+                            <Box>
+                                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5 }}>
+                                    <Typography variant="subtitle2" sx={{ fontWeight: 900, fontSize: '0.65rem', textTransform: 'uppercase', letterSpacing: '0.1em', opacity: 0.5 }}>
+                                        Social Network
                                     </Typography>
+                                    {!editingSocial && (
+                                        <IconButton size="small" onClick={() => setEditingSocial(true)} sx={{ p: 0.5 }}>
+                                            <EditIcon sx={{ fontSize: 12 }} />
+                                        </IconButton>
+                                    )}
                                 </Box>
 
-                                <Box sx={{
-                                    p: 2,
-                                    borderRadius: '16px',
-                                    background: 'rgba(0, 132, 255, 0.05)',
-                                    border: '1px solid rgba(0, 132, 255, 0.1)',
-                                    display: 'flex',
-                                    flexDirection: 'column',
-                                    gap: 1,
-                                    transition: 'all 0.3s ease',
-                                    '&:hover': { transform: 'scale(1.05)', background: 'rgba(0, 132, 255, 0.08)' }
-                                }}>
-                                    <MessengerIcon sx={{ color: '#0084FF', fontSize: 24 }} />
-                                    <Typography variant="caption" sx={{ fontWeight: 800, opacity: 0.5 }}>Messenger</Typography>
-                                    <Typography variant="body2" noWrap sx={{ fontWeight: 700 }}>
-                                        {dbUser?.messenger ? (
-                                            <a href={dbUser.messenger.startsWith('http') ? dbUser.messenger : `https://m.me/${dbUser.messenger}`} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none', color: 'inherit' }}>
-                                                Open Chat
-                                            </a>
-                                        ) : 'Not linked'}
-                                    </Typography>
-                                </Box>
-                            </Box>
-                        )}
-                    </Paper>
-
-                    {/* ── Card 3: Banking Details (Conditional Premium) ── */}
-                    {hasHouse && houseDetails?.typeOfHouse === 'expenses' && (
-                        <Paper className="glass animate-stagger" sx={{ p: 3, background: 'transparent', transitionDelay: '0.3s' }}>
-                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                                    <Box sx={{ p: 1, borderRadius: '10px', background: 'rgba(var(--primary-rgb), 0.1)' }}>
-                                        <AccountBalanceIcon color="primary" sx={{ fontSize: 20 }} />
+                                {editingSocial ? (
+                                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+                                        <TextField label="WhatsApp" size="small" value={whatsappValue} onChange={(e) => setWhatsappValue(e.target.value)} fullWidth />
+                                        <TextField label="Messenger" size="small" value={messengerValue} onChange={(e) => setMessengerValue(e.target.value)} fullWidth />
+                                        <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
+                                            <Button size="small" onClick={() => setEditingSocial(false)}>Cancel</Button>
+                                            <Button size="small" variant="contained" onClick={async () => {
+                                                if (await handleSaveFields({ whatsapp: whatsappValue.trim(), messenger: messengerValue.trim() })) setEditingSocial(false);
+                                            }}>Save</Button>
+                                        </Box>
                                     </Box>
-                                    <Typography variant="subtitle1" fontWeight={900} sx={{ letterSpacing: '-0.01em' }}>Banking Details</Typography>
-                                </Box>
-                                {!editingIban && (
-                                    <IconButton size="small" onClick={() => setEditingIban(true)} sx={{ background: 'rgba(255,255,255,0.05)' }}>
-                                        <EditIcon sx={{ fontSize: 16 }} />
-                                    </IconButton>
+                                ) : (
+                                    <Box sx={{ display: 'flex', gap: 1 }}>
+                                        <Box sx={{ flex: 1, p: 1.5, borderRadius: '12px', background: 'rgba(37, 211, 102, 0.05)', border: '1px solid rgba(37, 211, 102, 0.1)', display: 'flex', alignItems: 'center', gap: 1 }}>
+                                            <WhatsAppIcon sx={{ color: '#25D366', fontSize: 18 }} />
+                                            <Box sx={{ overflow: 'hidden' }}>
+                                                <Typography variant="caption" sx={{ fontWeight: 800, opacity: 0.5, display: 'block', fontSize: '0.6rem' }}>WhatsApp</Typography>
+                                                <Typography variant="caption" noWrap sx={{ fontWeight: 700, display: 'block' }}>
+                                                    {dbUser?.whatsapp ? (
+                                                        <a href={`https://wa.me/${dbUser.whatsapp.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none', color: 'inherit' }}>
+                                                            {dbUser.whatsapp}
+                                                        </a>
+                                                    ) : 'None'}
+                                                </Typography>
+                                            </Box>
+                                        </Box>
+                                        <Box sx={{ flex: 1, p: 1.5, borderRadius: '12px', background: 'rgba(0, 132, 255, 0.05)', border: '1px solid rgba(0, 132, 255, 0.1)', display: 'flex', alignItems: 'center', gap: 1 }}>
+                                            <MessengerIcon sx={{ color: '#0084FF', fontSize: 18 }} />
+                                            <Box sx={{ overflow: 'hidden' }}>
+                                                <Typography variant="caption" sx={{ fontWeight: 800, opacity: 0.5, display: 'block', fontSize: '0.6rem' }}>Messenger</Typography>
+                                                <Typography variant="caption" noWrap sx={{ fontWeight: 700, display: 'block' }}>
+                                                    {dbUser?.messenger ? (
+                                                        <a href={dbUser.messenger.startsWith('http') ? dbUser.messenger : `https://m.me/${dbUser.messenger}`} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none', color: 'inherit' }}>
+                                                            Open
+                                                        </a>
+                                                    ) : 'None'}
+                                                </Typography>
+                                            </Box>
+                                        </Box>
+                                    </Box>
                                 )}
                             </Box>
 
-                            {editingIban ? (
-                                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                                    <TextField
-                                        label="IBAN"
-                                        size="small"
-                                        placeholder="DE89..."
-                                        value={ibanValue}
-                                        onChange={(e) => setIbanValue(e.target.value)}
-                                        fullWidth
-                                        autoFocus
-                                        sx={{ '& .MuiInputBase-root': { borderRadius: '12px' } }}
-                                    />
-                                    <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
-                                        <Button size="small" onClick={() => {
-                                            setEditingIban(false);
-                                            setIbanValue(dbUser?.iban || '');
-                                        }}>Cancel</Button>
-                                        <Button size="small" variant="contained" sx={{ borderRadius: '20px', px: 3 }} disabled={savingFields} onClick={async () => {
-                                            if (await handleSaveFields({ iban: ibanValue.trim() })) {
-                                                setEditingIban(false);
-                                            }
-                                        }}>Save IBAN</Button>
+                            {/* Banking Section */}
+                            {hasHouse && houseDetails?.typeOfHouse === 'expenses' && (
+                                <Box>
+                                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5 }}>
+                                        <Typography variant="subtitle2" sx={{ fontWeight: 900, fontSize: '0.65rem', textTransform: 'uppercase', letterSpacing: '0.1em', opacity: 0.5 }}>
+                                            Banking Details
+                                        </Typography>
+                                        {!editingIban && (
+                                            <IconButton size="small" onClick={() => setEditingIban(true)} sx={{ p: 0.5 }}>
+                                                <EditIcon sx={{ fontSize: 12 }} />
+                                            </IconButton>
+                                        )}
                                     </Box>
-                                </Box>
-                            ) : (
-                                <Box sx={{
-                                    p: 2,
-                                    borderRadius: '12px',
-                                    background: 'rgba(255,255,255,0.03)',
-                                    border: '1px solid rgba(255,255,255,0.05)',
-                                    display: 'flex',
-                                    flexDirection: 'column',
-                                    gap: 0.5
-                                }}>
-                                    <Typography variant="caption" sx={{ color: 'text.disabled', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.1em', fontSize: '0.65rem' }}>IBAN</Typography>
-                                    <Typography variant="body2" sx={{ fontFamily: '"Roboto Mono", monospace', fontSize: '0.95rem', letterSpacing: '0.05em', fontWeight: 600 }} color={dbUser?.iban ? 'text.primary' : 'text.disabled'}>
-                                        {dbUser?.iban || 'Not configured'}
-                                    </Typography>
+
+                                    {editingIban ? (
+                                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+                                            <TextField label="IBAN" size="small" value={ibanValue} onChange={(e) => setIbanValue(e.target.value)} fullWidth />
+                                            <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
+                                                <Button size="small" onClick={() => setEditingIban(false)}>Cancel</Button>
+                                                <Button size="small" variant="contained" onClick={async () => {
+                                                    if (await handleSaveFields({ iban: ibanValue.trim() })) setEditingIban(false);
+                                                }}>Save</Button>
+                                            </Box>
+                                        </Box>
+                                    ) : (
+                                        <Box sx={{ p: 1.5, borderRadius: '12px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                                            <AccountBalanceIcon color="primary" sx={{ fontSize: 18 }} />
+                                            <Box>
+                                                <Typography variant="caption" sx={{ color: 'text.disabled', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.1em', fontSize: '0.6rem' }}>IBAN</Typography>
+                                                <Typography variant="caption" sx={{ fontFamily: '"Roboto Mono", monospace', fontWeight: 600, display: 'block' }} color={dbUser?.iban ? 'text.primary' : 'text.disabled'}>
+                                                    {dbUser?.iban || 'Not configured'}
+                                                </Typography>
+                                            </Box>
+                                        </Box>
+                                    )}
                                 </Box>
                             )}
-                        </Paper>
-                    )}
+                        </Box>
 
-                    {/* ── Card 4: Notification Settings ── */}
-                    {isNotificationSupported && (
-                        <Paper className="glass animate-stagger" sx={{ p: 3, background: 'transparent', transitionDelay: '0.4s' }}>
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 3 }}>
-                                <Box sx={{ p: 1, borderRadius: '10px', background: 'rgba(108, 99, 255, 0.1)' }}>
-                                    <NotificationsIcon sx={{ fontSize: 20, color: '#6C63FF' }} />
-                                </Box>
-                                <Typography variant="subtitle1" fontWeight={900}>Notification Settings</Typography>
-                            </Box>
+                        <Divider sx={{ my: 2, opacity: 0.1 }} />
 
-                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        {/* Notifications and Meal Status Group */}
+                        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2 }}>
+                            {/* Notifications */}
+                            {isNotificationSupported && (
                                 <Box>
-                                    <Typography variant="body2" sx={{ fontWeight: 700 }}>Push Notifications</Typography>
-                                    <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                                        {notificationPermission === 'granted' ? 'Currently enabled on this device' :
-                                            notificationPermission === 'denied' ? 'Blocked by browser' : 'Not yet enabled'}
-                                    </Typography>
-                                </Box>
-                                <Button
-                                    size="small"
-                                    variant={notificationPermission === 'granted' ? "outlined" : "contained"}
-                                    onClick={requestNotificationPermission}
-                                    disabled={notificationPermission === 'granted'}
-                                    sx={{
-                                        borderRadius: '12px',
-                                        textTransform: 'none',
-                                        fontWeight: 700,
-                                        bgcolor: notificationPermission === 'granted' ? 'transparent' : '#6C63FF',
-                                        color: notificationPermission === 'granted' ? '#6C63FF' : 'white',
-                                        '&:hover': { bgcolor: notificationPermission === 'granted' ? 'rgba(108, 99, 255, 0.05)' : '#5b54e6' }
-                                    }}
-                                >
-                                    {notificationPermission === 'granted' ? 'Enabled' : 'Enable'}
-                                </Button>
-                            </Box>
-                        </Paper>
-                    )}
-
-                    {/* ── Card 4: Meal Status ── */}
-                    {hasHouse && houseDetails?.typeOfHouse === 'meals_and_expenses' && (
-                        <Paper className="glass animate-stagger" sx={{ p: 3, background: 'transparent', transitionDelay: '0.35s' }}>
-                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                                    <Box sx={{ p: 1, borderRadius: '10px', background: 'rgba(255, 101, 132, 0.1)' }}>
-                                        <RestaurantMenuIcon sx={{ color: '#FF6584', fontSize: 20 }} />
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5 }}>
+                                        <NotificationsIcon sx={{ fontSize: 16, color: '#6C63FF' }} />
+                                        <Typography variant="subtitle2" sx={{ fontWeight: 900, fontSize: '0.65rem', textTransform: 'uppercase', letterSpacing: '0.1em', opacity: 0.5 }}>Notifications</Typography>
                                     </Box>
-                                    <Typography variant="subtitle1" fontWeight={900}>Meal Status</Typography>
+                                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', p: 1.5, borderRadius: '12px', background: 'rgba(108, 99, 255, 0.03)', border: '1px solid rgba(108, 99, 255, 0.05)' }}>
+                                        <Typography variant="caption" sx={{ fontWeight: 700 }}>Push Status</Typography>
+                                        <Button
+                                            size="small"
+                                            variant={notificationPermission === 'granted' ? "text" : "contained"}
+                                            onClick={requestNotificationPermission}
+                                            disabled={notificationPermission === 'granted'}
+                                            sx={{
+                                                borderRadius: '8px',
+                                                textTransform: 'none',
+                                                fontSize: '0.65rem',
+                                                py: 0.25,
+                                                minWidth: 'auto',
+                                                px: 1.5,
+                                                bgcolor: notificationPermission === 'granted' ? 'transparent' : '#6C63FF',
+                                                color: notificationPermission === 'granted' ? '#6C63FF' : 'white',
+                                            }}
+                                        >
+                                            {notificationPermission === 'granted' ? 'Enabled' : 'Enable'}
+                                        </Button>
+                                    </Box>
                                 </Box>
+                            )}
+
+                            {/* Meal Status Quick Toggle */}
+                            {hasHouse && houseDetails?.typeOfHouse === 'meals_and_expenses' && (
+                                <Box>
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5 }}>
+                                        <RestaurantMenuIcon sx={{ fontSize: 16, color: '#FF6584' }} />
+                                        <Typography variant="subtitle2" sx={{ fontWeight: 900, fontSize: '0.65rem', textTransform: 'uppercase', letterSpacing: '0.1em', opacity: 0.5 }}>Meal Status</Typography>
+                                    </Box>
+                                    <Box sx={{ p: 1.5, borderRadius: '12px', background: 'rgba(255, 101, 132, 0.03)', border: '1px solid rgba(255, 101, 132, 0.05)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                        {(() => {
+                                            const myDetails = (houseDetails.members?.find((m: any) => m.email === user.email)) as any;
+                                            const isOff = myDetails?.mealsEnabled === false;
+                                            return (
+                                                <Typography variant="caption" sx={{ fontWeight: 800, color: isOff ? 'warning.main' : 'success.main' }}>
+                                                    {isOff ? 'OFF' : 'ACTIVE'}
+                                                </Typography>
+                                            );
+                                        })()}
+                                        <Button
+                                            size="small"
+                                            variant="outlined"
+                                            sx={{ fontSize: '0.65rem', py: 0.25, minWidth: 'auto', px: 1.5, borderRadius: '8px' }}
+                                            onClick={() => {
+                                                const el = document.getElementById('meal-status-section');
+                                                if (el) el.scrollIntoView({ behavior: 'smooth' });
+                                            }}
+                                        >
+                                            Manage
+                                        </Button>
+                                    </Box>
+                                </Box>
+                            )}
+                        </Box>
+                    </Paper>
+
+                    {/* ── Card 3: Detailed Meal Management (if applicable) ── */}
+                    {hasHouse && houseDetails?.typeOfHouse === 'meals_and_expenses' && (
+                        <Paper id="meal-status-section" className="glass animate-stagger" sx={{ p: 2, background: 'transparent', transitionDelay: '0.3s', mt: 1.5 }}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+                                <RestaurantMenuIcon sx={{ color: '#FF6584', fontSize: 18 }} />
+                                <Typography variant="subtitle1" fontWeight={900} sx={{ fontSize: '0.9rem' }}>Detailed Meal Status</Typography>
                             </Box>
 
                             {(() => {
@@ -1122,7 +1102,11 @@ export default function Profile() {
                     )}
 
                     {/* ── Card 4: House Management ── */}
-                    <Paper className="glass animate-stagger" sx={{ p: 3, background: 'transparent', transitionDelay: '0.4s' }}>
+                    <Paper className="glass animate-stagger" sx={{ p: 2, background: 'transparent', transitionDelay: '0.4s', mt: 1.5 }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+                            <HomeIcon sx={{ color: 'primary.main', fontSize: 18 }} />
+                            <Typography variant="subtitle1" fontWeight={900} sx={{ fontSize: '0.9rem' }}>House Management</Typography>
+                        </Box>
 
                         {hasHouse && houseDetails ? (
                             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
@@ -1132,8 +1116,8 @@ export default function Profile() {
                                     <Box sx={{ mt: 2 }}>
                                         {/* Pending Meal-Off Requests */}
                                         {isManager && houseDetails.mealOffRequests && Object.keys(houseDetails.mealOffRequests).length > 0 && (
-                                            <Box sx={{ mb: 4, p: 2, borderRadius: '12px', border: '1px solid rgba(255, 101, 132, 0.2)', bgcolor: 'rgba(255, 101, 132, 0.02)' }}>
-                                                <Typography variant="subtitle2" sx={{ fontWeight: 900, mb: 1, color: '#FF6584' }}>Pending Meal-Off Requests</Typography>
+                                            <Box sx={{ mb: 2, p: 1.5, borderRadius: '12px', border: '1px solid rgba(255, 101, 132, 0.2)', bgcolor: 'rgba(255, 101, 132, 0.02)' }}>
+                                                <Typography variant="subtitle2" sx={{ fontWeight: 900, mb: 1, color: '#FF6584', fontSize: '0.7rem' }}>Pending Meal-Off Requests</Typography>
                                                 {Object.entries(houseDetails.mealOffRequests || {}).map(([email, req]: [string, any]) => {
                                                     const m = (houseDetails.members as any[])?.find((mem: any) => mem.email === email);
                                                     return (
@@ -1178,20 +1162,20 @@ export default function Profile() {
                                             </Box>
                                         )}
 
-                                        <Typography variant="subtitle2" sx={{ mb: 1.5, fontWeight: 'bold' }}>Member Settings</Typography>
+                                        <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 'bold', fontSize: '0.75rem', opacity: 0.7 }}>Member Settings</Typography>
                                         {((houseDetails.members || []) as any[]).map((member: any) => (
-                                            <Paper key={member.email} variant="outlined" sx={{ p: 1.5, mb: 1, display: 'flex', flexDirection: 'column', gap: 1 }}>
+                                            <Box key={member.email} sx={{ py: 1, mb: 0.5, px: 1, borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)', background: 'rgba(255,255,255,0.02)' }}>
                                                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                                                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flex: 1 }}>
-                                                        <Avatar src={member.photoUrl} sx={{ width: 24, height: 24, flexShrink: 0 }} />
+                                                        <Avatar src={member.photoUrl} sx={{ width: 20, height: 20, flexShrink: 0 }} />
                                                         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flex: 1, mr: (isManager && editingMember !== member.email) ? 1 : 0 }}>
-                                                            <Typography variant="body2"><strong>{member.name || member.email.split('@')[0]}</strong></Typography>
+                                                            <Typography variant="caption" sx={{ fontWeight: 700 }}>{member.name || member.email.split('@')[0]}</Typography>
                                                             {(() => {
                                                                 const joinedDate = member.joinedAt || houseDetails.createdAt;
                                                                 if (!joinedDate) return null;
                                                                 return (
-                                                                    <Box component="span" sx={{ fontSize: '0.65rem', opacity: 0.5, fontWeight: 500, display: 'inline-flex', alignItems: 'center', gap: 0.5, whiteSpace: 'nowrap' }}>
-                                                                        <AccessTimeIcon sx={{ fontSize: '0.75rem' }} />
+                                                                    <Box component="span" sx={{ fontSize: '0.6rem', opacity: 0.4, fontWeight: 500, display: 'inline-flex', alignItems: 'center', gap: 0.5, whiteSpace: 'nowrap' }}>
+                                                                        <AccessTimeIcon sx={{ fontSize: '0.65rem' }} />
                                                                         {formatDetailedDateTime(joinedDate)}
                                                                     </Box>
                                                                 );
@@ -1203,8 +1187,8 @@ export default function Profile() {
                                                             setEditingMember(member.email);
                                                             setEditRole(member.role || 'member');
                                                             setEditRent(member.rentAmount || 0);
-                                                        }}>
-                                                            <EditIcon sx={{ fontSize: 16 }} />
+                                                        }} sx={{ p: 0.25 }}>
+                                                            <EditIcon sx={{ fontSize: 12 }} />
                                                         </IconButton>
                                                     )}
                                                 </Box>
@@ -1229,12 +1213,12 @@ export default function Profile() {
                                                         </Box>
                                                     </Box>
                                                 ) : (
-                                                    <Box sx={{ display: 'flex', gap: 2, typography: 'caption', color: 'text.secondary' }}>
-                                                        <span>Role: <Box component="span" sx={{ color: member.role === 'manager' || member.email === houseDetails.createdBy ? 'primary.main' : 'inherit', fontWeight: member.role === 'manager' || member.email === houseDetails.createdBy ? 'bold' : 'normal' }}>{member.email === houseDetails.createdBy ? 'Creator (Manager)' : member.role || 'Member'}</Box></span>
-                                                        <span>Rent: <strong>{member.rentAmount || 0}</strong> {houseDetails.currency}</span>
+                                                    <Box sx={{ display: 'flex', gap: 2, mt: 0.5 }}>
+                                                        <Typography variant="caption" sx={{ color: 'text.secondary', fontSize: '0.65rem' }}>Role: <Box component="span" sx={{ color: member.role === 'manager' || member.email === houseDetails.createdBy ? 'primary.main' : 'inherit', fontWeight: member.role === 'manager' || member.email === houseDetails.createdBy ? 'bold' : 'normal' }}>{member.email === houseDetails.createdBy ? 'Creator' : member.role || 'Member'}</Box></Typography>
+                                                        <Typography variant="caption" sx={{ color: 'text.secondary', fontSize: '0.65rem' }}>Rent: <strong>{member.rentAmount || 0}</strong> {houseDetails.currency}</Typography>
                                                     </Box>
                                                 )}
-                                            </Paper>
+                                            </Box>
                                         ))}
                                     </Box>
                                 )}
@@ -1488,22 +1472,30 @@ export default function Profile() {
                                             You&apos;re not in a house yet. Create one below, or share your email — <strong>{user?.email}</strong> — so a housemate can add you.
                                         </Typography>
                                         <form onSubmit={handleCreateHouse}>
-                                            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+                                            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
                                                 <TextField label="House Name" fullWidth size="small" value={houseName} onChange={(e) => setHouseName(e.target.value)} required />
-                                                <TextField select label="House Type" value={typeOfHouse} onChange={(e) => setTypeOfHouse(e.target.value as 'expenses' | 'meals_and_expenses')} fullWidth size="small">
-                                                    <MenuItem value="expenses">Expenses Tracking Only</MenuItem>
-                                                    <MenuItem value="meals_and_expenses">Meal and Expenses Tracking</MenuItem>
-                                                </TextField>
-                                                {typeOfHouse === 'meals_and_expenses' && (
-                                                    <TextField select label="Meals Per Day" value={mealsPerDay} onChange={(e) => setMealsPerDay(e.target.value as any)} fullWidth size="small">
-                                                        <MenuItem value={2}>Two Meals (Lunch, Dinner)</MenuItem>
-                                                        <MenuItem value={3}>Three Meals (Breakfast, Lunch, Dinner)</MenuItem>
+                                                <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1 }}>
+                                                    <TextField select label="House Type" value={typeOfHouse} onChange={(e) => setTypeOfHouse(e.target.value as 'expenses' | 'meals_and_expenses')} fullWidth size="small">
+                                                        <MenuItem value="meals_and_expenses">Meals and Expenses</MenuItem>
+                                                        <MenuItem value="expenses">Expenses only</MenuItem>
                                                     </TextField>
-                                                )}
+                                                    {typeOfHouse === 'meals_and_expenses' && (
+                                                        <TextField select label="Meals" value={mealsPerDay} onChange={(e) => setMealsPerDay(e.target.value as any)} fullWidth size="small">
+                                                            <MenuItem value={2}>Two Meals</MenuItem>
+                                                            <MenuItem value={3}>Three Meals</MenuItem>
+                                                        </TextField>
+                                                    )}
+                                                </Box>
                                                 <TextField select label="Default Currency" value={newHouseCurrency} onChange={(e) => setNewHouseCurrency(e.target.value)} fullWidth size="small">
-                                                    <MenuItem value="USD">Dollar ($)</MenuItem>
-                                                    <MenuItem value="EUR">Euro (€)</MenuItem>
-                                                    <MenuItem value="BDT">Bangladeshi Taka (৳)</MenuItem>
+                                                    {typeOfHouse === 'meals_and_expenses' ? [
+                                                        <MenuItem key="BDT" value="BDT">Bangladeshi Taka (৳)</MenuItem>,
+                                                        <MenuItem key="EUR" value="EUR">Euro (€)</MenuItem>,
+                                                        <MenuItem key="USD" value="USD">Dollar ($)</MenuItem>
+                                                    ] : [
+                                                        <MenuItem key="EUR" value="EUR">Euro (€)</MenuItem>,
+                                                        <MenuItem key="BDT" value="BDT">Bangladeshi Taka (৳)</MenuItem>,
+                                                        <MenuItem key="USD" value="USD">Dollar ($)</MenuItem>
+                                                    ]}
                                                 </TextField>
                                                 <Button
                                                     type="submit"
@@ -1530,29 +1522,28 @@ export default function Profile() {
                         )}
                     </Paper>
 
-                    {/* ── Card 5: Logout ── */}
-                    <Box className="animate-stagger" sx={{ transitionDelay: '0.45s' }}>
+                    <Box className="animate-stagger" sx={{ transitionDelay: '0.45s', mt: 3 }}>
                         <Button
                             fullWidth
                             variant="contained"
                             color="error"
-                            startIcon={<LogoutIcon />}
+                            startIcon={<LogoutIcon sx={{ fontSize: 16 }} />}
                             onClick={logout}
                             sx={{
-                                py: 2,
-                                borderRadius: '24px',
+                                py: 1.2,
+                                borderRadius: '16px',
                                 background: 'rgba(211, 47, 47, 0.05)',
                                 color: '#d32f2f',
                                 border: '1px solid rgba(211, 47, 47, 0.2)',
                                 boxShadow: 'none',
                                 fontWeight: 800,
-                                fontSize: '0.9rem',
+                                fontSize: '0.75rem',
                                 letterSpacing: '0.05em',
                                 textTransform: 'uppercase',
                                 '&:hover': {
                                     background: 'rgba(211, 47, 47, 0.1)',
                                     border: '1px solid rgba(211, 47, 47, 0.4)',
-                                    boxShadow: '0 8px 24px rgba(211, 47, 47, 0.1)'
+                                    boxShadow: '0 4px 12px rgba(211, 47, 47, 0.1)'
                                 },
                                 transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)'
                             }}
