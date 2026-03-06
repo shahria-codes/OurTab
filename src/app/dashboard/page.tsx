@@ -185,6 +185,7 @@ export default function Dashboard() {
     // Fund Deposit State
     const [openDepositDialog, setOpenDepositDialog] = useState(false);
     const [openDepositDetails, setOpenDepositDetails] = useState(false);
+    const [openFundHistoryDialog, setOpenFundHistoryDialog] = useState(false);
     const [depositAmount, setDepositAmount] = useState('');
 
     // Member Details Dialog State
@@ -680,18 +681,32 @@ export default function Dashboard() {
                                     </Box>
 
                                     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                                        <Typography variant="subtitle2" sx={{ fontWeight: 800, color: 'success.main', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
-                                            House Fund
-                                        </Typography>
-                                        {pendingDeposits.length > 0 && (
-                                            <Chip
-                                                label={`${pendingDeposits.length} Pending`}
-                                                size="small"
-                                                color="warning"
-                                                variant="outlined"
-                                                sx={{ height: 20, fontSize: '0.65rem', fontWeight: 600 }}
-                                            />
-                                        )}
+                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                            <Typography variant="subtitle2" sx={{ fontWeight: 800, color: 'success.main', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+                                                House Fund
+                                            </Typography>
+                                            {pendingDeposits.length > 0 && (
+                                                <Chip
+                                                    label={`${pendingDeposits.length} Pending`}
+                                                    size="small"
+                                                    color="warning"
+                                                    variant="outlined"
+                                                    sx={{ height: 20, fontSize: '0.65rem', fontWeight: 600 }}
+                                                />
+                                            )}
+                                        </Box>
+                                        <IconButton
+                                            size="small"
+                                            onClick={(e) => { e.stopPropagation(); setOpenFundHistoryDialog(true); }}
+                                            sx={{
+                                                color: 'success.main',
+                                                background: 'rgba(76, 175, 80, 0.1)',
+                                                '&:hover': { background: 'rgba(76, 175, 80, 0.2)' },
+                                                p: 0.5
+                                            }}
+                                        >
+                                            <HistoryIcon fontSize="small" />
+                                        </IconButton>
                                     </Box>
 
                                     <Box sx={{ flexGrow: 1 }}>
@@ -2295,42 +2310,117 @@ export default function Dashboard() {
                                         </Box>
                                     </Box>
 
-                                    {/* Deposit History Section */}
-                                    <Box>
-                                        <Typography variant="subtitle2" sx={{ mb: 1.5, fontWeight: 'bold', color: 'text.secondary', textTransform: 'uppercase', letterSpacing: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
-                                            <HistoryIcon sx={{ fontSize: '1.2rem' }} /> Deposit History ({monthName})
-                                        </Typography>
-                                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                                            {approvedDeposits.filter(d => d.date.startsWith(monthStr)).length === 0 ? (
-                                                <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center', py: 2 }}>
-                                                    No approved deposits this month.
-                                                </Typography>
-                                            ) : (
-                                                approvedDeposits
-                                                    .filter(d => d.date.startsWith(monthStr))
-                                                    .map((d: any) => {
-                                                        const name = (allMembers.find((m: any) => (typeof m === 'string' ? m : m.email) === d.email)?.name) || d.email.split('@')[0];
-                                                        return (
-                                                            <Box key={d.id} sx={{ p: 1, bgcolor: 'rgba(0,0,0,0.02)', borderRadius: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                                                <Box>
-                                                                    <Typography variant="body2" sx={{ fontWeight: 'bold' }}>{displayCurrency}{d.amount.toFixed(2)}</Typography>
-                                                                    <Typography variant="caption" color="text.secondary">{name}</Typography>
-                                                                </Box>
-                                                                <Typography variant="caption" color="text.secondary">
-                                                                    {formatDateLocale(d.approvedAt || d.createdAt)} • {formatTimeLocale(d.approvedAt || d.createdAt)}
-                                                                </Typography>
-                                                            </Box>
-                                                        );
-                                                    })
-                                            )}
-                                        </Box>
-                                    </Box>
+                                    {/* Deposit History Section has been moved out */}
                                 </Box>
                             );
                         })()}
                     </DialogContent>
                     <DialogActions>
                         <Button onClick={() => setOpenDepositDetails(false)}>Close</Button>
+                    </DialogActions>
+                </Dialog>
+                {/* Fund History Dialog */}
+                <Dialog
+                    open={openFundHistoryDialog}
+                    onClose={() => setOpenFundHistoryDialog(false)}
+                    maxWidth="sm"
+                    fullWidth
+                    PaperProps={{
+                        sx: { borderRadius: 4, bgcolor: 'background.paper', overflow: 'hidden' }
+                    }}
+                >
+                    <DialogTitle sx={{ fontWeight: 800, textAlign: 'center', py: 2, bgcolor: 'rgba(76, 175, 80, 0.05)' }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 2 }}>
+                            <Box sx={{ width: 36, height: 36, borderRadius: '50%', bgcolor: 'success.main', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 8px rgba(76, 175, 80, 0.15)' }}>
+                                <HistoryIcon sx={{ fontSize: '1.2rem' }} />
+                            </Box>
+                            <Box sx={{ textAlign: 'left' }}>
+                                <Typography variant="h6" sx={{ fontWeight: 800, color: 'success.main', lineHeight: 1.1, fontSize: '1.1rem' }}>Fund Deposit History</Typography>
+                                <Typography variant="caption" sx={{ color: 'success.main', opacity: 0.8, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                                    {monthName}
+                                </Typography>
+                            </Box>
+                        </Box>
+                    </DialogTitle>
+                    <DialogContent sx={{ px: 2, py: 2.5 }}>
+                        {(() => {
+                            const approvedDeposits = (fundDeposits || []).filter(d => d.status === 'approved');
+                            const monthStr = getYYYYMM(selectedDate);
+                            const currentMonthDeposits = approvedDeposits
+                                .filter(d => d.date.startsWith(monthStr))
+                                .sort((a, b) => new Date(b.approvedAt || b.createdAt).getTime() - new Date(a.approvedAt || a.createdAt).getTime());
+
+                            return (
+                                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                                    {currentMonthDeposits.length === 0 ? (
+                                        <Box sx={{ p: 4, textAlign: 'center', bgcolor: 'rgba(0,0,0,0.02)', borderRadius: 3, border: '1px dashed divider' }}>
+                                            <AccountBalanceWalletIcon sx={{ fontSize: 48, color: 'text.disabled', opacity: 0.5, mb: 1 }} />
+                                            <Typography variant="body1" color="text.secondary" sx={{ fontWeight: 600 }}>
+                                                No deposits this month.
+                                            </Typography>
+                                        </Box>
+                                    ) : (
+                                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+                                            {currentMonthDeposits.map((d: any) => {
+                                                const member = allMembers.find((m: any) => (typeof m === 'string' ? m : m.email) === d.email);
+                                                const name = (typeof member === 'object' && member?.name) ? member.name : d.email.split('@')[0];
+                                                const photoUrl = typeof member === 'object' ? member?.photoUrl : undefined;
+                                                const displayCurrency = currencySymbols[currency || 'BDT'] || currency || '৳';
+
+                                                return (
+                                                    <Paper key={d.id} elevation={0} sx={{
+                                                        p: 1.5,
+                                                        bgcolor: 'background.paper',
+                                                        borderRadius: 2.5,
+                                                        display: 'flex',
+                                                        justifyContent: 'space-between',
+                                                        alignItems: 'center',
+                                                        border: '1px solid',
+                                                        borderColor: 'rgba(76, 175, 80, 0.15)',
+                                                        boxShadow: '0 2px 6px rgba(0,0,0,0.01)',
+                                                        transition: 'transform 0.2s',
+                                                        '&:hover': { transform: 'translateY(-1px)', boxShadow: '0 4px 12px rgba(76, 175, 80, 0.08)' }
+                                                    }}>
+                                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                                                            <Avatar src={photoUrl} sx={{ width: 32, height: 32, bgcolor: 'success.light', color: '#fff', fontSize: '0.85rem', fontWeight: 'bold' }}>
+                                                                {name[0]?.toUpperCase()}
+                                                            </Avatar>
+                                                            <Box>
+                                                                <Typography variant="subtitle1" sx={{ fontWeight: 800, color: 'success.main', lineHeight: 1.1, fontSize: '1rem' }}>
+                                                                    {displayCurrency}{d.amount.toFixed(2)}
+                                                                </Typography>
+                                                                <Typography variant="body2" sx={{ fontWeight: 600, color: 'text.primary', fontSize: '0.85rem', opacity: 0.9 }}>
+                                                                    {name}
+                                                                </Typography>
+                                                            </Box>
+                                                        </Box>
+                                                        <Box sx={{ textAlign: 'right' }}>
+                                                            <Typography variant="caption" sx={{ display: 'block', color: 'text.secondary', fontWeight: 600, fontSize: '0.75rem' }}>
+                                                                {formatDateLocale(d.approvedAt || d.createdAt)}
+                                                            </Typography>
+                                                            <Typography variant="caption" sx={{ color: 'text.disabled', fontWeight: 500, fontSize: '0.7rem' }}>
+                                                                {formatTimeLocale(d.approvedAt || d.createdAt)}
+                                                            </Typography>
+                                                        </Box>
+                                                    </Paper>
+                                                );
+                                            })}
+                                        </Box>
+                                    )}
+                                </Box>
+                            );
+                        })()}
+                    </DialogContent>
+                    <DialogActions sx={{ p: 3, pt: 0 }}>
+                        <Button
+                            onClick={() => setOpenFundHistoryDialog(false)}
+                            fullWidth
+                            variant="contained"
+                            color="success"
+                            sx={{ borderRadius: 3, py: 1, fontWeight: 700 }}
+                        >
+                            Close
+                        </Button>
                     </DialogActions>
                 </Dialog>
 
@@ -2738,6 +2828,6 @@ export default function Dashboard() {
                 userEmail={user?.email}
                 onSuccess={() => mutateHouse()}
             />
-        </AuthGuard>
+        </AuthGuard >
     );
 }
