@@ -70,6 +70,7 @@ import EmailIcon from '@mui/icons-material/Email';
 import CloseIcon from '@mui/icons-material/Close';
 import { formatDateLocale, formatTimeLocale, formatTimeStr } from '@/utils/date';
 import { isTakingMeal, countMemberMeals } from '@/utils/meals';
+import JoinDayMealDialog from '@/components/JoinDayMealDialog';
 
 
 const formatBirthday = (birthday?: string) => {
@@ -2732,6 +2733,11 @@ export default function Dashboard() {
                     )}
                 </DialogContent>
             </Dialog>
+            <JoinDayMealDialog
+                house={house}
+                userEmail={user?.email}
+                onSuccess={() => mutateHouse()}
+            />
         </AuthGuard>
     );
 }

@@ -27,6 +27,19 @@ export async function POST(request: Request) {
         delete leaveRequests[userEmail];
         await houseRef.update({ leaveRequests });
 
+        // Clean up pending 'approve_leave' notifications sent to other members
+        try {
+            const notifsSnap = await adminDb.collection('notifications')
+                .where('metadata.houseId', '==', houseId)
+                .where('actionType', '==', 'approve_leave')
+                .where('metadata.senderEmail', '==', userEmail)
+                .get();
+            const deletePromises = notifsSnap.docs.map(doc => doc.ref.delete());
+            await Promise.all(deletePromises);
+        } catch (err) {
+            console.error('Error cleaning up leave notifications:', err);
+        }
+
         return NextResponse.json({ success: true, cancelled: true });
     } catch (error) {
         console.error('Cancel leave error', error);

@@ -43,6 +43,8 @@ export default function NotificationsPage() {
 
     // Track loading state per notification id
     const [actionLoading, setActionLoading] = useState<Record<string, boolean>>({});
+    // Track selected meals for join day meal requests
+    const [selectedJoinMeals, setSelectedJoinMeals] = useState<Record<string, string[]>>({});
 
     const currencySymbol = getCurrencySymbol(house?.currency);
 
@@ -97,21 +99,6 @@ export default function NotificationsPage() {
     const handleNotificationClick = async (notification: AppNotification) => {
         if (!notification.read && notification.id) {
             markAsRead([notification.id]);
-        }
-        switch (notification.type) {
-            case 'expense':
-            case 'settlement':
-                router.push('/dashboard');
-                break;
-            case 'shopping':
-            case 'expense_todo':
-                router.push('/buy-list');
-                break;
-            case 'house':
-                router.push('/profile');
-                break;
-            default:
-                break;
         }
     };
 
@@ -226,6 +213,20 @@ export default function NotificationsPage() {
                         })
                     });
                     break;
+                case 'approve_join_meal':
+                    const reqMealsArray = meta.requestedMeals ? meta.requestedMeals.split(',') : [];
+                    res = await fetch('/api/meals/approve-join-meal', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            houseId: meta.houseId,
+                            email: meta.senderEmail,
+                            managerEmail: user.email,
+                            action,
+                            approvedMeals: action === 'approve' ? (selectedJoinMeals[id] || reqMealsArray) : []
+                        })
+                    });
+                    break;
             }
 
             if (res && res.ok) {
@@ -253,48 +254,61 @@ export default function NotificationsPage() {
             notification.actionType === 'approve_payment' ||
             notification.actionType === 'approve_fund_deposit' ||
             notification.actionType === 'approve_join' ||
-            notification.actionType === 'approve_invite';
+            notification.actionType === 'approve_invite' ||
+            notification.actionType === 'approve_join_meal';
 
         const approveLabel = notification.actionType === 'approve_invite' ? 'Accept' : 'Approve';
         const rejectLabel = notification.actionType === 'approve_invite' ? 'Decline' : 'Reject';
 
-        return (
-            <Box sx={{ mt: 1.5, display: 'flex', gap: 1, flexWrap: 'wrap' }} onClick={e => e.stopPropagation()}>
-                <Button
-                    size="small"
-                    variant="contained"
-                    disabled={loading}
-                    onClick={(e) => handleAction(e, notification, 'approve')}
-                    startIcon={loading ? <CircularProgress size={12} color="inherit" /> : <CheckCircleIcon />}
-                    sx={{
-                        borderRadius: '20px',
-                        px: 2,
-                        py: 0.4,
-                        fontSize: '0.75rem',
-                        fontWeight: 700,
-                        minHeight: 0,
-                        textTransform: 'none',
-                        bgcolor: 'rgba(76, 175, 80, 0.15)',
-                        color: '#4caf50',
-                        border: '1px solid rgba(76,175,80,0.3)',
-                        boxShadow: 'none',
-                        '&:hover': {
-                            bgcolor: 'rgba(76, 175, 80, 0.25)',
-                            boxShadow: '0 4px 12px rgba(76,175,80,0.2)',
-                        },
-                        '&:disabled': { opacity: 0.5 }
-                    }}
-                >
-                    {loading ? 'Processing…' : approveLabel}
-                </Button>
+        const isJoinMeal = notification.actionType === 'approve_join_meal';
+        const requestedMeals = isJoinMeal && notification.metadata?.requestedMeals ? notification.metadata.requestedMeals.split(',') : [];
+        const currentSelectedMeals = selectedJoinMeals[id] || requestedMeals;
 
-                {showReject && (
+        const handleMealToggle = (e: React.MouseEvent, meal: string) => {
+            e.stopPropagation();
+            setSelectedJoinMeals(prev => {
+                const prevArray = prev[id] || requestedMeals;
+                if (prevArray.includes(meal)) {
+                    return { ...prev, [id]: prevArray.filter(m => m !== meal) };
+                } else {
+                    return { ...prev, [id]: [...prevArray, meal] };
+                }
+            });
+        };
+
+        return (
+            <Box sx={{ mt: 1.5, display: 'flex', flexDirection: 'column', gap: 1 }} onClick={e => e.stopPropagation()}>
+                {isJoinMeal && requestedMeals.length > 0 && (
+                    <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mb: 0.5 }}>
+                        {requestedMeals.map((meal: string) => {
+                            const isSelected = currentSelectedMeals.includes(meal);
+                            const name = meal.charAt(0).toUpperCase() + meal.slice(1);
+                            return (
+                                <Box
+                                    key={meal}
+                                    onClick={(e) => handleMealToggle(e, meal)}
+                                    sx={{
+                                        px: 1.5, py: 0.5, borderRadius: '16px', fontSize: '0.75rem', fontWeight: 600,
+                                        cursor: 'pointer', border: '1px solid',
+                                        borderColor: isSelected ? 'primary.main' : 'divider',
+                                        bgcolor: isSelected ? 'rgba(108, 99, 255, 0.1)' : 'transparent',
+                                        color: isSelected ? 'primary.main' : 'text.secondary',
+                                        transition: 'all 0.2s'
+                                    }}
+                                >
+                                    {name}
+                                </Box>
+                            );
+                        })}
+                    </Box>
+                )}
+                <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
                     <Button
                         size="small"
                         variant="contained"
                         disabled={loading}
-                        onClick={(e) => handleAction(e, notification, 'reject')}
-                        startIcon={<CancelIcon />}
+                        onClick={(e) => handleAction(e, notification, 'approve')}
+                        startIcon={loading ? <CircularProgress size={12} color="inherit" /> : <CheckCircleIcon />}
                         sx={{
                             borderRadius: '20px',
                             px: 2,
@@ -303,20 +317,50 @@ export default function NotificationsPage() {
                             fontWeight: 700,
                             minHeight: 0,
                             textTransform: 'none',
-                            bgcolor: 'rgba(244, 67, 54, 0.1)',
-                            color: '#f44336',
-                            border: '1px solid rgba(244,67,54,0.25)',
+                            bgcolor: 'rgba(76, 175, 80, 0.15)',
+                            color: '#4caf50',
+                            border: '1px solid rgba(76,175,80,0.3)',
                             boxShadow: 'none',
                             '&:hover': {
-                                bgcolor: 'rgba(244, 67, 54, 0.2)',
-                                boxShadow: '0 4px 12px rgba(244,67,54,0.15)',
+                                bgcolor: 'rgba(76, 175, 80, 0.25)',
+                                boxShadow: '0 4px 12px rgba(76,175,80,0.2)',
                             },
                             '&:disabled': { opacity: 0.5 }
                         }}
                     >
-                        {rejectLabel}
+                        {loading ? 'Processing…' : approveLabel}
                     </Button>
-                )}
+
+                    {showReject && (
+                        <Button
+                            size="small"
+                            variant="contained"
+                            disabled={loading}
+                            onClick={(e) => handleAction(e, notification, 'reject')}
+                            startIcon={<CancelIcon />}
+                            sx={{
+                                borderRadius: '20px',
+                                px: 2,
+                                py: 0.4,
+                                fontSize: '0.75rem',
+                                fontWeight: 700,
+                                minHeight: 0,
+                                textTransform: 'none',
+                                bgcolor: 'rgba(244, 67, 54, 0.1)',
+                                color: '#f44336',
+                                border: '1px solid rgba(244,67,54,0.25)',
+                                boxShadow: 'none',
+                                '&:hover': {
+                                    bgcolor: 'rgba(244, 67, 54, 0.2)',
+                                    boxShadow: '0 4px 12px rgba(244,67,54,0.15)',
+                                },
+                                '&:disabled': { opacity: 0.5 }
+                            }}
+                        >
+                            {rejectLabel}
+                        </Button>
+                    )}
+                </Box>
             </Box>
         );
     };

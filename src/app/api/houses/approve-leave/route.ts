@@ -66,6 +66,19 @@ export async function POST(request: Request) {
 
             await batch.commit();
 
+            // Clean up pending 'approve_leave' notifications sent to other members
+            try {
+                const notifsSnap = await adminDb.collection('notifications')
+                    .where('metadata.houseId', '==', houseId)
+                    .where('actionType', '==', 'approve_leave')
+                    .where('metadata.senderEmail', '==', userToApprove)
+                    .get();
+                const deletePromises = notifsSnap.docs.map(doc => doc.ref.delete());
+                await Promise.all(deletePromises);
+            } catch (err) {
+                console.error('Error cleaning up completed leave notifications:', err);
+            }
+
             // Notify fully approved
             try {
                 // Fetch the departing user's name/photo

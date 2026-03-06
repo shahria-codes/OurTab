@@ -16,6 +16,45 @@ export function isTakingMeal(
 ): boolean {
     if (!house) return false;
 
+    // 0. Check if the member had even joined the house by this date.
+    //    joinedAt is stored in memberDetails[email].joinedAt as an ISO string.
+    const memberDetail0 = house.memberDetails?.[memberEmail];
+    if (memberDetail0?.joinedAt) {
+        const joinedISO: string = memberDetail0.joinedAt;
+        const joinedDateStr = joinedISO.substring(0, 10); // "YYYY-MM-DD"
+
+        if (dateStr < joinedDateStr) {
+            // Clearly before the join date — not a member yet.
+            return false;
+        }
+
+        if (dateStr === joinedDateStr) {
+            // Joined on this day — but if they joined AFTER the meal update
+            // window end time (default 05:00), the day's meals are already locked
+            // and they shouldn't be counted.
+            const windowEnd: string = house.mealUpdateWindowEnd || '05:00';
+            const [endHour, endMin] = windowEnd.split(':').map(Number);
+
+            const joinedTime = new Date(joinedISO);
+            const joinedHour = joinedTime.getUTCHours();
+            const joinedMinute = joinedTime.getUTCMinutes();
+
+            // Convert window end to minutes-since-midnight for easy comparison
+            const windowEndMins = endHour * 60 + endMin;
+            const joinedMins = joinedHour * 60 + joinedMinute;
+
+            if (joinedMins > windowEndMins) {
+                // Joined after the window closed — check if manager approved specific meals.
+                const joinRequest = house.joinDayMealRequests?.[memberEmail];
+                if (joinRequest?.status === 'approved' && Array.isArray(joinRequest.approvedMeals)) {
+                    return joinRequest.approvedMeals.includes(mealType);
+                }
+                // No approved request — not counted for this day.
+                return false;
+            }
+        }
+    }
+
     // 1. Check mealHistory — persistent record of all past off-windows.
     //    This is the most reliable source since it survives even after
     //    memberDetails.offFromDate is cleared when meals are turned back on.

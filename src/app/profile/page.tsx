@@ -1304,9 +1304,7 @@ export default function Profile() {
                                     const requesterName = requesterObj?.name || email.split('@')[0];
                                     const requesterPhotoUrl = requesterObj?.photoUrl || '';
                                     return (
-                                        <Alert key={email} severity="info" action={!hasApprovedLeave ? (
-                                            <Button color="inherit" size="small" startIcon={<HowToVoteIcon />} onClick={() => handleApproveLeave(email)} disabled={loading}>Approve</Button>
-                                        ) : undefined}>
+                                        <Alert key={email} severity="info">
                                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                                                 <Avatar src={requesterPhotoUrl} sx={{ width: 24, height: 24 }} />
                                                 <Box>
