@@ -73,42 +73,61 @@ export async function GET(request: Request) {
             }
         }
 
-        // --- 2. Fetch Notifications ---
+        // --- 2. Fetch Notifications & Cleanup ---
         const snapshot = await adminDb
             .collection('notifications')
             .where('userId', '==', userId)
             .get();
 
-        let notifications = snapshot.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data()
-        })) as AppNotification[];
+        const now = new Date();
+        const twelveHoursAgo = new Date(now.getTime() - 12 * 60 * 60 * 1000).toISOString();
+        const twoDaysAgo = new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000).toISOString();
 
-        // Sort by createdAt desc in memory to avoid needing a Firebase composite index
-        notifications.sort((a, b) => new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime());
-        // Limit to 50
-        notifications = notifications.slice(0, 50);
+        const toDeleteIds: string[] = [];
+        const keptNotifications: AppNotification[] = [];
 
-        // --- 3. Cleanup Old Notifications (Optional/Background) ---
-        // Cleanup notifications older than 30 days
-        const thirtyDaysAgo = new Date();
-        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+        snapshot.docs.forEach(doc => {
+            const data = doc.data() as AppNotification;
+            const createdAt = data.createdAt || '';
+            const isRead = data.read || false;
 
-        // This is a bit slow, so we just trigger it and don't await fully for every request
-        // Better: user a scheduled cloud function
-        adminDb.collection('notifications')
-            .where('userId', '==', userId)
-            .where('createdAt', '<', thirtyDaysAgo.toISOString())
-            .get()
-            .then(oldSnap => {
-                if (!oldSnap.empty) {
-                    const batch = adminDb.batch();
-                    oldSnap.docs.forEach(doc => {
-                        batch.delete(doc.ref);
-                    });
-                    batch.commit().catch(e => console.error('Error cleaning up old notifications:', e));
+            // Delete logic: read > 12h, unread > 2 days
+            const shouldDelete = isRead ? createdAt < twelveHoursAgo : createdAt < twoDaysAgo;
+
+            if (shouldDelete) {
+                toDeleteIds.push(doc.id);
+            } else {
+                keptNotifications.push({
+                    id: doc.id,
+                    ...data
+                });
+            }
+        });
+
+        // Trigger background cleanup if there are things to delete
+        if (toDeleteIds.length > 0) {
+            (async () => {
+                try {
+                    // Firebase batch limited to 500 items
+                    for (let i = 0; i < toDeleteIds.length; i += 500) {
+                        const batch = adminDb.batch();
+                        const chunk = toDeleteIds.slice(i, i + 500);
+                        chunk.forEach(id => {
+                            batch.delete(adminDb.collection('notifications').doc(id));
+                        });
+                        await batch.commit();
+                    }
+                } catch (e) {
+                    console.error('Error during notification cleanup batch:', e);
                 }
-            });
+            })();
+        }
+
+        // Sort by createdAt desc in memory
+        keptNotifications.sort((a, b) => new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime());
+
+        // Return top 50
+        const notifications = keptNotifications.slice(0, 50);
 
         return NextResponse.json(notifications);
     } catch (error) {
