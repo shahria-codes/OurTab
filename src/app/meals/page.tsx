@@ -99,6 +99,7 @@ export default function MealsPage() {
         }
         days.push(dateStr);
     }
+    days.reverse(); // Show most recent date first
 
     return (
         <AuthGuard>
