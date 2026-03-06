@@ -79,7 +79,8 @@ export async function POST(request: Request) {
                     [email]: {
                         role: 'member',
                         rentAmount: 0,
-                        mealsEnabled: true
+                        mealsEnabled: true,
+                        joinedAt: new Date().toISOString()
                     }
                 }
             }, { merge: true });
@@ -187,13 +188,16 @@ export async function POST(request: Request) {
             }
 
             // 1. Add user to house members
-            await houseRef.update({
+            await houseRef.set({
                 members: FieldValue.arrayUnion(email),
-                [`memberDetails.${email.replace(/\./g, '_')}`]: {
-                    role: 'member',
-                    rentAmount: 0
+                memberDetails: {
+                    [email]: {
+                        role: 'member',
+                        rentAmount: 0,
+                        joinedAt: new Date().toISOString()
+                    }
                 }
-            });
+            }, { merge: true });
 
             // 2. Update user doc: set houseId, clear pendingHouseId, pendingHouseStatus, pendingHouseName
             await adminDb.collection('users').doc(email).update({

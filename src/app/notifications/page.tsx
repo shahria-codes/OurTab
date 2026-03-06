@@ -215,6 +215,17 @@ export default function NotificationsPage() {
                         })
                     });
                     break;
+                case 'approve_invite':
+                    res = await fetch('/api/houses/join-requests', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            houseId: meta.houseId,
+                            email: user.email,
+                            action: action === 'approve' ? 'accept_invite' : 'decline_invite'
+                        })
+                    });
+                    break;
             }
 
             if (res && res.ok) {
@@ -241,7 +252,11 @@ export default function NotificationsPage() {
         const showReject =
             notification.actionType === 'approve_payment' ||
             notification.actionType === 'approve_fund_deposit' ||
-            notification.actionType === 'approve_join';
+            notification.actionType === 'approve_join' ||
+            notification.actionType === 'approve_invite';
+
+        const approveLabel = notification.actionType === 'approve_invite' ? 'Accept' : 'Approve';
+        const rejectLabel = notification.actionType === 'approve_invite' ? 'Decline' : 'Reject';
 
         return (
             <Box sx={{ mt: 1.5, display: 'flex', gap: 1, flexWrap: 'wrap' }} onClick={e => e.stopPropagation()}>
@@ -270,7 +285,7 @@ export default function NotificationsPage() {
                         '&:disabled': { opacity: 0.5 }
                     }}
                 >
-                    {loading ? 'Processing…' : 'Approve'}
+                    {loading ? 'Processing…' : approveLabel}
                 </Button>
 
                 {showReject && (
@@ -299,7 +314,7 @@ export default function NotificationsPage() {
                             '&:disabled': { opacity: 0.5 }
                         }}
                     >
-                        Reject
+                        {rejectLabel}
                     </Button>
                 )}
             </Box>

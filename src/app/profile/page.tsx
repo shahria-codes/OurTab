@@ -42,6 +42,7 @@ import WorkIcon from '@mui/icons-material/Work';
 import ContactSupportIcon from '@mui/icons-material/ContactSupport';
 import AccountTreeIcon from '@mui/icons-material/AccountTree';
 import HourglassEmptyIcon from '@mui/icons-material/HourglassEmpty';
+import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import NotificationsIcon from '@mui/icons-material/Notifications';
 import Dialog from '@mui/material/Dialog';
 import DialogTitle from '@mui/material/DialogTitle';
@@ -1150,9 +1151,21 @@ export default function Profile() {
                                         {((houseDetails.members || []) as any[]).map((member: any) => (
                                             <Paper key={member.email} variant="outlined" sx={{ p: 1.5, mb: 1, display: 'flex', flexDirection: 'column', gap: 1 }}>
                                                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                                        <Avatar src={member.photoUrl} sx={{ width: 24, height: 24 }} />
-                                                        <Typography variant="body2"><strong>{member.name || member.email.split('@')[0]}</strong></Typography>
+                                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flex: 1 }}>
+                                                        <Avatar src={member.photoUrl} sx={{ width: 24, height: 24, flexShrink: 0 }} />
+                                                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flex: 1, mr: (isManager && editingMember !== member.email) ? 1 : 0 }}>
+                                                            <Typography variant="body2"><strong>{member.name || member.email.split('@')[0]}</strong></Typography>
+                                                            {(() => {
+                                                                const joinedDate = member.joinedAt || houseDetails.createdAt;
+                                                                if (!joinedDate) return null;
+                                                                return (
+                                                                    <Box component="span" sx={{ fontSize: '0.65rem', opacity: 0.5, fontWeight: 500, display: 'inline-flex', alignItems: 'center', gap: 0.5, whiteSpace: 'nowrap' }}>
+                                                                        <AccessTimeIcon sx={{ fontSize: '0.75rem' }} />
+                                                                        {formatDetailedDateTime(joinedDate)}
+                                                                    </Box>
+                                                                );
+                                                            })()}
+                                                        </Box>
                                                     </Box>
                                                     {isManager && editingMember !== member.email && (
                                                         <IconButton size="small" onClick={() => {

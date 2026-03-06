@@ -58,7 +58,9 @@ export async function POST(request: Request) {
                 type: 'house',
                 message: `invited you to join ${houseData.name || 'the house'}.`,
                 senderName,
-                senderPhotoUrl
+                senderPhotoUrl,
+                actionType: 'approve_invite',
+                metadata: { houseId, senderEmail: addedBy || '' }
             });
 
             // 2. Notify ALL existing members (except the inviter)

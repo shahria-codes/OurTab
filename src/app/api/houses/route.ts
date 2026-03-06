@@ -51,7 +51,8 @@ export async function POST(request: Request) {
             memberDetails: { // Adding detailed map of members
                 [createdBy]: {
                     role: 'manager',
-                    rentAmount: 0 // Default rent is 0
+                    rentAmount: 0, // Default rent is 0
+                    joinedAt: new Date().toISOString()
                 }
             },
             currency: currency || 'USD',

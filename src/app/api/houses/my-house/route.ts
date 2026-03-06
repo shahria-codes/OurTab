@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { adminDb } from '@/lib/firebaseAdmin';
+import { FieldValue } from 'firebase-admin/firestore';
 
 export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
@@ -47,8 +48,22 @@ export async function GET(request: Request) {
             let additionalDetails = houseData.memberDetails?.[memberEmail];
 
             // --- HEALING MECHANISM ---
-            // If the key is missing but the email has a dot, Firestore might have nested it.
-            // e.g. memberDetails: { "user@gmail": { "com": { role: 'member', rentAmount: 0 } } }
+            // 1. Check for underscore-replaced key (from short-lived bug)
+            if (!additionalDetails && memberEmail.includes('.')) {
+                const underscoreKey = memberEmail.replace(/\./g, '_');
+                if (houseData.memberDetails?.[underscoreKey]) {
+                    additionalDetails = houseData.memberDetails[underscoreKey];
+                    // Heal it to the correct key
+                    adminDb.collection('houses').doc(resolvedHouseId).set({
+                        memberDetails: {
+                            [memberEmail]: additionalDetails,
+                            [underscoreKey]: FieldValue.delete()
+                        }
+                    }, { merge: true }).catch(e => console.error(`[healing] Failed to fix underscore ${memberEmail} in ${resolvedHouseId}`, e));
+                }
+            }
+
+            // 2. Check for nested dots (old Firestore behavior)
             if (!additionalDetails && memberEmail.includes('.')) {
                 const parts = memberEmail.split('.');
                 let current = houseData.memberDetails;
