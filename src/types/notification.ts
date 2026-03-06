@@ -7,7 +7,8 @@ export type NotificationActionType =
     | 'approve_fund_deposit'
     | 'approve_meal_off'
     | 'approve_join'
-    | 'approve_invite';
+    | 'approve_invite'
+    | 'approve_join_meal';
 
 export interface AppNotification {
     id?: string;

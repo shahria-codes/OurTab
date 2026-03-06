@@ -35,7 +35,15 @@ export interface House {
         rentAmount: number,
         mealsEnabled?: boolean,
         offFromDate?: string,
-        leftDate?: string // Added for past members
+        leftDate?: string; // Added for past members
+        joinedAt?: string; // ISO timestamp when the member joined
+    }>;
+    joinDayMealRequests?: Record<string, {
+        joinDate: string;         // "YYYY-MM-DD"
+        eligibleMeals: string[];  // meals that could be available
+        requestedMeals: string[];
+        status: 'pending' | 'approved' | 'rejected';
+        approvedMeals?: string[]; // set by manager on approval
     }>;
     pastMembers?: {
         email: string;
