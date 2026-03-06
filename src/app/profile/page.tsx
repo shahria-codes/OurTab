@@ -538,7 +538,38 @@ export default function Profile() {
                     }} />
                 </Box>
 
-                <Container maxWidth="sm" sx={{ mt: 3, mb: 5, display: 'flex', flexDirection: 'column', gap: 3 }}>
+                <Container maxWidth="sm" sx={{ mt: 3, mb: 5, display: 'flex', flexDirection: 'column' }}>
+
+                    <Box className="glass-nav" sx={{
+                        position: 'sticky',
+                        top: 0,
+                        zIndex: 1100,
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        py: 2,
+                        mb: 0.5,
+                        mx: { xs: -2, sm: -3 },
+                        px: { xs: 2, sm: 3 },
+                        backgroundColor: 'transparent !important', // Let glass-nav handle it
+                    }}>
+                        <Typography variant="h4" component="h1" sx={{
+                            fontWeight: 800,
+                            background: 'linear-gradient(45deg, #6C63FF 30%, #FF6584 90%)',
+                            WebkitBackgroundClip: 'text',
+                            WebkitTextFillColor: 'transparent',
+                            lineHeight: 1.2,
+                            backdropFilter: 'blur(20px)',
+                            borderRadius: '12px',
+                            padding: '4px',
+                            letterSpacing: '-0.02em'
+                        }}>
+                            Profile
+                        </Typography>
+                    </Box>
+                    <Typography variant="body1" color="text.secondary" sx={{ opacity: 0.8, fontWeight: 500, mb: 3 }}>
+                        Manage your personal profile and house settings
+                    </Typography>
 
                     {/* ── Card 1: User Info (Premium Header) ── */}
                     <Paper className="glass animate-stagger" sx={{ p: 0, overflow: 'hidden', background: 'transparent', transitionDelay: '0.1s' }}>
