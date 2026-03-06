@@ -1005,7 +1005,7 @@ export default function Dashboard() {
                                         <Button
                                             variant="contained"
                                             color="info"
-                                            href="/profile"
+                                            href="/profile?action=create-house"
                                             sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 700 }}
                                         >
                                             Create House

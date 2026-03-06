@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { Suspense } from 'react';
 import useSWR from 'swr';
 import Container from '@mui/material/Container';
 import Typography from '@mui/material/Typography';
@@ -52,8 +53,21 @@ import DialogActions from '@mui/material/DialogActions';
 import AuthGuard from '@/components/AuthGuard';
 import { formatDetailedDateTime } from '@/utils/date';
 
-export default function Profile() {
+function ProfileContent() {
     const { user, currency, updateCurrency, loading: authLoading, dbUser, house, mutateUser, mutateHouse, logout, isNotificationSupported, notificationPermission, requestNotificationPermission } = useAuth();
+    const searchParams = useSearchParams();
+
+    // Auto-scroll to Create House form if param is present
+    React.useEffect(() => {
+        const action = searchParams.get('action');
+        if (action === 'create-house') {
+            const timer = setTimeout(() => {
+                const el = document.getElementById('create-house-form');
+                if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }, 500);
+            return () => clearTimeout(timer);
+        }
+    }, [searchParams]);
     const [newHouseCurrency, setNewHouseCurrency] = useState('BDT'); // local picker for Create House form
     const [typeOfHouse, setTypeOfHouse] = useState<'expenses' | 'meals_and_expenses'>('meals_and_expenses');
 
@@ -1471,7 +1485,7 @@ export default function Profile() {
                                         <Typography variant="body2" color="text.secondary">
                                             You&apos;re not in a house yet. Create one below, or share your email — <strong>{user?.email}</strong> — so a housemate can add you.
                                         </Typography>
-                                        <form onSubmit={handleCreateHouse}>
+                                        <form id="create-house-form" onSubmit={handleCreateHouse}>
                                             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
                                                 <TextField label="House Name" fullWidth size="small" value={houseName} onChange={(e) => setHouseName(e.target.value)} required />
                                                 <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1 }}>
@@ -1656,5 +1670,13 @@ export default function Profile() {
                 </Box>
             </main>
         </AuthGuard >
+    );
+}
+
+export default function Profile() {
+    return (
+        <Suspense fallback={<Loader />}>
+            <ProfileContent />
+        </Suspense>
     );
 }
