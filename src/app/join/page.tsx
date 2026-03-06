@@ -21,7 +21,7 @@ import Loader from '@/components/Loader';
 function JoinContent() {
     const searchParams = useSearchParams();
     const router = useRouter();
-    const { user, loading: authLoading, mutateHouse } = useAuth();
+    const { user, loading: authLoading, mutateHouse, mutateUser } = useAuth();
     const { showToast } = useToast();
 
     const houseId = searchParams.get('houseId');
@@ -85,6 +85,7 @@ function JoinContent() {
             if (res.ok) {
                 showToast(data.message || 'Join request sent!', 'success');
                 setRequestPending(true);
+                if (mutateUser) mutateUser();
             } else {
                 showToast(data.error || 'Failed to join house.', 'error');
             }
@@ -107,6 +108,7 @@ function JoinContent() {
             if (res.ok) {
                 showToast('Join request cancelled.', 'success');
                 setRequestPending(false);
+                if (mutateUser) mutateUser();
             } else {
                 const data = await res.json();
                 showToast(data.error || 'Failed to cancel request.', 'error');
