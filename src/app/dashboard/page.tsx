@@ -2118,7 +2118,13 @@ export default function Dashboard() {
                     <DialogContent>
                         {(() => {
                             const approvedDeposits = (fundDeposits || []).filter(d => d.status === 'approved');
-                            const members = house?.members || [];
+                            const members = [...(house?.members || [])].sort((a, b) => {
+                                const emailA = typeof a === 'string' ? a : a.email;
+                                const emailB = typeof b === 'string' ? b : b.email;
+                                if (emailA === user?.email) return -1;
+                                if (emailB === user?.email) return 1;
+                                return 0;
+                            });
                             const monthStr = getYYYYMM(selectedDate);
 
                             return (
@@ -2195,25 +2201,25 @@ export default function Dashboard() {
 
                                                         <Box sx={{ pl: 1, display: 'flex', flexDirection: 'column', gap: 0.75 }}>
                                                             <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                                                                <Typography variant="body2" color="text.secondary">Deposits ({monthName})</Typography>
+                                                                <Typography variant="body2" color="text.secondary">Deposits</Typography>
                                                                 <Typography variant="body2" sx={{ fontWeight: 'medium', color: 'success.main' }}>
                                                                     + {displayCurrency}{mStats.periodicDeposits.toFixed(2)}
                                                                 </Typography>
                                                             </Box>
                                                             <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                                                                <Typography variant="body2" color="text.secondary">Rent ({monthName})</Typography>
+                                                                <Typography variant="body2" color="text.secondary">Rent</Typography>
                                                                 <Typography variant="body2" sx={{ fontWeight: 'medium', color: 'error.main' }}>
                                                                     - {displayCurrency}{mStats.periodicRent.toFixed(2)}
                                                                 </Typography>
                                                             </Box>
                                                             <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                                                                <Typography variant="body2" color="text.secondary">Utilities ({monthName})</Typography>
+                                                                <Typography variant="body2" color="text.secondary">Utilities</Typography>
                                                                 <Typography variant="body2" sx={{ fontWeight: 'medium', color: 'error.main' }}>
                                                                     - {displayCurrency}{mStats.periodicUtilities.toFixed(2)}
                                                                 </Typography>
                                                             </Box>
                                                             <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                                                                <Typography variant="body2" color="text.secondary">Worker Wage ({monthName})</Typography>
+                                                                <Typography variant="body2" color="text.secondary">Worker Wage</Typography>
                                                                 <Typography variant="body2" sx={{ fontWeight: 'medium', color: 'error.main' }}>
                                                                     - {displayCurrency}{mStats.periodicWage.toFixed(2)}
                                                                 </Typography>
@@ -2251,51 +2257,51 @@ export default function Dashboard() {
                                                     </Typography>
                                                 </Box>
                                                 <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
-                                                    <Typography variant="body2">Collected ({monthName})</Typography>
+                                                    <Typography variant="body2">Collected</Typography>
                                                     <Typography variant="body2" sx={{ fontWeight: 'bold', color: 'success.main' }}>
                                                         + {displayCurrency}{houseFundStatsResult.periodicTotalDeposits.toFixed(2)}
                                                     </Typography>
                                                 </Box>
                                                 <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
-                                                    <Typography variant="body2">Rent ({monthName})</Typography>
+                                                    <Typography variant="body2">Rent</Typography>
                                                     <Typography variant="body2" sx={{ fontWeight: 'bold', color: 'error.main' }}>
                                                         - {displayCurrency}{houseFundStatsResult.periodicTotalRent.toFixed(2)}
                                                     </Typography>
                                                 </Box>
                                                 <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
-                                                    <Typography variant="body2">Utilities ({monthName})</Typography>
+                                                    <Typography variant="body2">Utilities</Typography>
                                                     <Typography variant="body2" sx={{ fontWeight: 'bold', color: 'error.main' }}>
                                                         - {displayCurrency}{houseFundStatsResult.periodicTotalUtilities.toFixed(2)}
                                                     </Typography>
                                                 </Box>
                                                 <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
-                                                    <Typography variant="body2">Worker Wage ({monthName})</Typography>
+                                                    <Typography variant="body2">Worker Wage</Typography>
                                                     <Typography variant="body2" sx={{ fontWeight: 'bold', color: 'error.main' }}>
                                                         - {displayCurrency}{houseFundStatsResult.periodicTotalWages.toFixed(2)}
                                                     </Typography>
                                                 </Box>
                                                 <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
-                                                    <Typography variant="body2">Groceries ({monthName})</Typography>
+                                                    <Typography variant="body2">Groceries</Typography>
                                                     <Typography variant="body2" sx={{ fontWeight: 'bold', color: 'error.main' }}>
                                                         - {displayCurrency}{houseFundStatsResult.periodicTotalGroceries.toFixed(2)}
                                                     </Typography>
                                                 </Box>
                                                 {houseFundStatsResult.periodicTotalMisc > 0 && (
                                                     <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
-                                                        <Typography variant="body2">Other/Misc ({monthName})</Typography>
+                                                        <Typography variant="body2">Other/Misc</Typography>
                                                         <Typography variant="body2" sx={{ fontWeight: 'bold', color: 'error.main' }}>
                                                             - {displayCurrency}{houseFundStatsResult.periodicTotalMisc.toFixed(2)}
                                                         </Typography>
                                                     </Box>
                                                 )}
                                                 <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
-                                                    <Typography variant="body2">Total Meals ({monthName})</Typography>
+                                                    <Typography variant="body2">Total Meals</Typography>
                                                     <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
                                                         {houseFundStatsResult.periodicTotalMeals}
                                                     </Typography>
                                                 </Box>
                                                 <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
-                                                    <Typography variant="body2">Avg Meal Cost ({monthName})</Typography>
+                                                    <Typography variant="body2">Avg Meal Cost</Typography>
                                                     <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
                                                         {displayCurrency}{houseFundStatsResult.periodicCostPerMeal.toFixed(2)}
                                                     </Typography>
