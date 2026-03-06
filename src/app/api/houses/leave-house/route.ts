@@ -29,10 +29,28 @@ export async function POST(request: Request) {
         if (members.length <= 1) {
             members = members.filter(m => m !== userEmail);
 
+            const houseUpdate: any = { members };
+            const pastMembers: string[] = houseData.pastMembers || [];
+
+            // For a single person house leaving, we still move them to pastMembers
+            if (!pastMembers.includes(userEmail)) {
+                pastMembers.push(userEmail);
+                houseUpdate.pastMembers = pastMembers;
+            }
+
+            const memberDetails = houseData.memberDetails || {};
+            if (memberDetails[userEmail]) {
+                memberDetails[userEmail] = {
+                    ...memberDetails[userEmail],
+                    leftDate: new Date().toISOString()
+                };
+                houseUpdate.memberDetails = memberDetails;
+            }
+
             const batch = adminDb.batch();
 
             // Update house document
-            batch.update(houseRef, { members });
+            batch.update(houseRef, houseUpdate);
 
             // Remove houseId from user document
             const userRef = adminDb.collection('users').doc(userEmail);

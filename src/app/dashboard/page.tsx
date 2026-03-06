@@ -116,6 +116,11 @@ export default function Dashboard() {
     // Use the custom hook for data fetching
     const { house, expenses, todos, fundDeposits, meals, loading: dataLoading, mutateHouse, mutateExpenses, mutateFundDeposits, mutateMeals } = useHouseData();
 
+    // Derived state for all members (active + past)
+    const allMembers = useMemo(() => {
+        return [...(house?.members || []), ...(house?.pastMembers || [])];
+    }, [house]);
+
     // Derived state for pending todos
     const pendingTodos = useMemo(() => {
         return todos?.filter(todo => !todo.isCompleted) || [];
@@ -445,19 +450,30 @@ export default function Dashboard() {
 
     // Memoize settlement calculation to prevent re-render issues
     const settlements = useMemo(() => {
-        if (!house || !house.members || house.members.length < 2) return [];
+        if (!house || !allMembers || allMembers.length < 2) return [];
 
-        const members = house.members;
         const memberBalances: { [key: string]: number } = {};
-        members.forEach(m => memberBalances[m.email] = 0);
+        allMembers.forEach(m => memberBalances[m.email] = 0);
 
         // === 1. EXPENSES ONLY TRACKING (Legacy/Default) ===
         if (house.typeOfHouse !== 'meals_and_expenses') {
             expenses.forEach((exp: Expense) => {
+                const amount = exp.amount;
+                const payer = exp.userId;
+
+                const expMonth = exp.date.substring(0, 7);
+                const activeMembersAtTime = allMembers.filter(m => {
+                    const details = house.memberDetails?.[m.email];
+                    if (!details?.leftDate) return true;
+                    return details.leftDate.substring(0, 7) >= expMonth;
+                });
+                const relevantMembers = activeMembersAtTime.length > 0 ? activeMembersAtTime : allMembers;
+
+
                 if (exp.isSettlementPayment && exp.settlementBetween && exp.settlementBetween.length === 2) {
-                    const [payer, receiver] = [exp.userId, exp.settlementBetween.find(e => e !== exp.userId)!];
-                    if (memberBalances[payer] !== undefined) memberBalances[payer] += exp.amount;
-                    if (memberBalances[receiver] !== undefined) memberBalances[receiver] -= exp.amount;
+                    const [p, r] = [exp.userId, exp.settlementBetween.find(e => e !== exp.userId)!];
+                    if (memberBalances[p] !== undefined) memberBalances[p] += amount;
+                    if (memberBalances[r] !== undefined) memberBalances[r] -= amount;
                     return;
                 }
 
@@ -470,16 +486,16 @@ export default function Dashboard() {
                         }
                         contributorTotal += contributor.amount;
                     });
-                    const remainder = exp.amount - contributorTotal;
+                    const remainder = amount - contributorTotal;
                     if (remainder > 0.01) {
-                        if (memberBalances[exp.userId] !== undefined) memberBalances[exp.userId] += remainder;
+                        if (memberBalances[payer] !== undefined) memberBalances[payer] += remainder;
                     }
                 } else {
-                    if (memberBalances[exp.userId] !== undefined) memberBalances[exp.userId] += exp.amount;
+                    if (memberBalances[payer] !== undefined) memberBalances[payer] += amount;
                 }
 
-                const sharePerPerson = exp.amount / members.length;
-                members.forEach(m => {
+                const sharePerPerson = amount / relevantMembers.length;
+                relevantMembers.forEach(m => {
                     memberBalances[m.email] -= sharePerPerson;
                 });
             });
@@ -1656,7 +1672,7 @@ export default function Dashboard() {
                                     return (
                                         <>
                                             {displayedExpenses.map((expense) => {
-                                                const member = house?.members?.find(m => m.email === expense.userId);
+                                                const member = allMembers.find(m => m.email === expense.userId);
                                                 const memberName = member?.name || expense.userId.split('@')[0];
                                                 const expenseDate = new Date(expense.date);
                                                 const expenseDateStr = `${formatDateLocale(expenseDate, { day: 'numeric', month: 'short' })}, ${formatTimeLocale(expenseDate)}`;
@@ -1707,7 +1723,7 @@ export default function Dashboard() {
                                                                                                 {expense.contributors?.[0] && expense.contributors
                                                                                                     .filter(c => c.email !== expense.userId)
                                                                                                     .map((c, i, arr) => {
-                                                                                                        const contribMember = house?.members?.find(m => m.email === c.email);
+                                                                                                        const contribMember = allMembers.find(m => m.email === c.email);
                                                                                                         const cName = contribMember?.name || c.email.split('@')[0];
                                                                                                         return `${cName} ${displayCurrency}${c.amount.toFixed(2)}${i < arr.length - 1 ? ', ' : ''}`;
                                                                                                     })
@@ -1943,7 +1959,7 @@ export default function Dashboard() {
                     <DialogTitle>Confirm Payment</DialogTitle>
                     <DialogContent>
                         {paySettlement && (() => {
-                            const toMember = house?.members?.find(m => m.email === paySettlement.to);
+                            const toMember = allMembers.find(m => m.email === paySettlement.to);
                             const toName = toMember?.name || paySettlement.to.split('@')[0];
                             return (
                                 <Box sx={{ pt: 1, display: 'flex', flexDirection: 'column', gap: 2 }}>
@@ -2100,7 +2116,7 @@ export default function Dashboard() {
                                             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
                                                 {pendingDeposits.map((d: any) => {
                                                     const isMyDeposit = d.email === user?.email;
-                                                    const name = (house?.members?.find((m: any) => (typeof m === 'string' ? m : m.email) === d.email)?.name) || d.email.split('@')[0];
+                                                    const name = (allMembers.find((m: any) => (typeof m === 'string' ? m : m.email) === d.email)?.name) || d.email.split('@')[0];
 
                                                     return (
                                                         <Box key={d.id} sx={{ p: 1.5, bgcolor: 'rgba(237, 108, 2, 0.05)', borderRadius: 2, border: '1px solid', borderColor: 'warning.light', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -2292,7 +2308,7 @@ export default function Dashboard() {
                                                 approvedDeposits
                                                     .filter(d => d.date.startsWith(monthStr))
                                                     .map((d: any) => {
-                                                        const name = (house?.members?.find((m: any) => (typeof m === 'string' ? m : m.email) === d.email)?.name) || d.email.split('@')[0];
+                                                        const name = (allMembers.find((m: any) => (typeof m === 'string' ? m : m.email) === d.email)?.name) || d.email.split('@')[0];
                                                         return (
                                                             <Box key={d.id} sx={{ p: 1, bgcolor: 'rgba(0,0,0,0.02)', borderRadius: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                                                 <Box>
@@ -2449,8 +2465,8 @@ export default function Dashboard() {
                                     .map(exp => {
                                         const fromEmail = exp.userId;
                                         const toEmail = exp.settlementBetween?.find((e: string) => e !== fromEmail) || '';
-                                        const fromMember = house?.members?.find(m => m.email === fromEmail);
-                                        const toMember = house?.members?.find(m => m.email === toEmail);
+                                        const fromMember = allMembers.find(m => m.email === fromEmail);
+                                        const toMember = allMembers.find(m => m.email === toEmail);
                                         const createdDate = new Date(exp.createdAt || exp.date);
                                         const approvedDate = exp.approvedAt ? new Date(exp.approvedAt) : createdDate;
                                         const dateOptions: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'short', year: 'numeric' };

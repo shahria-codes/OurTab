@@ -382,6 +382,7 @@ export default function ExpensePage() {
 
             const memberBalances: { [email: string]: number } = {};
             const members = currentHouseData?.members || [];
+            const allMembers = [...members, ...(currentHouseData?.pastMembers || [])];
 
             const totalGroupExpense = expenses.reduce((sum: number, exp: Expense) => sum + exp.amount, 0);
             void totalGroupExpense;
@@ -400,10 +401,19 @@ export default function ExpensePage() {
 
             // --- SETTLEMENT LOGIC --- (Follows Dashboard logic using allExpenses)
             if (currentHouseData?.typeOfHouse !== 'meals_and_expenses') {
-                members.forEach((m: HouseMember) => { memberBalances[m.email] = 0; });
+                const allMembers = [...(currentHouseData?.members || []), ...(currentHouseData?.pastMembers || [])];
+                allMembers.forEach((m: HouseMember) => { memberBalances[m.email] = 0; });
                 allExpenses.forEach((exp: Expense) => {
                     const amount = exp.amount;
                     const payer = exp.userId;
+
+                    const expMonth = exp.date.substring(0, 7);
+                    const activeMembersAtTime = allMembers.filter(m => {
+                        const details = currentHouseData?.memberDetails?.[m.email];
+                        if (!details?.leftDate) return true;
+                        return details.leftDate.substring(0, 7) >= expMonth;
+                    });
+                    const relevantMembers = activeMembersAtTime.length > 0 ? activeMembersAtTime : allMembers;
 
                     if (exp.isSettlementPayment && exp.settlementBetween && exp.settlementBetween.length === 2) {
                         const [p, r] = [exp.userId, exp.settlementBetween.find((e: string) => e !== exp.userId)!];
@@ -432,17 +442,19 @@ export default function ExpensePage() {
                                 memberBalances[payer] = remainder;
                             }
                         }
-                        const sharePerPerson = amount / members.length;
-                        members.forEach((m: HouseMember) => { memberBalances[m.email] -= sharePerPerson; });
                     } else {
                         if (memberBalances[payer] !== undefined) {
                             memberBalances[payer] += amount;
                         } else {
                             memberBalances[payer] = amount;
                         }
-                        const sharePerPerson = amount / members.length;
-                        members.forEach((m: HouseMember) => { memberBalances[m.email] -= sharePerPerson; });
                     }
+
+                    const sharePerPerson = amount / relevantMembers.length;
+                    relevantMembers.forEach((m: HouseMember) => {
+                        if (memberBalances[m.email] !== undefined) memberBalances[m.email] -= sharePerPerson;
+                        else memberBalances[m.email] = -sharePerPerson;
+                    });
                 });
             }
             else {
@@ -560,8 +572,8 @@ export default function ExpensePage() {
                 const amount = Math.min(Math.abs(payer.amount), receiver.amount);
 
                 if (amount > 0.01) {
-                    const debtorName = members.find((m: HouseMember) => m.email === payer.id)?.name || payer.id.split('@')[0];
-                    const creditorName = members.find((m: HouseMember) => m.email === receiver.id)?.name || receiver.id.split('@')[0];
+                    const debtorName = allMembers.find((m: HouseMember) => m.email === payer.id)?.name || payer.id.split('@')[0];
+                    const creditorName = allMembers.find((m: HouseMember) => m.email === receiver.id)?.name || receiver.id.split('@')[0];
 
                     settlements.push({
                         debtorName,
@@ -656,7 +668,7 @@ export default function ExpensePage() {
                 const dateObj = new Date(exp.date);
                 const dateStr = `${dateObj.getDate().toString().padStart(2, '0')}/${(dateObj.getMonth() + 1).toString().padStart(2, '0')}/${dateObj.getFullYear()}`;
 
-                const member = currentHouseData?.members?.find((m: HouseMember) => m.email === exp.userId);
+                const member = allMembers.find((m: HouseMember) => m.email === exp.userId);
                 const fullName = member?.name || exp.userId.split('@')[0];
                 const names = fullName.split(' ');
                 const displayName = names.length >= 2 ? `${names[0]} ${names[1]}` : names[0];
@@ -674,7 +686,7 @@ export default function ExpensePage() {
                     if (others.length > 0) {
                         userCellContent += isMealsHouse ? '' : '\n------------------\n';
                         userCellContent += others.map(c => {
-                            const otherMember = currentHouseData?.members?.find((m: HouseMember) => m.email === c.email);
+                            const otherMember = allMembers.find((m: HouseMember) => m.email === c.email);
                             const otherFullName = otherMember?.name || c.email.split('@')[0];
                             const otherNames = otherFullName.split(' ');
                             const otherDisplayName = otherNames.length >= 2 ? `${otherNames[0]} ${otherNames[1]}` : otherNames[0];
@@ -735,7 +747,7 @@ export default function ExpensePage() {
                 doc.text(`Report Period: ${monthDisplayLabel}`, pageWidth / 2, 28, { align: 'center' });
 
                 const fundTableData: any[] = [];
-                currentHouseData.members?.forEach((m: HouseMember) => {
+                allMembers.forEach((m: HouseMember) => {
                     const stats = accounting[m.email];
                     if (stats) {
                         const netBalance = stats.closingBalance;

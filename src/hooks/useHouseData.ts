@@ -34,8 +34,22 @@ export interface House {
         role: 'manager' | 'member',
         rentAmount: number,
         mealsEnabled?: boolean,
-        offFromDate?: string
+        offFromDate?: string,
+        leftDate?: string // Added for past members
     }>;
+    pastMembers?: {
+        email: string;
+        name?: string;
+        photoUrl?: string;
+        role?: 'manager' | 'member';
+        rentAmount?: number;
+        profession?: string;
+        birthday?: string;
+        whatsapp?: string;
+        messenger?: string;
+        iban?: string;
+        wallet?: string;
+    }[];
     pendingPayments?: {
         id: string;
         from: string;

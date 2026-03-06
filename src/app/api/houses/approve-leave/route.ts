@@ -39,13 +39,27 @@ export async function POST(request: Request) {
             const newMembers = allMembers.filter(m => m !== userToApprove);
             delete leaveRequests[userToApprove];
 
+            const pastMembers: string[] = houseData.pastMembers || [];
+            if (!pastMembers.includes(userToApprove)) {
+                pastMembers.push(userToApprove);
+            }
+
             const memberDetails = houseData.memberDetails || {};
             if (memberDetails[userToApprove]) {
-                delete memberDetails[userToApprove];
+                memberDetails[userToApprove] = {
+                    ...memberDetails[userToApprove],
+                    leftDate: new Date().toISOString(),
+                    mealsEnabled: false // Disable meals when leaving
+                };
             }
 
             const batch = adminDb.batch();
-            batch.update(houseRef, { members: newMembers, leaveRequests, memberDetails });
+            batch.update(houseRef, {
+                members: newMembers,
+                leaveRequests,
+                pastMembers,
+                memberDetails
+            });
 
             const userRef = adminDb.collection('users').doc(userToApprove);
             batch.update(userRef, { houseId: null });
