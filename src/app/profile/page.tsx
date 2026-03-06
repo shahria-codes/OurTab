@@ -1590,7 +1590,7 @@ function ProfileContent() {
 
                     <Box className="animate-stagger" sx={{ textAlign: 'center', mt: 3, mb: 1, transitionDelay: '0.6s' }}>
                         <Typography variant="caption" sx={{ color: 'text.disabled', fontWeight: 600, letterSpacing: '0.05em' }}>
-                            App Version 1.2.0
+                            App Version 1.3.0
                         </Typography>
                     </Box>
 
