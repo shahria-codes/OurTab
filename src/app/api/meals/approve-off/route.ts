@@ -6,7 +6,7 @@ import { createNotification } from '@/lib/notifications';
 export async function POST(request: Request) {
     try {
         const body = await request.json();
-        let { houseId, email, managerEmail } = body;
+        let { houseId, email, managerEmail, clientToday } = body;
         if (!houseId || !email || !managerEmail) {
             return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
         }
@@ -51,19 +51,30 @@ export async function POST(request: Request) {
         }
 
         // Calculate offFromDate
-        const now = new Date();
+        let clientLocalNow: Date;
+        if (clientToday) {
+            // If clientToday provided, use it as the base (safest for timezones)
+            const [cy, cm, cd] = clientToday.split('-').map(Number);
+            clientLocalNow = new Date(cy, cm - 1, cd);
+        } else {
+            clientLocalNow = new Date();
+            clientLocalNow.setHours(0, 0, 0, 0); // fallback server local
+        }
+
+        const nowHours = new Date(); // still need server time to check window end hour
         const windowEnd = houseData.mealUpdateWindowEnd || '05:00';
         const [endHour, endMin] = windowEnd.split(':').map(Number);
-        const todayEnd = new Date(now);
+        const todayEnd = new Date(nowHours);
         todayEnd.setHours(endHour, endMin, 0, 0);
 
         let offFromDate: string;
-        if (now <= todayEnd) {
-            offFromDate = now.toISOString().split('T')[0];
+        if (nowHours <= todayEnd) {
+            // Window is open, they turn off for client's today
+            offFromDate = `${clientLocalNow.getFullYear()}-${String(clientLocalNow.getMonth() + 1).padStart(2, '0')}-${String(clientLocalNow.getDate()).padStart(2, '0')}`;
         } else {
-            const tomorrow = new Date(now);
-            tomorrow.setDate(tomorrow.getDate() + 1);
-            offFromDate = tomorrow.toISOString().split('T')[0];
+            // Window closed, they turn off for client's tomorrow
+            clientLocalNow.setDate(clientLocalNow.getDate() + 1);
+            offFromDate = `${clientLocalNow.getFullYear()}-${String(clientLocalNow.getMonth() + 1).padStart(2, '0')}-${String(clientLocalNow.getDate()).padStart(2, '0')}`;
         }
 
         const dateObj = new Date(offFromDate);
@@ -86,6 +97,8 @@ export async function POST(request: Request) {
         }
 
         // 2. Set flat literal versions
+        const existingHistory: any[] = houseData.mealHistory?.[email] || [];
+        const closedHistory = existingHistory.filter((w: any) => !!w.onFrom);
         batch.set(houseRef, {
             memberDetails: {
                 [email]: {
@@ -93,6 +106,9 @@ export async function POST(request: Request) {
                     mealsEnabled: false,
                     offFromDate: offFromDate
                 }
+            },
+            mealHistory: {
+                [email]: [...closedHistory, { offFrom: offFromDate }]
             },
             // Also clear literal request key
             mealOffRequests: {

@@ -120,10 +120,11 @@ export function useHouseData() {
         { refreshInterval: 5000, revalidateOnFocus: true }
     );
 
-    // 5. Fetch Meal Statuses
+    // 5. Fetch Meal Statuses (poll every 5s for real-time cross-device updates)
     const { data: meals, error: mealsError, isLoading: mealsLoading, mutate: mutateMeals } = useSWR<any[]>(
         house?.typeOfHouse === 'meals_and_expenses' ? `/api/meals?houseId=${house.id}` : null,
-        fetcher
+        fetcher,
+        { refreshInterval: 5000, revalidateOnFocus: true }
     );
 
     // 6. Fetch Settlements

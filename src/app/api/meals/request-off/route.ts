@@ -6,7 +6,7 @@ import { createNotification } from '@/lib/notifications';
 export async function POST(request: Request) {
     try {
         const body = await request.json();
-        let { houseId, email } = body;
+        let { houseId, email, clientToday } = body;
         if (!houseId || !email) {
             return NextResponse.json({ error: 'HouseId and Email are required' }, { status: 400 });
         }
@@ -48,19 +48,30 @@ export async function POST(request: Request) {
 
         if (isManager) {
             // Auto-approve for manager
-            const now = new Date();
+            let clientLocalNow: Date;
+            if (clientToday) {
+                // If clientToday provided, use it as the base (safest for timezones)
+                const [cy, cm, cd] = clientToday.split('-').map(Number);
+                clientLocalNow = new Date(cy, cm - 1, cd);
+            } else {
+                clientLocalNow = new Date();
+                clientLocalNow.setHours(0, 0, 0, 0); // fallback server local
+            }
+
+            const nowHours = new Date(); // still need server time to check window end hour
             const windowEnd = houseData.mealUpdateWindowEnd || '05:00';
             const [endHour, endMin] = windowEnd.split(':').map(Number);
-            const todayEnd = new Date(now);
+            const todayEnd = new Date(nowHours);
             todayEnd.setHours(endHour, endMin, 0, 0);
 
             let offFromDate: string;
-            if (now <= todayEnd) {
-                offFromDate = now.toISOString().split('T')[0];
+            if (nowHours <= todayEnd) {
+                // Window is open, they turn off for client's today
+                offFromDate = `${clientLocalNow.getFullYear()}-${String(clientLocalNow.getMonth() + 1).padStart(2, '0')}-${String(clientLocalNow.getDate()).padStart(2, '0')}`;
             } else {
-                const tomorrow = new Date(now);
-                tomorrow.setDate(tomorrow.getDate() + 1);
-                offFromDate = tomorrow.toISOString().split('T')[0];
+                // Window closed, they turn off for client's tomorrow
+                clientLocalNow.setDate(clientLocalNow.getDate() + 1);
+                offFromDate = `${clientLocalNow.getFullYear()}-${String(clientLocalNow.getMonth() + 1).padStart(2, '0')}-${String(clientLocalNow.getDate()).padStart(2, '0')}`;
             }
             const dateObj = new Date(offFromDate);
             const day = dateObj.getDate().toString().padStart(2, '0');
@@ -79,7 +90,10 @@ export async function POST(request: Request) {
                 batch.update(houseRef, { [new FieldPath('mealOffRequests', ...email.split('.'))]: FieldValue.delete() });
             }
 
-            // 2. Set flat literal version
+            // 2. Set flat literal version + append to mealHistory
+            const existingHistory: any[] = houseData.mealHistory?.[email] || [];
+            // Remove any unclosed window (safety: shouldn't happen for manager)
+            const closedHistory = existingHistory.filter((w: any) => !!w.onFrom);
             batch.set(houseRef, {
                 memberDetails: {
                     [email]: {
@@ -87,6 +101,9 @@ export async function POST(request: Request) {
                         mealsEnabled: false,
                         offFromDate: offFromDate
                     }
+                },
+                mealHistory: {
+                    [email]: [...closedHistory, { offFrom: offFromDate }]
                 },
                 // Also clear literal request key just in case
                 mealOffRequests: {

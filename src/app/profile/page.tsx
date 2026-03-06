@@ -987,10 +987,12 @@ export default function Profile() {
                                                 onClick={async () => {
                                                     setLoading(true);
                                                     try {
+                                                        const now = new Date();
+                                                        const clientToday = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
                                                         const res = await fetch('/api/meals/turn-on', {
                                                             method: 'POST',
                                                             headers: { 'Content-Type': 'application/json' },
-                                                            body: JSON.stringify({ houseId: houseDetails.id, email: user.email })
+                                                            body: JSON.stringify({ houseId: houseDetails.id, email: user.email, clientToday })
                                                         });
                                                         if (res.ok) {
                                                             showToast('Meals turned back ON!', 'success');
@@ -1060,10 +1062,12 @@ export default function Profile() {
                                             onClick={async () => {
                                                 setLoading(true);
                                                 try {
+                                                    const now = new Date();
+                                                    const clientToday = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
                                                     const res = await fetch('/api/meals/request-off', {
                                                         method: 'POST',
                                                         headers: { 'Content-Type': 'application/json' },
-                                                        body: JSON.stringify({ houseId: houseDetails.id, email: user.email })
+                                                        body: JSON.stringify({ houseId: houseDetails.id, email: user.email, clientToday })
                                                     });
                                                     if (res.ok) {
                                                         showToast('Meal off request sent to manager', 'success');
@@ -1116,10 +1120,12 @@ export default function Profile() {
                                                                 onClick={async () => {
                                                                     setLoading(true);
                                                                     try {
+                                                                        const now = new Date();
+                                                                        const clientToday = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
                                                                         const res = await fetch('/api/meals/approve-off', {
                                                                             method: 'POST',
                                                                             headers: { 'Content-Type': 'application/json' },
-                                                                            body: JSON.stringify({ houseId: houseDetails.id, email, managerEmail: user.email })
+                                                                            body: JSON.stringify({ houseId: houseDetails.id, email, managerEmail: user.email, clientToday })
                                                                         });
                                                                         if (res.ok) {
                                                                             showToast('Request approved!', 'success');

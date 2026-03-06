@@ -1,7 +1,11 @@
 
 /**
  * Centralized utility to determine if a member is taking a specific meal on a given date.
- * It respects both explicit meal records and member-level "meals enabled" / "off from date" settings.
+ * It respects mealHistory (persistent off-windows), explicit meal records, and current memberDetails.
+ *
+ * mealHistory structure (stored in house doc):
+ *   mealHistory: { [email]: Array<{ offFrom: string; onFrom?: string }> }
+ * Each entry records a window when the member was OFF. onFrom being absent means still off.
  */
 export function isTakingMeal(
     memberEmail: string,
@@ -12,15 +16,32 @@ export function isTakingMeal(
 ): boolean {
     if (!house) return false;
 
-    // 1. Check if the member has meals turned off globally or from a specific date
-    const memberDetail = house.memberDetails?.[memberEmail];
-    if (memberDetail) {
-        if (memberDetail.mealsEnabled === false && memberDetail.offFromDate && dateStr >= memberDetail.offFromDate) {
-            return false;
+    // 1. Check mealHistory — persistent record of all past off-windows.
+    //    This is the most reliable source since it survives even after
+    //    memberDetails.offFromDate is cleared when meals are turned back on.
+    const history: Array<{ offFrom: string; onFrom?: string }> =
+        house.mealHistory?.[memberEmail] || [];
+    for (const window of history) {
+        const afterOff = dateStr >= window.offFrom;
+        const beforeOn = !window.onFrom || dateStr < window.onFrom;
+        if (afterOff && beforeOn) {
+            return false; // date falls within an off-window
         }
     }
 
-    // 2. Check if there is an explicit record for this day and member
+    // 2. Check current memberDetails (for the active / most recent off state)
+    const memberDetail = house.memberDetails?.[memberEmail];
+    if (memberDetail) {
+        if (memberDetail.mealsEnabled === false) {
+            // If offFromDate is set, only mark as off from that date onward.
+            // If offFromDate is absent, treat as off for all dates (safety fallback).
+            if (!memberDetail.offFromDate || dateStr >= memberDetail.offFromDate) {
+                return false;
+            }
+        }
+    }
+
+    // 3. Check if there is an explicit record for this day and member
     const dayRecord = (meals || []).find(m => m.date === dateStr);
     if (dayRecord && dayRecord.meals && dayRecord.meals[memberEmail]) {
         const mMeals = dayRecord.meals[memberEmail];
@@ -29,7 +50,7 @@ export function isTakingMeal(
         }
     }
 
-    // 3. Default to true if no record exists and they haven't turned off meals
+    // 4. Default to true if no record exists and they haven't turned off meals
     return true;
 }
 
