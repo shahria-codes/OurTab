@@ -72,6 +72,30 @@ export async function GET(request: Request) {
 
         const members = await Promise.all(memberPromises);
 
+        // Fetch details for past members as well
+        const pastMembersList = houseData.pastMembers || [];
+        const pastMemberPromises = pastMembersList.map(async (memberEmail: string) => {
+            const memberSnap = await adminDb.collection('users').doc(memberEmail).get();
+            const baseData = memberSnap.exists ? { email: memberEmail, ...(memberSnap.data() as object) } : { email: memberEmail };
+
+            let additionalDetails = houseData.memberDetails?.[memberEmail];
+
+            if (!additionalDetails && memberEmail.includes('.')) {
+                const parts = memberEmail.split('.');
+                let current = houseData.memberDetails;
+                for (const part of parts) {
+                    current = current?.[part];
+                }
+                if (current && typeof current === 'object' && ('leftDate' in current || 'role' in current || 'rentAmount' in current)) {
+                    additionalDetails = current;
+                }
+            }
+
+            return { ...baseData, ...(additionalDetails || {}) };
+        });
+
+        const pastMembers = await Promise.all(pastMemberPromises);
+
         // 4. Map pendingPayments from subcollection
         const pendingPayments = pendingPaymentsSnap.docs.map(doc => ({
             id: doc.id,
@@ -86,6 +110,7 @@ export async function GET(request: Request) {
             id: houseSnap.id,
             ...restHouseData,
             members,
+            pastMembers,
             pendingPayments,
         });
 

@@ -28,7 +28,7 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
     try {
         const body = await request.json();
-        const { houseId, email, action } = body;
+        const { houseId, email, action, approverName, approverPhotoUrl } = body;
 
         if (!houseId || !email || !action) {
             return NextResponse.json({ error: 'HouseId, Email and Action are required' }, { status: 400 });
@@ -43,6 +43,22 @@ export async function POST(request: Request) {
 
         const requestRef = houseRef.collection('joinRequests').doc(email);
         const requestSnap = await requestRef.get();
+
+        // Helper to clean up notifications for house members
+        const cleanupNotifications = async () => {
+            try {
+                const notifsSnap = await adminDb.collection('notifications')
+                    .where('actionType', '==', 'approve_join')
+                    .where('metadata.houseId', '==', houseId)
+                    .where('metadata.senderEmail', '==', email)
+                    .get();
+
+                const deletePromises = notifsSnap.docs.map(doc => doc.ref.delete());
+                await Promise.all(deletePromises);
+            } catch (notifErr) {
+                console.error('Error cleaning up notifications:', notifErr);
+            }
+        };
 
         if (action === 'approve') {
             if (!requestSnap.exists) {
@@ -89,8 +105,8 @@ export async function POST(request: Request) {
                     userId: email,
                     type: 'house',
                     message: `your request to join ${houseData.name} has been approved.`,
-                    senderName: 'System',
-                    senderPhotoUrl: ''
+                    senderName: approverName || 'System',
+                    senderPhotoUrl: approverPhotoUrl || ''
                 });
 
                 // Notify existing members
@@ -106,6 +122,8 @@ export async function POST(request: Request) {
                 );
                 await Promise.all(notifications);
             } catch (notifErr) { console.error('Error sending approval notifications:', notifErr); }
+
+            await cleanupNotifications();
 
             return NextResponse.json({ success: true, message: 'Request approved.' });
         } else if (action === 'reject') {
@@ -124,10 +142,12 @@ export async function POST(request: Request) {
                     userId: email,
                     type: 'house',
                     message: `your request to join ${houseData.name} was rejected.`,
-                    senderName: 'System',
-                    senderPhotoUrl: ''
+                    senderName: approverName || 'System',
+                    senderPhotoUrl: approverPhotoUrl || ''
                 });
             } catch (notifErr) { console.error('Error sending rejection notification:', notifErr); }
+
+            await cleanupNotifications();
 
             return NextResponse.json({ success: true, message: 'Request rejected.' });
         } else if (action === 'cancel') {
@@ -140,19 +160,23 @@ export async function POST(request: Request) {
                 pendingHouseStatus: FieldValue.delete()
             });
 
-            // Cleanup notifications for house members
-            try {
-                const notifsSnap = await adminDb.collection('notifications')
-                    .where('actionType', '==', 'approve_join')
-                    .where('metadata.houseId', '==', houseId)
-                    .where('metadata.senderEmail', '==', email)
-                    .get();
+            // Helper to clean up notifications for house members
+            const cleanupNotifications = async () => {
+                try {
+                    const notifsSnap = await adminDb.collection('notifications')
+                        .where('actionType', '==', 'approve_join')
+                        .where('metadata.houseId', '==', houseId)
+                        .where('metadata.senderEmail', '==', email)
+                        .get();
 
-                const deletePromises = notifsSnap.docs.map(doc => doc.ref.delete());
-                await Promise.all(deletePromises);
-            } catch (notifErr) {
-                console.error('Error cleaning up notifications on cancel:', notifErr);
-            }
+                    const deletePromises = notifsSnap.docs.map(doc => doc.ref.delete());
+                    await Promise.all(deletePromises);
+                } catch (notifErr) {
+                    console.error('Error cleaning up notifications:', notifErr);
+                }
+            };
+
+            await cleanupNotifications();
 
             return NextResponse.json({ success: true, message: 'Request cancelled.' });
         } else if (action === 'accept_invite') {

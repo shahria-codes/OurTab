@@ -84,7 +84,8 @@ export function calculateMemberFundAccounting(
 
     if (!house || !house.members || house.typeOfHouse !== 'meals_and_expenses') return emptyResult;
 
-    const members = house.members;
+    // 1. Combine active and past members
+    const members = [...(house.members || []), ...(house.pastMembers || [])];
     const stats: MemberAccountingRecord = {};
 
     const getEmail = (m: any) => typeof m === 'string' ? m : m.email;
@@ -139,13 +140,21 @@ export function calculateMemberFundAccounting(
         const isPreviousMonth = monthStr < targetMonth;
         const isTargetMonth = monthStr === targetMonth;
 
+        // 2. Identify active members for THIS MONTH
+        const activeMembersForMonth = members.filter(m => {
+            const mEmail = getEmail(m);
+            const details = house.memberDetails?.[mEmail];
+            if (!details?.leftDate) return true;
+            return details.leftDate.substring(0, 7) >= monthStr;
+        });
+
         const mealsPerDay = house.mealsPerDay || 3;
         const monthlyMemberMeals: { [key: string]: number } = {};
-        members.forEach(m => monthlyMemberMeals[getEmail(m)] = 0);
+        activeMembersForMonth.forEach(m => monthlyMemberMeals[getEmail(m)] = 0);
 
         // Calculate meals for this month
         meals.filter(m => m.date.startsWith(monthStr)).forEach(dayRecord => {
-            members.forEach(m => {
+            activeMembersForMonth.forEach(m => {
                 const mEmail = getEmail(m);
                 const dateStr = dayRecord.date;
 
@@ -159,7 +168,7 @@ export function calculateMemberFundAccounting(
         houseTotalMeals += monthlyMealsConsumed;
         if (isTargetMonth) periodicTotalMeals = monthlyMealsConsumed;
 
-        // Deposits for this month
+        // Deposits for this month (from ALL members, even past)
         let monthlyDepositsTotal = 0;
         (fundDeposits || [])
             .filter(d => d.status === 'approved' && getYYYYMM(new Date(d.createdAt || d.date)) === monthStr)
@@ -173,11 +182,14 @@ export function calculateMemberFundAccounting(
             });
         if (isTargetMonth) periodicTotalDeposits = monthlyDepositsTotal;
 
-        // Rent for this month
+        // Rent for this month (only charge ACTIVE members)
         let monthlyRentTotal = 0;
-        members.forEach(m => {
+        activeMembersForMonth.forEach(m => {
             const mEmail = getEmail(m);
-            const rent = Number(m.rentAmount || 0);
+            // Default to member object rentAmount unless overriden by house.memberDetails
+            const memberObjRent = typeof m === 'object' && m.rentAmount !== undefined ? m.rentAmount : 0;
+            const rent = house.memberDetails?.[mEmail]?.rentAmount ?? memberObjRent;
+
             if (stats[mEmail]) {
                 stats[mEmail].rent += rent;
                 if (isTargetMonth) stats[mEmail].periodicRent += rent;
@@ -219,33 +231,47 @@ export function calculateMemberFundAccounting(
             previousMonthsRemaining += (monthlyDepositsTotal - totalMonthlyExpenses);
         }
 
-        const utilShare = members.length > 0 ? (monthlyUtilities / members.length) : 0;
-        const wageShare = members.length > 0 ? (monthlyWage / members.length) : 0;
-        const miscShare = members.length > 0 ? (monthlyMisc / members.length) : 0;
+        // Shares only split among ACTIVE members
+        const activeCount = activeMembersForMonth.length;
+        const utilShare = activeCount > 0 ? (monthlyUtilities / activeCount) : 0;
+        const wageShare = activeCount > 0 ? (monthlyWage / activeCount) : 0;
+        const miscShare = activeCount > 0 ? (monthlyMisc / activeCount) : 0;
         const mealUnitPrice = monthlyMealsConsumed > 0 ? (monthlyGroceries / monthlyMealsConsumed) : 0;
 
+        // Update stats for ALL members (some just carry over balance)
         members.forEach(m => {
             const mEmail = getEmail(m);
             if (stats[mEmail]) {
                 const prevClosing = stats[mEmail].closingBalance || 0;
                 if (isTargetMonth) stats[mEmail].openingBalance = prevClosing;
 
-                const monthlyUtilCost = utilShare;
-                const monthlyMiscCost = miscShare;
-                stats[mEmail].utilities += monthlyUtilCost;
-                stats[mEmail].wage += wageShare;
-                stats[mEmail].misc += monthlyMiscCost;
+                const isActive = activeMembersForMonth.some(act => getEmail(act) === mEmail);
 
-                stats[mEmail].mealCount += monthlyMemberMeals[mEmail];
-                const monthlyMealCost = monthlyMemberMeals[mEmail] * mealUnitPrice;
-                stats[mEmail].mealCost += monthlyMealCost;
+                if (isActive) {
+                    stats[mEmail].utilities += utilShare;
+                    stats[mEmail].wage += wageShare;
+                    stats[mEmail].misc += miscShare;
 
-                if (isTargetMonth) {
-                    stats[mEmail].periodicUtilities = monthlyUtilCost;
-                    stats[mEmail].periodicWage = wageShare;
-                    stats[mEmail].periodicMisc = monthlyMiscCost;
-                    stats[mEmail].periodicMealCount = monthlyMemberMeals[mEmail];
-                    stats[mEmail].periodicMealCost = monthlyMealCost;
+                    const mMealCount = monthlyMemberMeals[mEmail] || 0;
+                    stats[mEmail].mealCount += mMealCount;
+
+                    const mMealCost = mMealCount * mealUnitPrice;
+                    stats[mEmail].mealCost += mMealCost;
+
+                    if (isTargetMonth) {
+                        stats[mEmail].periodicUtilities = utilShare;
+                        stats[mEmail].periodicWage = wageShare;
+                        stats[mEmail].periodicMisc = miscShare;
+                        stats[mEmail].periodicMealCount = mMealCount;
+                        stats[mEmail].periodicMealCost = mMealCost;
+                    }
+                } else if (isTargetMonth) {
+                    // Make sure periodic values are 0 if not active in target month
+                    stats[mEmail].periodicUtilities = 0;
+                    stats[mEmail].periodicWage = 0;
+                    stats[mEmail].periodicMisc = 0;
+                    stats[mEmail].periodicMealCount = 0;
+                    stats[mEmail].periodicMealCost = 0;
                 }
 
                 // Update closing balance for each month to carry over

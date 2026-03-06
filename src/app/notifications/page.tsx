@@ -209,7 +209,9 @@ export default function NotificationsPage() {
                         body: JSON.stringify({
                             houseId: meta.houseId,
                             email: meta.senderEmail,
-                            action: action === 'approve' ? 'approve' : 'reject'
+                            action: action === 'approve' ? 'approve' : 'reject',
+                            approverName: user.displayName || user.email?.split('@')[0] || 'System',
+                            approverPhotoUrl: user.photoURL || ''
                         })
                     });
                     break;
