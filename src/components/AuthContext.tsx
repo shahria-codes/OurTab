@@ -110,7 +110,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
     }, [messaging]);
 
-    // Shared helper: obtain + save FCM token using a specific SW registration.
+    // Shared helper: obtain + save FCM token for a given SW registration.
     const saveFcmToken = async (userEmail: string, swRegistration: ServiceWorkerRegistration) => {
         if (!messaging) return;
         try {
@@ -131,6 +131,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
     };
 
+    // Called only when the user explicitly grants permission for the first time.
+    // Resets all existing SWs and registers a fresh firebase-messaging-sw.js.
     const requestNotificationPermission = async () => {
         if (!user || !isNotificationSupported || !messaging) return false;
 
@@ -139,56 +141,47 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             setNotificationPermission(permission);
 
             if (permission === 'granted') {
-                // Clear out any old service workers to prevent conflicts (e.g. from next-pwa or old SWs with query params)
+                // Clear out any old service workers to prevent conflicts
                 const existingRegistrations = await navigator.serviceWorker.getRegistrations();
                 for (const registration of existingRegistrations) {
                     await registration.unregister();
                 }
 
                 const swRegistration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+                await swRegistration.update();
 
                 if (user.email) {
-                    console.log('[FCM] Registering token after permission grant...');
                     await saveFcmToken(user.email, swRegistration);
                     return true;
                 }
             }
             return false;
         } catch (err) {
-            console.error('Error requesting notification permission:', err);
+            console.error('[FCM] Error requesting notification permission:', err);
             return false;
         }
     };
 
-    // When a new service worker takes over (after a code deployment), the push
-    // subscription tied to the old SW registration becomes invalid. FCM sends
-    // push messages to the old token, but they are never delivered.
-    // Fix: listen for `controllerchange` and silently refresh the FCM token so
-    // users never need to reinstall the PWA after an update.
-    useEffect(() => {
-        if (typeof window === 'undefined' || !('serviceWorker' in navigator)) return;
+    // Silently refreshes the FCM token against the existing SW registration.
+    // Called on every auth state change when permission is already granted.
+    // Does NOT unregister SWs — that would be destructive and break things.
+    const refreshFcmTokenSilently = async (userEmail: string) => {
+        if (!messaging) return;
+        try {
+            // Find the firebase messaging SW registration if it exists
+            const registrations = await navigator.serviceWorker.getRegistrations();
+            const existingReg = registrations.find(r =>
+                r.active?.scriptURL?.includes('firebase-messaging-sw.js')
+            );
 
-        const handleControllerChange = async () => {
-            if (!user?.email || !messaging) return;
-            if (window.Notification.permission !== 'granted') return;
-
-            console.log('[FCM] Service worker updated — refreshing FCM token...');
-            try {
-                // Re-register the firebase messaging SW explicitly so getToken
-                // uses the correct registration after the controller changes.
-                const swRegistration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
-                await saveFcmToken(user.email, swRegistration);
-                console.log('[FCM] Token refreshed after SW update.');
-            } catch (err) {
-                console.error('[FCM] Failed to refresh token after SW update:', err);
-            }
-        };
-
-        navigator.serviceWorker.addEventListener('controllerchange', handleControllerChange);
-        return () => {
-            navigator.serviceWorker.removeEventListener('controllerchange', handleControllerChange);
-        };
-    }, [user, messaging]);
+            // Use the existing registration, or register fresh if not found
+            const swReg = existingReg ?? await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+            await saveFcmToken(userEmail, swReg);
+        } catch (err) {
+            // Non-fatal — don't block auth flow
+            console.error('[FCM] Silent token refresh failed:', err);
+        }
+    };
 
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
@@ -210,10 +203,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                         }
                     });
 
-                    // If permission is already granted, try to refresh token silently
-                    if ('Notification' in window && window.Notification.permission === 'granted' && messaging) {
-                        // We don't block login on this
-                        requestNotificationPermission().catch(() => { });
+                    // If permission already granted, silently refresh the FCM token.
+                    // This handles the case where a code deployment caused the SW to
+                    // update, invalidating the old push subscription + token.
+                    if ('Notification' in window && window.Notification.permission === 'granted' && messaging && firebaseUser.email) {
+                        refreshFcmTokenSilently(firebaseUser.email).catch(() => { });
                     }
                 } catch (error) {
                     console.error("Error syncing user with DB:", error);
