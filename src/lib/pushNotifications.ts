@@ -30,23 +30,19 @@ export async function sendPushNotification(email: string, title: string, body: s
         stringifiedData.body = body;
 
         const message: any = {
-            // No top-level `notification` key: prevents FCM from showing a
-            // *second* system-level notification alongside the one the service
-            // worker shows in onBackgroundMessage (which would cause duplicates).
-            // Android & iOS still get their native notification via the
-            // platform-specific blocks below.
+            // Data-only payload: no top-level `notification` key and no
+            // `android.notification` block. This ensures FCM does NOT show a
+            // system-level notification on Android, which would bypass the
+            // service worker's onBackgroundMessage handler entirely.
+            // The SW reads title/body/icon from `data` and calls
+            // self.registration.showNotification() itself — giving us a
+            // consistent, fully-customised notification on all platforms.
             data: stringifiedData,
             token: fcmToken,
             android: {
                 priority: 'high',
-                notification: {
-                    title,
-                    body,
-                    sound: 'default',
-                    channelId: 'default',
-                    color: '#6C63FF',
-                    image: notificationIcon
-                },
+                // No `notification` block here — keep this data-only so the
+                // service worker's onBackgroundMessage fires on Android web.
             },
             apns: {
                 payload: {
