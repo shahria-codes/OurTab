@@ -110,6 +110,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
     }, [messaging]);
 
+    // Shared helper: obtain + save FCM token using a specific SW registration.
+    const saveFcmToken = async (userEmail: string, swRegistration: ServiceWorkerRegistration) => {
+        if (!messaging) return;
+        try {
+            const currentToken = await getToken(messaging, {
+                vapidKey: process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY,
+                serviceWorkerRegistration: swRegistration
+            });
+            if (currentToken) {
+                await fetch('/api/users', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: userEmail, fcmToken: currentToken }),
+                });
+                mutateUser();
+            }
+        } catch (err) {
+            console.error('[FCM] Error saving token:', err);
+        }
+    };
+
     const requestNotificationPermission = async () => {
         if (!user || !isNotificationSupported || !messaging) return false;
 
@@ -126,22 +147,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
                 const swRegistration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
 
-                const currentToken = await getToken(messaging, {
-                    vapidKey: process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY,
-                    serviceWorkerRegistration: swRegistration
-                });
-
-                if (currentToken) {
-                    console.log('FCM Token received:', currentToken);
-                    await fetch('/api/users', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            email: user.email,
-                            fcmToken: currentToken
-                        }),
-                    });
-                    mutateUser();
+                if (user.email) {
+                    console.log('[FCM] Registering token after permission grant...');
+                    await saveFcmToken(user.email, swRegistration);
                     return true;
                 }
             }
@@ -151,6 +159,36 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             return false;
         }
     };
+
+    // When a new service worker takes over (after a code deployment), the push
+    // subscription tied to the old SW registration becomes invalid. FCM sends
+    // push messages to the old token, but they are never delivered.
+    // Fix: listen for `controllerchange` and silently refresh the FCM token so
+    // users never need to reinstall the PWA after an update.
+    useEffect(() => {
+        if (typeof window === 'undefined' || !('serviceWorker' in navigator)) return;
+
+        const handleControllerChange = async () => {
+            if (!user?.email || !messaging) return;
+            if (window.Notification.permission !== 'granted') return;
+
+            console.log('[FCM] Service worker updated — refreshing FCM token...');
+            try {
+                // Re-register the firebase messaging SW explicitly so getToken
+                // uses the correct registration after the controller changes.
+                const swRegistration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+                await saveFcmToken(user.email, swRegistration);
+                console.log('[FCM] Token refreshed after SW update.');
+            } catch (err) {
+                console.error('[FCM] Failed to refresh token after SW update:', err);
+            }
+        };
+
+        navigator.serviceWorker.addEventListener('controllerchange', handleControllerChange);
+        return () => {
+            navigator.serviceWorker.removeEventListener('controllerchange', handleControllerChange);
+        };
+    }, [user, messaging]);
 
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
