@@ -230,6 +230,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const logOut = async () => {
         try {
+            // Unregister token from DB so they stop receiving notifications
+            if (user?.email) {
+                await fetch('/api/users', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: user.email,
+                        fcmToken: '' // Empty string clears the token
+                    }),
+                });
+            }
             await signOut(auth);
             setUser(null);
             router.push('/');
