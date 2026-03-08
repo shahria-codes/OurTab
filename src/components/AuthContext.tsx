@@ -205,8 +205,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                     });
 
                     // If permission already granted, silently refresh the FCM token.
-                    // This handles the case where a code deployment caused the SW to
-                    // update, invalidating the old push subscription + token.
                     if ('Notification' in window && window.Notification.permission === 'granted' && messaging && firebaseUser.email) {
                         refreshFcmTokenSilently(firebaseUser.email).catch(() => { });
                     }
@@ -219,6 +217,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         return () => unsubscribe();
     }, [mutateUser, isNotificationSupported]);
+
+    // ─── Real-time User Profile Listener ──────────────────────────────────────
+    // Listens for changes to the user's document in Firestore (e.g. house join 
+    // approval, house deletion, role changes) and triggers SWR refreshes.
+    useEffect(() => {
+        if (!user?.email) return;
+
+        const { onSnapshot, doc } = require('firebase/firestore');
+        const { db } = require('@/lib/firebase');
+
+        const unsub = onSnapshot(doc(db, 'users', user.email), (snapshot: any) => {
+            if (snapshot.exists()) {
+                // Trigger SWR to refresh data across the app
+                mutateUser();
+                // If houseId changed, mutate house too
+                mutateHouse();
+            }
+        });
+
+        return () => unsub();
+    }, [user?.email, mutateUser, mutateHouse]);
 
     const signIn = async () => {
         const provider = new GoogleAuthProvider();
