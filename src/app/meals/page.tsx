@@ -387,10 +387,17 @@ export default function MealsPage() {
 
                         <Grid container spacing={3}>
                             {members.map(member => {
-                                let totalMealsConsumed = 0;
+                                let totalB = 0;
+                                let totalL = 0;
+                                let totalD = 0;
+
                                 days.forEach(dateStr => {
-                                    totalMealsConsumed += countMemberMeals(member.email, dateStr, house, meals);
+                                    if (mealsPerDay === 3 && isTakingMeal(member.email, dateStr, 'breakfast', house, meals)) totalB++;
+                                    if (isTakingMeal(member.email, dateStr, 'lunch', house, meals)) totalL++;
+                                    if (isTakingMeal(member.email, dateStr, 'dinner', house, meals)) totalD++;
                                 });
+
+                                const totalMealsConsumed = totalB + totalL + totalD;
 
                                 return (
                                     <Grid size={{ xs: 12, sm: 6, lg: 3 }} key={`summary-${member.email}`} sx={{ display: 'flex' }}>
@@ -419,10 +426,34 @@ export default function MealsPage() {
                                                 bgcolor: 'background.paper',
                                                 boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
                                             }} />
-                                            <Box sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                                                <Typography variant="h6" sx={{ fontWeight: 800, mb: 1, lineHeight: 1.2 }}>
+                                            <Box sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', width: '100%' }}>
+                                                <Typography variant="h6" sx={{ fontWeight: 800, mb: 1.5, lineHeight: 1.2 }}>
                                                     {member.name ? member.name.split(' ').slice(0, 2).join(' ') : member.email.split('@')[0]}
                                                 </Typography>
+
+                                                <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center', mb: 2 }}>
+                                                    {mealsPerDay === 3 && (
+                                                        <Tooltip title="Breakfasts">
+                                                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, bgcolor: 'rgba(255,193,7,0.1)', px: 1, py: 0.5, borderRadius: 2 }}>
+                                                                <LightModeIcon sx={{ fontSize: 16, color: '#ffb300' }} />
+                                                                <Typography variant="body2" sx={{ fontWeight: 700, color: '#ffb300' }}>{totalB}</Typography>
+                                                            </Box>
+                                                        </Tooltip>
+                                                    )}
+                                                    <Tooltip title="Lunches">
+                                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, bgcolor: 'rgba(255,152,0,0.1)', px: 1, py: 0.5, borderRadius: 2 }}>
+                                                            <WbSunnyIcon sx={{ fontSize: 16, color: '#f57c00' }} />
+                                                            <Typography variant="body2" sx={{ fontWeight: 700, color: '#f57c00' }}>{totalL}</Typography>
+                                                        </Box>
+                                                    </Tooltip>
+                                                    <Tooltip title="Dinners">
+                                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, bgcolor: 'rgba(63,81,181,0.1)', px: 1, py: 0.5, borderRadius: 2 }}>
+                                                            <BedtimeIcon sx={{ fontSize: 16, color: '#3f51b5' }} />
+                                                            <Typography variant="body2" sx={{ fontWeight: 700, color: '#3f51b5' }}>{totalD}</Typography>
+                                                        </Box>
+                                                    </Tooltip>
+                                                </Box>
+
                                                 <Box sx={{
                                                     display: 'inline-flex',
                                                     alignItems: 'center',
