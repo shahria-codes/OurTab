@@ -347,3 +347,31 @@
 [debug] [2026-03-08T11:38:06.587Z] Checked if tokens are valid: true, expires at: 1772973180668
 [debug] [2026-03-08T11:38:06.587Z] >>> [apiv2][query] POST https://cloudscheduler.googleapis.com/v1/projects/ourtab26/locations/us-central1/jobs [none]
 [debug] [2026-03-08T11:38:06.587Z] >>> [apiv2][body] POST https://cloudscheduler.googleapis.com/v1/projects/ourtab26/locations/us-central1/jobs {"timeZone":"UTC","name":"projects/ourtab26/locations/us-central1/jobs/firebase-schedule-birthdayReminderCron-us-central1","httpTarget":{"uri":"https://us-central1-ourtab26.cloudfunctions.net/birthdayReminderCron","httpMethod":"POST","oidcToken":{"serviceAccountEmail":"223085955311-compute@developer.gserviceaccount.com"}},"schedule":"every 30 minutes","attemptDeadline":null,"retryConfig":{"maxDoublings":null,"retryCount":null,"maxBackoffDuration":null,"minBackoffDuration":null,"maxRetryDuration":null}}
+[debug] [2026-03-08T11:38:13.954Z] <<< [apiv2][status] POST https://cloudscheduler.googleapis.com/v1/projects/ourtab26/locations/us-central1/jobs 200
+[debug] [2026-03-08T11:38:13.954Z] <<< [apiv2][body] POST https://cloudscheduler.googleapis.com/v1/projects/ourtab26/locations/us-central1/jobs {"name":"projects/ourtab26/locations/us-central1/jobs/firebase-schedule-birthdayReminderCron-us-central1","httpTarget":{"uri":"https://us-central1-ourtab26.cloudfunctions.net/birthdayReminderCron","httpMethod":"POST","headers":{"User-Agent":"Google-Cloud-Scheduler"},"oidcToken":{"serviceAccountEmail":"223085955311-compute@developer.gserviceaccount.com","audience":"https://us-central1-ourtab26.cloudfunctions.net/birthdayReminderCron"}},"userUpdateTime":"2026-03-08T11:38:13.734822Z","state":"ENABLED","status":{"code":-1},"scheduleTime":"2026-03-08T12:08:00Z","retryConfig":{"maxRetryDuration":"0s","minBackoffDuration":"5s","maxBackoffDuration":"3600s","maxDoublings":5},"schedule":"every 30 minutes","timeZone":"UTC","attemptDeadline":"180s"}
+[debug] [2026-03-08T11:38:13.954Z] created scheduler job firebase-schedule-birthdayReminderCron-us-central1
+[info] ✔  functions[birthdayReminderCron(us-central1)] Successful create operation. 
+[debug] [2026-03-08T11:38:13.966Z] Total Function Deployment time: 140718
+[debug] [2026-03-08T11:38:13.966Z] 1 Functions Deployed
+[debug] [2026-03-08T11:38:13.967Z] 0 Functions Errored
+[debug] [2026-03-08T11:38:13.967Z] 0 Function Deployments Aborted
+[debug] [2026-03-08T11:38:13.967Z] Average Function Deployment time: 140716
+[debug] [2026-03-08T11:38:14.117Z] Checked if tokens are valid: true, expires at: 1772973180668
+[debug] [2026-03-08T11:38:14.117Z] Checked if tokens are valid: true, expires at: 1772973180668
+[debug] [2026-03-08T11:38:14.118Z] >>> [apiv2][query] GET https://artifactregistry.googleapis.com/v1/projects/ourtab26/locations/us-central1/repositories/gcf-artifacts [none]
+[debug] [2026-03-08T11:38:14.964Z] <<< [apiv2][status] GET https://artifactregistry.googleapis.com/v1/projects/ourtab26/locations/us-central1/repositories/gcf-artifacts 200
+[debug] [2026-03-08T11:38:14.964Z] <<< [apiv2][body] GET https://artifactregistry.googleapis.com/v1/projects/ourtab26/locations/us-central1/repositories/gcf-artifacts {"name":"projects/ourtab26/locations/us-central1/repositories/gcf-artifacts","format":"DOCKER","description":"This repository is created and used by Cloud Functions for storing function docker images.","labels":{"goog-managed-by":"cloudfunctions"},"createTime":"2026-03-08T11:36:56.296609Z","updateTime":"2026-03-08T11:37:43.722089Z","mode":"STANDARD_REPOSITORY","sizeBytes":"106343627","vulnerabilityScanningConfig":{"lastEnableTime":"2026-03-08T11:36:48.136229767Z","enablementState":"SCANNING_DISABLED","enablementStateReason":"API containerscanning.googleapis.com is not enabled."},"satisfiesPzi":true,"registryUri":"us-central1-docker.pkg.dev/ourtab26/gcf-artifacts"}
+[warn] ⚠  functions: No cleanup policy detected for repositories in us-central1. This may result in a small monthly bill as container images accumulate over time. 
+[debug] [2026-03-08T11:40:00.247Z] ExitPromptError: User force closed the prompt with SIGINT
+    at Interface.sigint (/usr/lib/node_modules/firebase-tools/node_modules/@inquirer/core/dist/commonjs/lib/create-prompt.js:101:37)
+    at Interface.emit (node:events:508:28)
+    at [_ttyWrite] [as _ttyWrite] (node:internal/readline/interface:1327:18)
+    at ReadStream.onkeypress (node:internal/readline/interface:284:20)
+    at ReadStream.emit (node:events:520:35)
+    at emitKeys (node:internal/readline/utils:371:14)
+    at emitKeys.next (<anonymous>)
+    at ReadStream.onData (node:internal/readline/emitKeypressEvents:64:36)
+    at ReadStream.emit (node:events:508:28)
+    at addChunk (node:internal/streams/readable:563:12)
+[error] 
+[error] Error: An unexpected error has occurred.

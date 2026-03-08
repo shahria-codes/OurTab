@@ -57,3 +57,6 @@ public/workbox-f1770938.js
 /src/app/api/dev/*
 scripts/test-offsets.js
 .firebaserc
+functions/firebase-debug.log
+functions/firebase-debug.log
+functions/firebase-debug.log
