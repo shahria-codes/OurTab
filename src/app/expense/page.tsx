@@ -382,7 +382,11 @@ export default function ExpensePage() {
 
             const memberBalances: { [email: string]: number } = {};
             const members = currentHouseData?.members || [];
-            const allMembers = [...members, ...(currentHouseData?.pastMembers || [])];
+            const allMembersMap = new Map();
+            [...(currentHouseData?.pastMembers || []), ...members].forEach(m => {
+                allMembersMap.set(m.email, m);
+            });
+            const allMembers = Array.from(allMembersMap.values());
 
             const totalGroupExpense = expenses.reduce((sum: number, exp: Expense) => sum + exp.amount, 0);
             void totalGroupExpense;
@@ -401,7 +405,11 @@ export default function ExpensePage() {
 
             // --- SETTLEMENT LOGIC --- (Follows Dashboard logic using allExpenses)
             if (currentHouseData?.typeOfHouse !== 'meals_and_expenses') {
-                const allMembers = [...(currentHouseData?.members || []), ...(currentHouseData?.pastMembers || [])];
+                const membersMap = new Map();
+                [...(currentHouseData?.pastMembers || []), ...(currentHouseData?.members || [])].forEach(m => {
+                    membersMap.set(m.email, m);
+                });
+                const allMembers = Array.from(membersMap.values());
                 allMembers.forEach((m: HouseMember) => { memberBalances[m.email] = 0; });
                 allExpenses.forEach((exp: Expense) => {
                     const amount = exp.amount;

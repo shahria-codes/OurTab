@@ -54,19 +54,44 @@ interface RealtimeHouseData {
     mutateSettlements: () => void;
 }
 
+// ─── Global Cache (Session Persistence) ───────────────────────────────────────
+// This cache allows the app to show "stale" data immediately when navigating 
+// between pages, avoiding the "Loader" spinner flash.
+let globalHouseDataCache: House | null = null;
+let globalExpensesCache: Expense[] = [];
+let globalTodosCache: ExpenseTodo[] = [];
+let globalDepositsCache: any[] = [];
+let globalMealsCache: any[] = [];
+let globalSettlementsCache: Settlement[] = [];
+let globalHouseIdCache: string | null = null;
+let lastCachedUserEmail: string | null = null;
+
 // ─── Hook ────────────────────────────────────────────────────────────────────
 
 export function useRealtimeHouseData(): RealtimeHouseData {
     const { user } = useAuth();
 
-    const [houseId, setHouseId] = useState<string | null>(null);
-    const [house, setHouse] = useState<House | null>(null);
-    const [expenses, setExpenses] = useState<Expense[]>([]);
-    const [todos, setTodos] = useState<ExpenseTodo[]>([]);
-    const [fundDeposits, setFundDeposits] = useState<any[]>([]);
-    const [meals, setMeals] = useState<any[]>([]);
-    const [settlements, setSettlements] = useState<Settlement[]>([]);
-    const [loading, setLoading] = useState(true);
+    // Prevent cross-user data leakage by clearing cache if the user has changed 
+    // since the last time this hook was used (e.g. logout/login cycle).
+    if (user?.email !== lastCachedUserEmail) {
+        globalHouseIdCache = null;
+        globalHouseDataCache = null;
+        globalExpensesCache = [];
+        globalTodosCache = [];
+        globalDepositsCache = [];
+        globalMealsCache = [];
+        globalSettlementsCache = [];
+        lastCachedUserEmail = user?.email || null;
+    }
+
+    const [houseId, setHouseId] = useState<string | null>(globalHouseIdCache);
+    const [house, setHouse] = useState<House | null>(globalHouseDataCache);
+    const [expenses, setExpenses] = useState<Expense[]>(globalExpensesCache);
+    const [todos, setTodos] = useState<ExpenseTodo[]>(globalTodosCache);
+    const [fundDeposits, setFundDeposits] = useState<any[]>(globalDepositsCache);
+    const [meals, setMeals] = useState<any[]>(globalMealsCache);
+    const [settlements, setSettlements] = useState<Settlement[]>(globalSettlementsCache);
+    const [loading, setLoading] = useState(!globalHouseDataCache);
     const [error, setError] = useState<Error | null>(null);
 
     // Cache member profiles so we don't re-fetch on every house snapshot
@@ -92,9 +117,11 @@ export function useRealtimeHouseData(): RealtimeHouseData {
                     const data: any = snap.data();
                     const resolvedId: string | null = data.houseId || data.groupId || null;
                     setHouseId(resolvedId);
+                    globalHouseIdCache = resolvedId;
                     if (!resolvedId) setLoading(false);
                 } else {
                     setHouseId(null);
+                    globalHouseIdCache = null;
                     setLoading(false);
                 }
             })
@@ -167,13 +194,16 @@ export function useRealtimeHouseData(): RealtimeHouseData {
             const { pendingPayments: _old, ...restHouseData } = houseRaw;
             void _old;
 
-            setHouse({
+            const finalHouse = {
                 id: houseId,
                 ...restHouseData,
                 members,
                 pastMembers,
                 pendingPayments: payments,
-            } as House);
+            } as House;
+
+            setHouse(finalHouse);
+            globalHouseDataCache = finalHouse;
             setLoading(false);
         };
 
@@ -207,6 +237,7 @@ export function useRealtimeHouseData(): RealtimeHouseData {
             (snap: any) => {
                 const data = snap.docs.map((d: any) => ({ id: d.id, ...d.data() })) as Expense[];
                 setExpenses(data);
+                globalExpensesCache = data;
             },
             (err: Error) => setError(err)
         );
@@ -226,6 +257,7 @@ export function useRealtimeHouseData(): RealtimeHouseData {
                         new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
                     ) as ExpenseTodo[];
                 setTodos(data);
+                globalTodosCache = data;
             },
             (err: Error) => setError(err)
         );
@@ -238,6 +270,7 @@ export function useRealtimeHouseData(): RealtimeHouseData {
                     .map((d: any) => ({ id: d.id, ...d.data() }))
                     .sort((a: any, b: any) => (b.createdAt || '').localeCompare(a.createdAt || ''));
                 setFundDeposits(data);
+                globalDepositsCache = data;
             },
             (err: Error) => setError(err)
         );
@@ -248,6 +281,7 @@ export function useRealtimeHouseData(): RealtimeHouseData {
             (snap: any) => {
                 const data = snap.docs.map((d: any) => ({ id: d.id, ...d.data() }));
                 setMeals(data);
+                globalMealsCache = data;
             },
             (err: Error) => setError(err)
         );
@@ -258,6 +292,7 @@ export function useRealtimeHouseData(): RealtimeHouseData {
             (snap: any) => {
                 const data = snap.docs.map((d: any) => ({ id: d.id, ...d.data() })) as Settlement[];
                 setSettlements(data);
+                globalSettlementsCache = data;
             },
             (err: Error) => setError(err)
         );

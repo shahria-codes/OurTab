@@ -125,6 +125,12 @@ export default function JoinDayMealDialog({ house, userEmail, onSuccess }: JoinD
         }
     };
 
+    const isManager = useMemo(() => {
+        if (!house || !userEmail) return false;
+        const email = userEmail.toLowerCase();
+        return house.memberDetails?.[email]?.role === 'manager' || house.createdBy?.toLowerCase() === email;
+    }, [house, userEmail]);
+
     if (!open || eligibleMeals.length === 0) return null;
 
     const labels: Record<string, string> = {
@@ -140,12 +146,14 @@ export default function JoinDayMealDialog({ house, userEmail, onSuccess }: JoinD
                     <Box sx={{ width: 48, height: 48, borderRadius: '50%', bgcolor: 'primary.light', color: 'primary.main', display: 'flex', alignItems: 'center', justifyContent: 'center', mb: 1 }}>
                         <RestaurantMenuIcon />
                     </Box>
-                    <Typography variant="h6" sx={{ fontWeight: 800 }}>Meals for Today?</Typography>
+                    <Typography variant="h6" sx={{ fontWeight: 800 }}>{isManager ? 'Start Your Meals' : 'Meals for Today?'}</Typography>
                 </Box>
             </DialogTitle>
             <DialogContent>
                 <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center', mb: 3 }}>
-                    Since you joined the house late today, your meals are turned off by default. Would you like to request meals for today?
+                    {isManager
+                        ? "Since you've just started this house, you can choose which meals you'll be taking today."
+                        : "Since you joined the house late today, your meals are turned off by default. Would you like to request meals for today?"}
                 </Typography>
 
                 <Box sx={{ bgcolor: 'background.default', p: 2, borderRadius: 3, border: '1px solid', borderColor: 'divider' }}>
@@ -177,7 +185,7 @@ export default function JoinDayMealDialog({ house, userEmail, onSuccess }: JoinD
                     disabled={loading}
                     sx={{ borderRadius: 2, py: 1.2, fontWeight: 700 }}
                 >
-                    {loading ? <CircularProgress size={24} color="inherit" /> : 'Send Request'}
+                    {loading ? <CircularProgress size={24} color="inherit" /> : (isManager ? 'Turn On Meals' : 'Send Request')}
                 </Button>
                 <Button
                     fullWidth

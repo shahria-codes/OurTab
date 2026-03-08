@@ -119,7 +119,11 @@ export default function Dashboard() {
 
     // Derived state for all members (active + past)
     const allMembers = useMemo(() => {
-        return [...(house?.members || []), ...(house?.pastMembers || [])];
+        const membersMap = new Map();
+        [...(house?.pastMembers || []), ...(house?.members || [])].forEach(m => {
+            membersMap.set(m.email, m);
+        });
+        return Array.from(membersMap.values());
     }, [house]);
 
     // Derived state for pending todos

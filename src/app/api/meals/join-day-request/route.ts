@@ -86,7 +86,43 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: 'No valid meals in request' }, { status: 400 });
         }
 
-        // Store the request
+        const isManager = memberDetail.role === 'manager' || houseData.createdBy?.toLowerCase() === memberEmail;
+
+        if (isManager) {
+            // AUTO-APPROVE for managers
+            await houseRef.set({
+                joinDayMealRequests: {
+                    [memberEmail]: {
+                        joinDate: joinedDateStr,
+                        eligibleMeals,
+                        requestedMeals: validRequested,
+                        status: 'approved',
+                        approvedMeals: validRequested,
+                    }
+                }
+            }, { merge: true });
+
+            // Create meal status records directly
+            const mealsRef = adminDb.collection('meals').doc(`${houseId}_${joinedDateStr}`);
+            const mealMap: Record<string, boolean> = {
+                breakfast: validRequested.includes('breakfast'),
+                lunch: validRequested.includes('lunch'),
+                dinner: validRequested.includes('dinner'),
+            };
+            if (mealsPerDay === 2) delete mealMap.breakfast;
+
+            await mealsRef.set({
+                houseId,
+                date: joinedDateStr,
+                meals: {
+                    [memberEmail]: mealMap
+                }
+            }, { merge: true });
+
+            return NextResponse.json({ success: true, autoApproved: true });
+        }
+
+        // Store the request for normal members
         await houseRef.set({
             joinDayMealRequests: {
                 [memberEmail]: {
@@ -98,7 +134,7 @@ export async function POST(request: Request) {
             }
         }, { merge: true });
 
-        // Notify all managers
+        // Notify all other managers
         try {
             const userSnap = await adminDb.collection('users').doc(memberEmail).get();
             const userName = userSnap.exists ? (userSnap.data()?.name || memberEmail.split('@')[0]) : memberEmail.split('@')[0];
