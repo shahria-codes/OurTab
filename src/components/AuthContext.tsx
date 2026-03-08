@@ -2,7 +2,8 @@
 
 import { createContext, useContext, useEffect, useState } from 'react';
 import { User, onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut } from 'firebase/auth';
-import { auth, messaging } from '@/lib/firebase';
+import { auth, messaging, db } from '@/lib/firebase';
+import { onSnapshot, doc } from 'firebase/firestore';
 import { getToken } from 'firebase/messaging';
 import { useRouter } from 'next/navigation';
 import useSWR from 'swr';
@@ -222,10 +223,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Listens for changes to the user's document in Firestore (e.g. house join 
     // approval, house deletion, role changes) and triggers SWR refreshes.
     useEffect(() => {
-        if (!user?.email) return;
-
-        const { onSnapshot, doc } = require('firebase/firestore');
-        const { db } = require('@/lib/firebase');
+        if (!user?.email || !db) return;
 
         const unsub = onSnapshot(doc(db, 'users', user.email), (snapshot: any) => {
             if (snapshot.exists()) {
