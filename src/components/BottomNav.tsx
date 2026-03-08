@@ -10,14 +10,12 @@ import FormatListBulletedIcon from '@mui/icons-material/FormatListBulleted';
 import RestaurantMenuIcon from '@mui/icons-material/RestaurantMenu';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '@/components/AuthContext';
-import { useHouseData } from '@/hooks/useHouseData';
 import Avatar from '@mui/material/Avatar';
 
 export default function BottomNav() {
     const router = useRouter();
     const pathname = usePathname();
-    const { user } = useAuth();
-    const { house } = useHouseData();
+    const { user, house } = useAuth();
 
     useEffect(() => {
         // Keep effect for any future pathname-based side effects

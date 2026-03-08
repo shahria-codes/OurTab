@@ -34,6 +34,7 @@ export interface HouseAccountingSummary {
     totalMeals: number;
     costPerMeal: number;
     previousMonthsRemaining: number;
+    refundedDeposits: number;
     remainingFund: number;
     // Periodic summary
     periodicTotalDeposits: number;
@@ -70,6 +71,7 @@ export function calculateMemberFundAccounting(
             totalMeals: 0,
             costPerMeal: 0,
             previousMonthsRemaining: 0,
+            refundedDeposits: 0,
             remainingFund: 0,
             periodicTotalDeposits: 0,
             periodicTotalRent: 0,
@@ -144,6 +146,11 @@ export function calculateMemberFundAccounting(
         const activeMembersForMonth = members.filter(m => {
             const mEmail = getEmail(m);
             const details = house.memberDetails?.[mEmail];
+
+            if (details?.joinedAt && details.joinedAt.substring(0, 7) > monthStr) {
+                return false;
+            }
+
             if (!details?.leftDate) return true;
             return details.leftDate.substring(0, 7) >= monthStr;
         });
@@ -297,6 +304,20 @@ export function calculateMemberFundAccounting(
         });
     }
 
+    let houseRefundedDeposits = 0;
+    members.forEach(m => {
+        const mEmail = getEmail(m);
+        const leftDate = house.memberDetails?.[mEmail]?.leftDate;
+        if (leftDate) {
+            const leftYYYYMM = leftDate.substring(0, 7);
+            if (leftYYYYMM <= targetMonth) {
+                if (stats[mEmail] && stats[mEmail].closingBalance > 0) {
+                    houseRefundedDeposits += stats[mEmail].closingBalance;
+                }
+            }
+        }
+    });
+
     return {
         members: stats,
         summary: {
@@ -309,7 +330,8 @@ export function calculateMemberFundAccounting(
             totalMeals: houseTotalMeals,
             costPerMeal: houseTotalMeals > 0 ? (houseTotalGroceries / houseTotalMeals) : 0,
             previousMonthsRemaining: previousMonthsRemaining,
-            remainingFund: houseTotalDeposits - (houseTotalRent + houseTotalUtilities + houseTotalWages + houseTotalGroceries + houseTotalMisc),
+            refundedDeposits: houseRefundedDeposits,
+            remainingFund: houseTotalDeposits - (houseTotalRent + houseTotalUtilities + houseTotalWages + houseTotalGroceries + houseTotalMisc) - houseRefundedDeposits,
             // Periodic
             periodicTotalDeposits,
             periodicTotalRent,

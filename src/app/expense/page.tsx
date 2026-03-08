@@ -410,6 +410,9 @@ export default function ExpensePage() {
                     const expMonth = exp.date.substring(0, 7);
                     const activeMembersAtTime = allMembers.filter(m => {
                         const details = currentHouseData?.memberDetails?.[m.email];
+                        if (details?.joinedAt && details.joinedAt.substring(0, 7) > expMonth) {
+                            return false;
+                        }
                         if (!details?.leftDate) return true;
                         return details.leftDate.substring(0, 7) >= expMonth;
                     });
@@ -621,8 +624,19 @@ export default function ExpensePage() {
             doc.setFontSize(8);
             doc.setFont('helvetica', 'normal');
             let leftY = 30;
-            if (currentHouseData?.members) {
-                currentHouseData.members.forEach((m: HouseMember) => {
+            if (allMembers && allMembers.length > 0) {
+                const membersToShow = allMembers.filter((m: HouseMember) => {
+                    const details = currentHouseData?.memberDetails?.[m.email];
+                    if (details?.joinedAt && details.joinedAt.substring(0, 7) > targetMonth) {
+                        return false;
+                    }
+                    if (details?.leftDate && details.leftDate.substring(0, 7) < targetMonth) {
+                        return false;
+                    }
+                    return true;
+                });
+
+                membersToShow.forEach((m: HouseMember) => {
                     const mName = m.name || m.email.split('@')[0];
                     doc.text(mName, 14, leftY);
                     leftY += 4;
@@ -750,9 +764,29 @@ export default function ExpensePage() {
                 allMembers.forEach((m: HouseMember) => {
                     const stats = accounting[m.email];
                     if (stats) {
+                        const joinedAt = currentHouseData?.memberDetails?.[m.email]?.joinedAt;
+                        if (joinedAt) {
+                            const joinedYYYYMM = joinedAt.substring(0, 7);
+                            if (joinedYYYYMM > targetMonth) {
+                                return; // Skip members who joined after the target month
+                            }
+                        }
+
                         const netBalance = stats.closingBalance;
+
+                        let memberNameDisplay = m.name || m.email.split('@')[0];
+                        const leftDate = currentHouseData?.memberDetails?.[m.email]?.leftDate;
+                        if (leftDate) {
+                            const leftYYYYMM = leftDate.substring(0, 7);
+                            if (leftYYYYMM <= targetMonth) {
+                                const dateObj = new Date(leftDate);
+                                const dateStr = `${dateObj.getDate().toString().padStart(2, '0')}/${(dateObj.getMonth() + 1).toString().padStart(2, '0')}/${dateObj.getFullYear()}`;
+                                memberNameDisplay += `\n(Left: ${dateStr})`;
+                            }
+                        }
+
                         fundTableData.push([
-                            m.name || m.email.split('@')[0],
+                            memberNameDisplay,
                             `${stats.periodicDeposits.toFixed(2)}`,
                             `- ${stats.periodicRent.toFixed(2)}`,
                             `- ${stats.periodicUtilities.toFixed(2)}`,
@@ -811,6 +845,10 @@ export default function ExpensePage() {
 
                 if (summary.periodicTotalMisc > 0) {
                     summaryItems.push({ label: "Other/Misc Costs", value: `- ${summary.periodicTotalMisc.toFixed(2)}`, color: [150, 0, 0] });
+                }
+
+                if (summary.refundedDeposits > 0) {
+                    summaryItems.push({ label: "Refunded Deposits (Left Members)", value: `- ${summary.refundedDeposits.toFixed(2)}`, color: [150, 0, 0] });
                 }
 
                 summaryItems.push(

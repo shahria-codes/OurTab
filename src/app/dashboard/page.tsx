@@ -1519,28 +1519,36 @@ export default function Dashboard() {
                                                     <Typography variant="caption" sx={{ flex: 1, fontWeight: 800, textAlign: 'center' }}>Spent</Typography>
                                                     <Typography variant="caption" sx={{ flex: 1, fontWeight: 800, textAlign: 'right' }}>Balance</Typography>
                                                 </Box>
-                                                {(house.members || []).map(member => {
-                                                    const mStats = memberFundAccounting[member.email] || {
-                                                        deposits: 0, rent: 0, utilities: 0, wage: 0, mealCount: 0, mealCost: 0,
-                                                        periodicDeposits: 0, periodicRent: 0, periodicUtilities: 0, periodicWage: 0,
-                                                        periodicMealCount: 0, periodicMealCost: 0,
-                                                        openingBalance: 0, closingBalance: 0
-                                                    };
-                                                    const remaining = mStats.closingBalance;
-                                                    return (
-                                                        <Box key={member.email} sx={{ display: 'flex', alignItems: 'center' }}>
-                                                            <Box sx={{ flex: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}>
-                                                                <Avatar src={member.photoUrl} sx={{ width: 20, height: 20, fontSize: '0.6rem' }}>{member.name?.[0]}</Avatar>
-                                                                <Typography variant="body2" sx={{ fontWeight: 600, fontSize: '0.8rem' }}>{member.name?.split(' ').slice(0, 2).join(' ')}</Typography>
+                                                {(() => {
+                                                    const monthStr = getYYYYMM(selectedDate);
+                                                    return allMembers.filter(m => {
+                                                        const details = house?.memberDetails?.[m.email];
+                                                        if (details?.joinedAt && details.joinedAt.substring(0, 7) > monthStr) return false;
+                                                        if (details?.leftDate && details.leftDate.substring(0, 7) < monthStr) return false;
+                                                        return true;
+                                                    }).map(member => {
+                                                        const mStats = memberFundAccounting[member.email] || {
+                                                            deposits: 0, rent: 0, utilities: 0, wage: 0, mealCount: 0, mealCost: 0,
+                                                            periodicDeposits: 0, periodicRent: 0, periodicUtilities: 0, periodicWage: 0,
+                                                            periodicMealCount: 0, periodicMealCost: 0,
+                                                            openingBalance: 0, closingBalance: 0
+                                                        };
+                                                        const remaining = mStats.closingBalance;
+                                                        return (
+                                                            <Box key={member.email} sx={{ display: 'flex', alignItems: 'center' }}>
+                                                                <Box sx={{ flex: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}>
+                                                                    <Avatar src={member.photoUrl} sx={{ width: 20, height: 20, fontSize: '0.6rem' }}>{member.name?.[0]}</Avatar>
+                                                                    <Typography variant="body2" sx={{ fontWeight: 600, fontSize: '0.8rem' }}>{member.name?.split(' ').slice(0, 2).join(' ')}</Typography>
+                                                                </Box>
+                                                                <Typography variant="body2" sx={{ flex: 1, textAlign: 'center' }}>{mStats.periodicMealCount}</Typography>
+                                                                <Typography variant="body2" sx={{ flex: 1, textAlign: 'center' }}>{displayCurrency}{mStats.periodicMealCost.toFixed(0)}</Typography>
+                                                                <Typography variant="body2" sx={{ flex: 1, textAlign: 'right', fontWeight: 800, color: remaining >= 0 ? 'success.main' : 'error.main' }}>
+                                                                    {displayCurrency}{remaining.toFixed(0)}
+                                                                </Typography>
                                                             </Box>
-                                                            <Typography variant="body2" sx={{ flex: 1, textAlign: 'center' }}>{mStats.periodicMealCount}</Typography>
-                                                            <Typography variant="body2" sx={{ flex: 1, textAlign: 'center' }}>{displayCurrency}{mStats.periodicMealCost.toFixed(0)}</Typography>
-                                                            <Typography variant="body2" sx={{ flex: 1, textAlign: 'right', fontWeight: 800, color: remaining >= 0 ? 'success.main' : 'error.main' }}>
-                                                                {displayCurrency}{remaining.toFixed(0)}
-                                                            </Typography>
-                                                        </Box>
-                                                    );
-                                                })}
+                                                        );
+                                                    });
+                                                })()}
                                                 <Box sx={{ display: 'flex', mt: 1, pt: 1, borderTop: '1px dashed rgba(0,0,0,0.1)' }}>
                                                     <Typography variant="body2" sx={{ flex: 1.5, fontWeight: 800, fontSize: '0.8rem' }}>Total</Typography>
                                                     <Typography variant="body2" sx={{ flex: 1, textAlign: 'center', fontWeight: 800, fontSize: '0.8rem' }}>{houseFundStatsResult.periodicTotalMeals}</Typography>
@@ -2118,14 +2126,24 @@ export default function Dashboard() {
                     <DialogContent>
                         {(() => {
                             const approvedDeposits = (fundDeposits || []).filter(d => d.status === 'approved');
-                            const members = [...(house?.members || [])].sort((a, b) => {
+                            const monthStr = getYYYYMM(selectedDate);
+                            const members = [...allMembers].filter((m: any) => {
+                                const email = typeof m === 'string' ? m : m.email;
+                                const details = house?.memberDetails?.[email];
+                                if (details?.joinedAt && details.joinedAt.substring(0, 7) > monthStr) {
+                                    return false;
+                                }
+                                if (details?.leftDate && details.leftDate.substring(0, 7) < monthStr) {
+                                    return false;
+                                }
+                                return true;
+                            }).sort((a, b) => {
                                 const emailA = typeof a === 'string' ? a : a.email;
                                 const emailB = typeof b === 'string' ? b : b.email;
                                 if (emailA === user?.email) return -1;
                                 if (emailB === user?.email) return 1;
                                 return 0;
                             });
-                            const monthStr = getYYYYMM(selectedDate);
 
                             return (
                                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, mt: 1 }}>
