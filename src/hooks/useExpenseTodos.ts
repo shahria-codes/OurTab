@@ -1,5 +1,5 @@
-import useSWR from 'swr';
 import { useAuth } from '@/components/AuthContext';
+import { useHouseData } from '@/hooks/useHouseData';
 
 export interface ExpenseTodo {
     id: string;
@@ -13,15 +13,11 @@ export interface ExpenseTodo {
     expenseId?: string;
 }
 
-const fetcher = (url: string) => fetch(url).then((res) => res.json());
-
 export function useExpenseTodos() {
     const { house } = useAuth();
 
-    const { data: todos, error, isLoading, mutate } = useSWR<ExpenseTodo[]>(
-        house?.id ? `/api/expense-todos?houseId=${house.id}` : null,
-        fetcher
-    );
+    // Instead of a separate SWR fetch, use the real-time data we already established
+    const { todos, loading: isLoading, mutateTodos: mutate } = useHouseData();
 
     const addTodosBatch = async (items: string[], addedBy: string) => {
         if (!house?.id || items.length === 0) return;
@@ -72,7 +68,6 @@ export function useExpenseTodos() {
     return {
         todos: todos || [],
         loading: isLoading,
-        error,
         addTodosBatch,
         toggleTodo,
         deleteTodo,

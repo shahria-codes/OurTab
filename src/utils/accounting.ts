@@ -153,16 +153,33 @@ export function calculateMemberFundAccounting(
         activeMembersForMonth.forEach(m => monthlyMemberMeals[getEmail(m)] = 0);
 
         // Calculate meals for this month
-        meals.filter(m => m.date.startsWith(monthStr)).forEach(dayRecord => {
+        const [year, monthNum] = monthStr.split('-').map(Number);
+        const houseCreatedAt = house.createdAt ? new Date(house.createdAt) : null;
+
+        let startDay = 1;
+        if (houseCreatedAt && houseCreatedAt.getFullYear() === year && houseCreatedAt.getMonth() + 1 === monthNum) {
+            startDay = houseCreatedAt.getDate();
+        }
+
+        const now = new Date();
+        const daysInMonth = new Date(year, monthNum, 0).getDate();
+        let endDay = daysInMonth;
+
+        if (now.getFullYear() === year && now.getMonth() + 1 === monthNum) {
+            endDay = Math.min(daysInMonth, now.getDate());
+        } else if (now.getFullYear() < year || (now.getFullYear() === year && now.getMonth() + 1 < monthNum)) {
+            endDay = 0; // Future month
+        }
+
+        for (let i = startDay; i <= endDay; i++) {
+            const dateStr = `${year}-${String(monthNum).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
             activeMembersForMonth.forEach(m => {
                 const mEmail = getEmail(m);
-                const dateStr = dayRecord.date;
-
                 if (mealsPerDay === 3 && isTakingMeal(mEmail, dateStr, 'breakfast', house, meals)) monthlyMemberMeals[mEmail]++;
                 if (isTakingMeal(mEmail, dateStr, 'lunch', house, meals)) monthlyMemberMeals[mEmail]++;
                 if (isTakingMeal(mEmail, dateStr, 'dinner', house, meals)) monthlyMemberMeals[mEmail]++;
             });
-        });
+        }
 
         const monthlyMealsConsumed = Object.values(monthlyMemberMeals).reduce((sum, count) => sum + count, 0);
         houseTotalMeals += monthlyMealsConsumed;

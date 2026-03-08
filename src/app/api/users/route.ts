@@ -52,7 +52,30 @@ export async function POST(request: Request) {
 export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const email = searchParams.get('email');
+    const emailsParam = searchParams.get('emails');
 
+    // ── Batch lookup: ?emails=a@b.com,c@d.com ────────────────────────────────
+    if (emailsParam) {
+        const emails = emailsParam.split(',').map(e => e.trim()).filter(Boolean);
+        if (emails.length === 0) {
+            return NextResponse.json({});
+        }
+        try {
+            const results: Record<string, any> = {};
+            await Promise.all(
+                emails.map(async (em) => {
+                    const snap = await adminDb.collection('users').doc(em).get();
+                    results[em] = snap.exists ? snap.data() : {};
+                })
+            );
+            return NextResponse.json(results);
+        } catch (error) {
+            console.error('Error in users batch GET:', error);
+            return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+        }
+    }
+
+    // ── Single lookup: ?email=a@b.com ────────────────────────────────────────
     if (!email) {
         return NextResponse.json({ error: 'Email is required' }, { status: 400 });
     }

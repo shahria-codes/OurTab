@@ -2830,7 +2830,7 @@ export default function Dashboard() {
                 </DialogContent>
             </Dialog>
             <JoinDayMealDialog
-                house={house}
+                house={house ?? undefined}
                 userEmail={user?.email}
                 onSuccess={() => mutateHouse()}
             />

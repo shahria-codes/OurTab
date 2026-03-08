@@ -70,12 +70,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
     );
 
-    // Use SWR to keep house details accessible
+    // Use SWR to keep house details accessible (no polling — real-time updates
+    // come from Firestore onSnapshot listeners in useHouseData)
     const { data: house, mutate: mutateHouse, isLoading: houseLoading } = useSWR(
         user?.email ? `/api/houses/my-house?email=${user.email}` : null,
         url => fetch(url).then(res => res.json()),
         {
-            refreshInterval: 5000,
             fallbackData: getCachedData(`house_${user?.email}`),
             onSuccess: (data) => typeof window !== 'undefined' && window.localStorage.setItem(`house_${user?.email}`, JSON.stringify(data))
         }
