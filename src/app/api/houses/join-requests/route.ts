@@ -105,7 +105,7 @@ export async function POST(request: Request) {
                 await createNotification({
                     userId: email,
                     type: 'house',
-                    message: `your request to join ${houseData.name} has been approved.`,
+                    message: `approved your request to join ${houseData.name}.`,
                     senderName: approverName || 'System',
                     senderPhotoUrl: approverPhotoUrl || ''
                 });
@@ -142,7 +142,7 @@ export async function POST(request: Request) {
                 await createNotification({
                     userId: email,
                     type: 'house',
-                    message: `your request to join ${houseData.name} was rejected.`,
+                    message: `declined your request to join ${houseData.name}.`,
                     senderName: approverName || 'System',
                     senderPhotoUrl: approverPhotoUrl || ''
                 });

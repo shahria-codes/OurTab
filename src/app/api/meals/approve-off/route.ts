@@ -127,7 +127,7 @@ export async function POST(request: Request) {
             await createNotification({
                 userId: email,
                 type: 'house',
-                message: `has approved your request to turn off meals. Meals will stop from ${formattedDate}.`,
+                message: `approved your request to turn off meals. Meals will stop from ${formattedDate}.`,
                 senderName: managerName,
                 senderPhotoUrl: managerPhotoUrl
             });

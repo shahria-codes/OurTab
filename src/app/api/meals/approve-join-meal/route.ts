@@ -63,7 +63,7 @@ export async function POST(request: Request) {
                     await createNotification({
                         userId: memberEmail,
                         type: 'house',
-                        message: `your meal request for today has been declined.`,
+                        message: `declined your meal request for today.`,
                         senderName: managerName,
                         senderPhotoUrl: managerSnap.data()?.photoUrl || ''
                     });
@@ -104,7 +104,7 @@ export async function POST(request: Request) {
                 await createNotification({
                     userId: memberEmail,
                     type: 'house',
-                    message: `your meal request has been approved! You will be counted for ${mealLabel} today.`,
+                    message: `approved your meal request! You will be counted for ${mealLabel} today.`,
                     senderName: managerName,
                     senderPhotoUrl: managerSnap.data()?.photoUrl || ''
                 });
@@ -124,7 +124,7 @@ export async function POST(request: Request) {
                 await createNotification({
                     userId: memberEmail,
                     type: 'house',
-                    message: `your meal request for today has been declined.`,
+                    message: `declined your meal request for today.`,
                     senderName: managerName,
                     senderPhotoUrl: managerSnap.data()?.photoUrl || ''
                 });
