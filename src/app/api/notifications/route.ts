@@ -12,66 +12,9 @@ export async function GET(request: Request) {
     }
 
     try {
-        // --- 1. Birthday Check Logic ---
-        // Check if any house members have a birthday tomorrow
-        const tomorrow = new Date();
-        tomorrow.setDate(tomorrow.getDate() + 1);
-        const day = tomorrow.getDate().toString().padStart(2, '0');
-        const month = (tomorrow.getMonth() + 1).toString().padStart(2, '0');
-        const birthdayStr = `${day}-${month}`; // DD-MM format
-
-        const userHousesSnap = await adminDb.collection('houses')
-            .where('members', 'array-contains', userId)
-            .get();
-
-        for (const houseDoc of userHousesSnap.docs) {
-            const houseData = houseDoc.data();
-            const members = houseData.members || [];
-            const memberDetails = houseData.memberDetails || {};
-
-            for (const memberEmail of members) {
-                // Skip if it's the current user themselves (or handle as you wish)
-                // if (memberEmail === userId) continue;
-
-                const memberData = memberDetails[memberEmail];
-                if (memberData?.birthday === birthdayStr) {
-                    // Create a notification for the current user about this member's birthday
-                    // Only if not already notified today
-                    const notifId = `birthday_${memberEmail}_${new Date().toISOString().split('T')[0]}_for_${userId}`;
-                    const notifRef = adminDb.collection('notifications').doc(notifId);
-                    const notifSnap = await notifRef.get();
-
-                    if (!notifSnap.exists) {
-                        const title = 'Birthday Celebration! 🎂';
-                        const message = `Tomorrow is ${memberData.name || memberEmail}'s birthday! Get ready to celebrate! 🎉`;
-
-                        // Fetch member photo for the push notification icon
-                        let memberPhotoUrl = '';
-                        try {
-                            const memberUserSnap = await adminDb.collection('users').doc(memberEmail).get();
-                            if (memberUserSnap.exists) {
-                                memberPhotoUrl = memberUserSnap.data()?.photoUrl || '';
-                            }
-                        } catch (e) {
-                            console.error('Error fetching member photo for birthday notif:', e);
-                        }
-
-                        await notifRef.set({
-                            userId: userId,
-                            title,
-                            message,
-                            type: 'birthday',
-                            read: false,
-                            senderPhotoUrl: memberPhotoUrl,
-                            createdAt: new Date().toISOString()
-                        });
-
-                        // Send push notification with member photo as icon
-                        await sendPushNotification(userId, title, message, null, memberPhotoUrl);
-                    }
-                }
-            }
-        }
+        // --- 1. Birthday Check Logic (Removed) ---
+        // Moved to a scheduled Firebase Cloud Function to ensure precise local timezone delivery. 
+        // See functions/src/index.ts
 
         // --- 2. Fetch Notifications & Cleanup ---
         const snapshot = await adminDb

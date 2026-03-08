@@ -4,7 +4,7 @@ import { adminDb } from '@/lib/firebaseAdmin';
 export async function POST(request: Request) {
     try {
         const body = await request.json();
-        const { email, name, photoUrl, profession, whatsapp, messenger, birthday, iban, fcmToken, pendingHouseId } = body;
+        const { email, name, photoUrl, profession, whatsapp, messenger, birthday, iban, fcmToken, pendingHouseId, utcOffset } = body;
 
         if (!email) {
             return NextResponse.json({ error: 'Email is required' }, { status: 400 });
@@ -23,6 +23,7 @@ export async function POST(request: Request) {
             iban?: string;
             fcmToken?: string;
             pendingHouseId?: string;
+            utcOffset?: number;
         }
 
         const userData: UserRecord = { email };
@@ -37,6 +38,7 @@ export async function POST(request: Request) {
         // Removed bkash, nagad, upay
         if (birthday !== undefined) userData.birthday = birthday; // Added birthday
         if (pendingHouseId !== undefined) userData.pendingHouseId = pendingHouseId;
+        if (utcOffset !== undefined) userData.utcOffset = utcOffset;
 
         await userRef.set(userData, { merge: true });
 

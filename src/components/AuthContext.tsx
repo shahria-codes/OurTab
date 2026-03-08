@@ -196,6 +196,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                             email: firebaseUser.email,
                             name: firebaseUser.displayName,
                             photoUrl: firebaseUser.photoURL,
+                            utcOffset: new Date().getTimezoneOffset(),
                         }),
                     }).then(res => {
                         if (res.ok) {
