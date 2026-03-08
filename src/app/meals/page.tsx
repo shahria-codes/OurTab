@@ -71,7 +71,52 @@ export default function MealsPage() {
         );
     }
 
-    const { mealsPerDay = 3, members = [] } = house;
+    const { mealsPerDay = 3 } = house;
+
+    const displayMembers = useMemo(() => {
+        if (!house) return [];
+        const membersMap = new Map();
+
+        const selectedMonthStr = `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, '0')}`;
+
+        [...(house.members || [])].forEach(m => {
+            let joinedAfterThisMonth = false;
+            if (m.joinedAt) {
+                const joinedMonthStr = typeof m.joinedAt === 'string'
+                    ? m.joinedAt.substring(0, 7)
+                    : new Date(m.joinedAt).toISOString().substring(0, 7);
+                if (joinedMonthStr > selectedMonthStr) {
+                    joinedAfterThisMonth = true;
+                }
+            }
+            if (!joinedAfterThisMonth) {
+                membersMap.set(m.email, { ...m, isInactive: false });
+            }
+        });
+
+        [...(house.pastMembers || [])].forEach(m => {
+            let joinedAfterThisMonth = false;
+            if (m.joinedAt) {
+                const joinedMonthStr = typeof m.joinedAt === 'string'
+                    ? m.joinedAt.substring(0, 7)
+                    : new Date(m.joinedAt).toISOString().substring(0, 7);
+                if (joinedMonthStr > selectedMonthStr) {
+                    joinedAfterThisMonth = true;
+                }
+            }
+
+            if (!joinedAfterThisMonth && m.leftDate) {
+                const leftDateMonthStr = m.leftDate.substring(0, 7);
+                if (leftDateMonthStr >= selectedMonthStr) {
+                    if (!membersMap.has(m.email)) {
+                        membersMap.set(m.email, { ...m, isInactive: true });
+                    }
+                }
+            }
+        });
+
+        return Array.from(membersMap.values());
+    }, [house, selectedDate]);
 
     const houseCreatedAt = house.createdAt ? new Date(house.createdAt) : null;
     const houseCreationDateOnly = houseCreatedAt
@@ -199,12 +244,19 @@ export default function MealsPage() {
                         display: { xs: 'none', md: 'block' },
                         border: '1px solid rgba(255, 255, 255, 0.1)'
                     }}>
-                        <Box sx={{ display: 'grid', gridTemplateColumns: `120px repeat(${members.length}, 1fr)`, gap: 2, mb: 3 }}>
+                        <Box sx={{ display: 'grid', gridTemplateColumns: `120px repeat(${displayMembers.length}, 1fr)`, gap: 2, mb: 3 }}>
                             <Typography variant="subtitle2" sx={{ fontWeight: 800, color: 'text.secondary', opacity: 0.6, pl: 1 }}>DATE</Typography>
-                            {members.map(member => (
-                                <Box key={member.email} sx={{ textAlign: 'center' }}>
+                            {displayMembers.map(member => (
+                                <Box key={member.email} sx={{ textAlign: 'center', opacity: member.isInactive ? 0.6 : 1, filter: member.isInactive ? 'grayscale(100%)' : 'none' }}>
                                     <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mb: 1 }}>
-                                        <Avatar src={member.photoUrl} sx={{ width: 36, height: 36, mb: 1, border: '2px solid rgba(108, 99, 255, 0.3)' }} />
+                                        <Box sx={{ position: 'relative' }}>
+                                            <Avatar src={member.photoUrl} sx={{ width: 36, height: 36, mb: 1, border: member.isInactive ? '1px solid rgba(255,255,255,0.2)' : '2px solid rgba(108, 99, 255, 0.3)' }} />
+                                            {member.isInactive && (
+                                                <Typography variant="caption" sx={{ position: 'absolute', top: -8, right: -12, bgcolor: 'error.main', color: 'white', px: 0.5, py: 0.1, borderRadius: 1, fontSize: '0.55rem', fontWeight: 800 }}>
+                                                    LEFT
+                                                </Typography>
+                                            )}
+                                        </Box>
                                         <Typography variant="subtitle2" sx={{ fontWeight: 700, maxWidth: 120 }} noWrap>
                                             {member.name ? member.name.split(' ').slice(0, 2).join(' ') : member.email.split('@')[0]}
                                         </Typography>
@@ -229,7 +281,7 @@ export default function MealsPage() {
                                 return (
                                     <Box key={dateStr} sx={{
                                         display: 'grid',
-                                        gridTemplateColumns: `120px repeat(${members.length}, 1fr)`,
+                                        gridTemplateColumns: `120px repeat(${displayMembers.length}, 1fr)`,
                                         gap: 2,
                                         alignItems: 'center',
                                         p: 1.5,
@@ -248,7 +300,7 @@ export default function MealsPage() {
                                             {isToday && <Typography variant="caption" sx={{ color: 'primary.main', fontWeight: 700, display: 'block', mt: -0.5 }}>TODAY</Typography>}
                                         </Box>
 
-                                        {members.map(member => {
+                                        {displayMembers.map(member => {
                                             const memberMeals = dayRecord?.meals?.[member.email] || {};
                                             const b = memberMeals.breakfast ?? true;
                                             const l = memberMeals.lunch ?? true;
@@ -322,7 +374,7 @@ export default function MealsPage() {
                                     </Box>
 
                                     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                                        {members.map(member => {
+                                        {displayMembers.map(member => {
                                             const memberMeals = dayRecord?.meals?.[member.email] || {};
                                             const b = memberMeals.breakfast ?? true;
                                             const l = memberMeals.lunch ?? true;
@@ -349,11 +401,18 @@ export default function MealsPage() {
                                             const memberMealCount = countMemberMeals(member.email, dateStr, house, meals);
 
                                             return (
-                                                <Box key={member.email} sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                <Box key={member.email} sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', opacity: member.isInactive ? 0.6 : 1, filter: member.isInactive ? 'grayscale(100%)' : 'none' }}>
                                                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                                                        <Avatar src={member.photoUrl} sx={{ width: 32, height: 32, border: '1.5px solid rgba(255, 255, 255, 0.1)' }}>
-                                                            {member.name ? member.name[0].toUpperCase() : member.email[0].toUpperCase()}
-                                                        </Avatar>
+                                                        <Box sx={{ position: 'relative' }}>
+                                                            <Avatar src={member.photoUrl} sx={{ width: 32, height: 32, border: '1.5px solid rgba(255, 255, 255, 0.1)' }}>
+                                                                {member.name ? member.name[0].toUpperCase() : member.email[0].toUpperCase()}
+                                                            </Avatar>
+                                                            {member.isInactive && (
+                                                                <Typography variant="caption" sx={{ position: 'absolute', top: -5, right: -5, bgcolor: 'error.main', color: 'white', px: 0.5, py: 0, borderRadius: 1, fontSize: '0.45rem', fontWeight: 800 }}>
+                                                                    LEFT
+                                                                </Typography>
+                                                            )}
+                                                        </Box>
                                                         <Typography variant="body2" sx={{ fontWeight: 700 }}>
                                                             {member.name ? member.name.split(' ').slice(0, 2).join(' ') : member.email.split('@')[0]}
                                                         </Typography>
@@ -386,7 +445,7 @@ export default function MealsPage() {
                         </Box>
 
                         <Grid container spacing={3}>
-                            {members.map(member => {
+                            {displayMembers.map(member => {
                                 let totalB = 0;
                                 let totalL = 0;
                                 let totalD = 0;
@@ -400,7 +459,7 @@ export default function MealsPage() {
                                 const totalMealsConsumed = totalB + totalL + totalD;
 
                                 return (
-                                    <Grid size={{ xs: 12, sm: 6, lg: 3 }} key={`summary-${member.email}`} sx={{ display: 'flex' }}>
+                                    <Grid size={{ xs: 12, sm: 6, lg: 3 }} key={`summary-${member.email}`} sx={{ display: 'flex', opacity: member.isInactive ? 0.7 : 1, filter: member.isInactive ? 'grayscale(80%)' : 'none' }}>
                                         <Paper className="glass" sx={{
                                             p: 3,
                                             display: 'flex',
@@ -412,12 +471,18 @@ export default function MealsPage() {
                                             textAlign: 'center',
                                             width: '100%',
                                             height: '100%',
+                                            position: 'relative',
                                             transition: 'transform 0.3s ease, box-shadow 0.3s ease',
                                             '&:hover': {
                                                 transform: 'translateY(-5px)',
                                                 boxShadow: '0 12px 24px rgba(0,0,0,0.1)'
                                             }
                                         }}>
+                                            {member.isInactive && (
+                                                <Typography variant="caption" sx={{ position: 'absolute', top: 10, right: 10, bgcolor: 'error.main', color: 'white', px: 1, py: 0.2, borderRadius: 2, fontSize: '0.65rem', fontWeight: 800 }}>
+                                                    LEFT
+                                                </Typography>
+                                            )}
                                             <Avatar src={member.photoUrl} sx={{
                                                 width: 70,
                                                 height: 70,
