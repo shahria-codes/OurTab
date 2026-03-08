@@ -182,6 +182,9 @@ export function calculateMemberFundAccounting(
             const dateStr = `${year}-${String(monthNum).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
             activeMembersForMonth.forEach(m => {
                 const mEmail = getEmail(m);
+                // Stop counting meals for a member after their left date (inclusive)
+                const memberLeftDate = house.memberDetails?.[mEmail]?.leftDate;
+                if (memberLeftDate && dateStr > memberLeftDate) return;
                 if (mealsPerDay === 3 && isTakingMeal(mEmail, dateStr, 'breakfast', house, meals)) monthlyMemberMeals[mEmail]++;
                 if (isTakingMeal(mEmail, dateStr, 'lunch', house, meals)) monthlyMemberMeals[mEmail]++;
                 if (isTakingMeal(mEmail, dateStr, 'dinner', house, meals)) monthlyMemberMeals[mEmail]++;

@@ -1334,7 +1334,13 @@ export default function Dashboard() {
                                             </Typography>
 
                                             <Box sx={{ display: 'flex', gap: 1.5, overflowX: 'auto', pb: 1, flexGrow: 1, alignItems: 'center', '::-webkit-scrollbar': { height: 4 } }}>
-                                                {(house.members || []).map(member => {
+                                                {allMembers.filter(m => {
+                                                    const details = house?.memberDetails?.[m.email];
+                                                    const monthStr = summaryStr.substring(0, 7);
+                                                    if (details?.joinedAt && details.joinedAt.substring(0, 7) > monthStr) return false;
+                                                    if (details?.leftDate && details.leftDate.substring(0, 7) < monthStr) return false;
+                                                    return true;
+                                                }).map(member => {
                                                     const mb = isTakingMeal(member.email, summaryStr, 'breakfast', house, meals);
                                                     const ml = isTakingMeal(member.email, summaryStr, 'lunch', house, meals);
                                                     const md = isTakingMeal(member.email, summaryStr, 'dinner', house, meals);
@@ -1538,15 +1544,43 @@ export default function Dashboard() {
                                                             openingBalance: 0, closingBalance: 0
                                                         };
                                                         const remaining = mStats.closingBalance;
+                                                        const details = house?.memberDetails?.[member.email];
+                                                        const leftDate = details?.leftDate;
+                                                        const hasLeft = !!leftDate && leftDate.substring(0, 7) === monthStr;
+                                                        const leftLabel = hasLeft && leftDate
+                                                            ? (() => {
+                                                                if (leftDate.length <= 10) {
+                                                                    const [, mm, dd] = leftDate.split('-');
+                                                                    const day = parseInt(dd);
+                                                                    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                                                                    return `${day} ${months[parseInt(mm) - 1]}`;
+                                                                }
+                                                                const d = new Date(leftDate);
+                                                                const day = d.getDate();
+                                                                const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                                                                const h = d.getHours(), m = d.getMinutes();
+                                                                const timeStr = `${h % 12 || 12}:${String(m).padStart(2, '0')} ${h < 12 ? 'AM' : 'PM'}`;
+                                                                return `${day} ${months[d.getMonth()]}, ${timeStr}`;
+                                                            })()
+                                                            : null;
+
+
                                                         return (
-                                                            <Box key={member.email} sx={{ display: 'flex', alignItems: 'center' }}>
+                                                            <Box key={member.email} sx={{ display: 'flex', alignItems: 'center', opacity: hasLeft ? 0.65 : 1 }}>
                                                                 <Box sx={{ flex: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}>
-                                                                    <Avatar src={member.photoUrl} sx={{ width: 20, height: 20, fontSize: '0.6rem' }}>{member.name?.[0]}</Avatar>
-                                                                    <Typography variant="body2" sx={{ fontWeight: 600, fontSize: '0.8rem' }}>{member.name?.split(' ').slice(0, 2).join(' ')}</Typography>
+                                                                    <Avatar src={member.photoUrl} sx={{ width: 20, height: 20, fontSize: '0.6rem', filter: hasLeft ? 'grayscale(1)' : 'none' }}>{member.name?.[0]}</Avatar>
+                                                                    <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+                                                                        <Typography variant="body2" sx={{ fontWeight: 600, fontSize: '0.8rem', color: hasLeft ? 'text.disabled' : 'inherit', lineHeight: 1.2 }}>{member.name?.split(' ').slice(0, 2).join(' ')}</Typography>
+                                                                        {leftLabel && (
+                                                                            <Typography variant="caption" sx={{ fontSize: '0.65rem', color: 'text.disabled', fontStyle: 'italic', whiteSpace: 'nowrap', lineHeight: 1.2 }}>
+                                                                                {leftLabel}
+                                                                            </Typography>
+                                                                        )}
+                                                                    </Box>
                                                                 </Box>
-                                                                <Typography variant="body2" sx={{ flex: 1, textAlign: 'center' }}>{mStats.periodicMealCount}</Typography>
-                                                                <Typography variant="body2" sx={{ flex: 1, textAlign: 'center' }}>{displayCurrency}{mStats.periodicMealCost.toFixed(0)}</Typography>
-                                                                <Typography variant="body2" sx={{ flex: 1, textAlign: 'right', fontWeight: 800, color: remaining >= 0 ? 'success.main' : 'error.main' }}>
+                                                                <Typography variant="body2" sx={{ flex: 1, textAlign: 'center', color: hasLeft ? 'text.disabled' : 'inherit' }}>{mStats.periodicMealCount}</Typography>
+                                                                <Typography variant="body2" sx={{ flex: 1, textAlign: 'center', color: hasLeft ? 'text.disabled' : 'inherit' }}>{displayCurrency}{mStats.periodicMealCost.toFixed(0)}</Typography>
+                                                                <Typography variant="body2" sx={{ flex: 1, textAlign: 'right', fontWeight: 800, color: hasLeft ? 'text.disabled' : remaining >= 0 ? 'success.main' : 'error.main' }}>
                                                                     {displayCurrency}{remaining.toFixed(0)}
                                                                 </Typography>
                                                             </Box>

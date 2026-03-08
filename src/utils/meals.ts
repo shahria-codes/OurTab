@@ -19,6 +19,14 @@ export function isTakingMeal(
     // 0. Check if the member had even joined the house by this date.
     //    joinedAt is stored in memberDetails[email].joinedAt as an ISO string.
     const memberDetail0 = house.memberDetails?.[memberEmail];
+
+    // 0a. Check if the member had already left the house by this date.
+    //     leftDate is stored as a YYYY-MM-DD string and is inclusive (the day they left
+    //     IS counted). Any date after leftDate should return false.
+    if (memberDetail0?.leftDate && dateStr > memberDetail0.leftDate) {
+        return false;
+    }
+
     if (memberDetail0?.joinedAt) {
         const joinedISO: string = memberDetail0.joinedAt;
         const joinedDateStr = joinedISO.substring(0, 10); // "YYYY-MM-DD"

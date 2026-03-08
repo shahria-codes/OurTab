@@ -780,16 +780,35 @@ export default function ExpensePage() {
                             }
                         }
 
-                        const netBalance = stats.closingBalance;
-
-                        let memberNameDisplay = m.name || m.email.split('@')[0];
                         const leftDate = currentHouseData?.memberDetails?.[m.email]?.leftDate;
                         if (leftDate) {
                             const leftYYYYMM = leftDate.substring(0, 7);
+                            if (leftYYYYMM < targetMonth) {
+                                return; // Skip members who left before the target month
+                            }
+                        }
+
+                        const netBalance = stats.closingBalance;
+
+                        let memberNameDisplay = m.name || m.email.split('@')[0];
+                        if (leftDate) {
+                            const leftYYYYMM = leftDate.substring(0, 7);
                             if (leftYYYYMM <= targetMonth) {
-                                const dateObj = new Date(leftDate);
-                                const dateStr = `${dateObj.getDate().toString().padStart(2, '0')}/${(dateObj.getMonth() + 1).toString().padStart(2, '0')}/${dateObj.getFullYear()}`;
-                                memberNameDisplay += `\n(Left: ${dateStr})`;
+                                let dateStr = '';
+                                if (leftDate.length <= 10) {
+                                    const [, mm, dd] = leftDate.split('-');
+                                    const day = parseInt(dd);
+                                    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                                    dateStr = `${day} ${months[parseInt(mm) - 1]}`;
+                                } else {
+                                    const d = new Date(leftDate);
+                                    const day = d.getDate();
+                                    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                                    const h = d.getHours(), m = d.getMinutes();
+                                    const timeStr = `${h % 12 || 12}:${String(m).padStart(2, '0')} ${h < 12 ? 'AM' : 'PM'}`;
+                                    dateStr = `${day} ${months[d.getMonth()]}, ${timeStr}`;
+                                }
+                                memberNameDisplay += `\n(${dateStr})`;
                             }
                         }
 
