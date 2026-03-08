@@ -79,7 +79,7 @@ export default function MealsPage() {
 
         const selectedMonthStr = `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, '0')}`;
 
-        [...(house.members || [])].forEach(m => {
+        [...(house.members || [])].forEach((m: any) => {
             let joinedAfterThisMonth = false;
             if (m.joinedAt) {
                 const joinedMonthStr = typeof m.joinedAt === 'string'
@@ -94,7 +94,7 @@ export default function MealsPage() {
             }
         });
 
-        [...(house.pastMembers || [])].forEach(m => {
+        [...(house.pastMembers || [])].forEach((m: any) => {
             let joinedAfterThisMonth = false;
             if (m.joinedAt) {
                 const joinedMonthStr = typeof m.joinedAt === 'string'
