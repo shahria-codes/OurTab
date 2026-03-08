@@ -109,7 +109,7 @@ export function useRealtimeHouseData(): RealtimeHouseData {
             return;
         }
 
-        setLoading(true);
+        if (!globalHouseDataCache) setLoading(true);
 
         getDoc(doc(db, 'users', user.email))
             .then((snap: any) => {
