@@ -32,6 +32,16 @@ messaging.onBackgroundMessage((payload) => {
     };
 
     self.registration.showNotification(notificationTitle, notificationOptions);
+
+    // Update app icon badge if count is provided
+    if (payload.data?.badge && 'setAppBadge' in self.navigator) {
+        const badgeCount = parseInt(payload.data.badge);
+        if (!isNaN(badgeCount)) {
+            self.navigator.setAppBadge(badgeCount).catch(err => {
+                console.error('[firebase-messaging-sw.js] Error setting app badge:', err);
+            });
+        }
+    }
 });
 
 self.addEventListener('notificationclick', (event) => {

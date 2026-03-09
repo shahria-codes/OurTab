@@ -44,7 +44,7 @@ export const birthdayReminderCron = onSchedule('every 30 minutes', async (event)
             return;
         }
 
-        const notificationsToSend: { token: string, title: string, body: string, icon?: string }[] = [];
+        const notificationsToSend: { token: string, title: string, body: string, icon?: string, badgeCount?: number }[] = [];
 
         // Pre-fetch all houses to check memberships
         const housesSnapshot = await db.collection('houses').get();
@@ -106,11 +106,18 @@ export const birthdayReminderCron = onSchedule('every 30 minutes', async (event)
                                     createdAt: nowUtc.toISOString()
                                 });
 
+                                // Calculate unread count for badge
+                                const unreadSnap = await db.collection('notifications')
+                                    .where('userId', '==', email)
+                                    .where('read', '==', false)
+                                    .get();
+
                                 notificationsToSend.push({
                                     token: fcmToken,
                                     title,
                                     body: message,
-                                    icon: memberPhotoUrl || undefined
+                                    icon: memberPhotoUrl || undefined,
+                                    badgeCount: unreadSnap.size
                                 });
                             }
                         }
@@ -143,10 +150,17 @@ export const birthdayReminderCron = onSchedule('every 30 minutes', async (event)
                             createdAt: nowUtc.toISOString()
                         });
 
+                        // Calculate unread count for badge
+                        const unreadSnap = await db.collection('notifications')
+                            .where('userId', '==', email)
+                            .where('read', '==', false)
+                            .get();
+
                         notificationsToSend.push({
                             token: fcmToken,
                             title,
                             body: message,
+                            badgeCount: unreadSnap.size
                         });
                     }
                 }
@@ -155,12 +169,29 @@ export const birthdayReminderCron = onSchedule('every 30 minutes', async (event)
 
         // 3. Batch Send Notifications
         if (notificationsToSend.length > 0) {
-            for (const n of notificationsToSend) {
+            for (const n of notificationsToSend as any[]) {
                 try {
                     await admin.messaging().send({
                         token: n.token,
-                        notification: { title: n.title, body: n.body, ...(n.icon ? { image: n.icon } : {}) },
-                        webpush: { notification: { icon: '/icon512_maskable.png' } }
+                        data: {
+                            title: n.title,
+                            body: n.body,
+                            icon: n.icon || '/icon-192.png',
+                            badge: String(n.badgeCount || 0)
+                        },
+                        apns: {
+                            payload: {
+                                aps: {
+                                    badge: n.badgeCount || 0,
+                                    sound: 'default'
+                                }
+                            }
+                        },
+                        webpush: {
+                            notification: {
+                                icon: '/icon512_maskable.png'
+                            }
+                        }
                     });
                 } catch (e) {
                     console.error("Error sending push:", e);

@@ -1,6 +1,6 @@
 import { adminDb, adminMessaging } from './firebaseAdmin';
 
-export async function sendPushNotification(email: string, title: string, body: string, data?: any, iconUrl?: string) {
+export async function sendPushNotification(email: string, title: string, body: string, data?: any, iconUrl?: string, badgeCount?: number) {
     try {
         const userDoc = await adminDb.collection('users').doc(email).get();
         if (!userDoc.exists) {
@@ -24,10 +24,13 @@ export async function sendPushNotification(email: string, title: string, body: s
             });
         }
 
-        // Include icon in data so the service worker can use it
+        // Include icon and badge in data so the service worker can use it
         stringifiedData.icon = notificationIcon;
         stringifiedData.title = title;
         stringifiedData.body = body;
+        if (badgeCount !== undefined) {
+            stringifiedData.badge = String(badgeCount);
+        }
 
         const message: any = {
             // Data-only payload: no top-level `notification` key and no
@@ -51,6 +54,7 @@ export async function sendPushNotification(email: string, title: string, body: s
                         sound: 'default',
                         contentAvailable: true,
                         mutableContent: true,
+                        badge: badgeCount !== undefined ? badgeCount : undefined,
                     },
                 },
                 fcm_options: {

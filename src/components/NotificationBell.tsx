@@ -41,6 +41,19 @@ export default function NotificationBell() {
     useEffect(() => {
         if (!mounted || unreadCount === undefined) return;
 
+        // Sync with browser app icon badge
+        if ('setAppBadge' in navigator) {
+            if (unreadCount > 0) {
+                (navigator as any).setAppBadge(unreadCount).catch((err: any) => {
+                    console.error('Error setting app badge:', err);
+                });
+            } else {
+                (navigator as any).clearAppBadge().catch((err: any) => {
+                    console.error('Error clearing app badge:', err);
+                });
+            }
+        }
+
         // First time we get data: just record the baseline, no sound
         if (prevCountRef.current === null) {
             prevCountRef.current = unreadCount;
