@@ -2342,6 +2342,14 @@ export default function Dashboard() {
                                                         - {displayCurrency}{houseFundStatsResult.periodicTotalGroceries.toFixed(2)}
                                                     </Typography>
                                                 </Box>
+                                                {houseFundStatsResult.refundedDeposits > 0 && (
+                                                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
+                                                        <Typography variant="body2">Refunded Deposits (Left Members)</Typography>
+                                                        <Typography variant="body2" sx={{ fontWeight: 'bold', color: 'error.main' }}>
+                                                            - {displayCurrency}{houseFundStatsResult.refundedDeposits.toFixed(2)}
+                                                        </Typography>
+                                                    </Box>
+                                                )}
                                                 {houseFundStatsResult.periodicTotalMisc > 0 && (
                                                     <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
                                                         <Typography variant="body2">Other/Misc</Typography>
