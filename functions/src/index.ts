@@ -66,7 +66,7 @@ export const birthdayReminderCron = onSchedule('every 30 minutes', async (event)
                 tomorrowLocal.setUTCDate(tomorrowLocal.getUTCDate() + 1);
                 const day = tomorrowLocal.getUTCDate().toString().padStart(2, '0');
                 const month = (tomorrowLocal.getUTCMonth() + 1).toString().padStart(2, '0');
-                const tomorrowBirthdayStr = `${day}-${month}`;
+                const tomorrowBirthdayStr = `${month}-${day}`;
 
                 const userHouses = allHouses.filter(h => h.members && h.members.includes(email));
 
@@ -122,7 +122,7 @@ export const birthdayReminderCron = onSchedule('every 30 minutes', async (event)
             if (localHours === 0 && localMinutes < 30) {
                 const day = userLocalTime.getUTCDate().toString().padStart(2, '0');
                 const month = (userLocalTime.getUTCMonth() + 1).toString().padStart(2, '0');
-                const todayBirthdayStr = `${day}-${month}`;
+                const todayBirthdayStr = `${month}-${day}`;
 
                 if (userData.birthday === todayBirthdayStr) {
                     const dateKey = userLocalTime.toISOString().split('T')[0];
