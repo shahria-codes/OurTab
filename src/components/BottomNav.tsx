@@ -1,5 +1,5 @@
 'use client';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import BottomNavigation from '@mui/material/BottomNavigation';
 import BottomNavigationAction from '@mui/material/BottomNavigationAction';
 import Paper from '@mui/material/Paper';
@@ -16,10 +16,44 @@ export default function BottomNav() {
     const router = useRouter();
     const pathname = usePathname();
     const { user, house } = useAuth();
+    const [isVisible, setIsVisible] = useState(true);
 
     useEffect(() => {
-        // Keep effect for any future pathname-based side effects
-    }, [pathname]);
+        // Detect keyboard on mobile
+        const handleResize = () => {
+            if (window.visualViewport) {
+                // If viewport height is significantly less than screen height, keyboard is likely open
+                const isKeyboardOpen = window.visualViewport.height < window.innerHeight * 0.8;
+                setIsVisible(!isKeyboardOpen);
+            }
+        };
+
+        const handleFocusIn = (e: FocusEvent) => {
+            const target = e.target as HTMLElement;
+            if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') {
+                setIsVisible(false);
+            }
+        };
+
+        const handleFocusOut = () => {
+            // Small delay to allow click events on buttons to register before UI shifts
+            setTimeout(() => {
+                setIsVisible(true);
+            }, 200);
+        };
+
+        window.visualViewport?.addEventListener('resize', handleResize);
+        window.addEventListener('focusin', handleFocusIn);
+        window.addEventListener('focusout', handleFocusOut);
+
+        return () => {
+            window.visualViewport?.removeEventListener('resize', handleResize);
+            window.removeEventListener('focusin', handleFocusIn);
+            window.removeEventListener('focusout', handleFocusOut);
+        };
+    }, []);
+
+    if (!isVisible) return null;
 
     return (
         <Paper sx={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 1000, pb: 'calc(env(safe-area-inset-bottom) + 8px)' }} elevation={3} className="glass-nav">

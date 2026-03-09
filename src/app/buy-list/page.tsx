@@ -80,9 +80,42 @@ export default function Todos() {
     };
 
     const [now, setNow] = useState(Date.now());
+    const [isKeyboardOpen, setIsKeyboardOpen] = useState(false);
+
     useEffect(() => {
         const timerId = setInterval(() => setNow(Date.now()), 10000); // Update every 10 seconds
-        return () => clearInterval(timerId);
+
+        const handleResize = () => {
+            if (window.visualViewport) {
+                const isOpen = window.visualViewport.height < window.innerHeight * 0.8;
+                setIsKeyboardOpen(isOpen);
+            }
+        };
+
+        const handleFocusIn = (e: FocusEvent) => {
+            const target = e.target as HTMLElement;
+            if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') {
+                setIsKeyboardOpen(true);
+            }
+        };
+
+        const handleFocusOut = () => {
+            // Small delay to allow click events on buttons to register before UI shifts
+            setTimeout(() => {
+                setIsKeyboardOpen(false);
+            }, 200);
+        };
+
+        window.visualViewport?.addEventListener('resize', handleResize);
+        window.addEventListener('focusin', handleFocusIn);
+        window.addEventListener('focusout', handleFocusOut);
+
+        return () => {
+            clearInterval(timerId);
+            window.visualViewport?.removeEventListener('resize', handleResize);
+            window.removeEventListener('focusin', handleFocusIn);
+            window.removeEventListener('focusout', handleFocusOut);
+        };
     }, []);
 
     const canUnmark = (todo: ExpenseTodo) => {
@@ -171,67 +204,6 @@ export default function Todos() {
                     ) : (
                         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
 
-                            {/* Batch List (Pending Items) */}
-                            {pendingItems.length > 0 && (
-                                <Box
-                                    sx={{
-                                        p: 2.5,
-                                        borderRadius: '28px',
-                                        background: 'rgba(108, 99, 255, 0.05)',
-                                        border: '1px solid rgba(108, 99, 255, 0.1)',
-                                        backdropFilter: 'blur(20px)',
-                                        boxShadow: '0 20px 40px rgba(0,0,0,0.05), inset 0 0 0 1px rgba(255,255,255,0.5)',
-                                        animation: 'slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1)'
-                                    }}
-                                >
-                                    <Typography variant="overline" sx={{ display: 'block', mb: 2, fontWeight: 900, textAlign: 'center', letterSpacing: 3, fontSize: '0.75rem', color: '#6C63FF' }}>
-                                        Staging Area ({pendingItems.length})
-                                    </Typography>
-                                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 3, justifyContent: 'center' }}>
-                                        {pendingItems.map((item, index) => (
-                                            <Paper
-                                                key={`pending-${index}`}
-                                                sx={{
-                                                    py: 0.75,
-                                                    pl: 2,
-                                                    pr: 0.75,
-                                                    borderRadius: '14px',
-                                                    display: 'flex',
-                                                    alignItems: 'center',
-                                                    gap: 1,
-                                                    background: 'background.paper',
-                                                    border: '1px solid rgba(0,0,0,0.05)',
-                                                    transition: 'all 0.2s',
-                                                    '&:hover': { background: 'rgba(108, 99, 255, 0.05)', borderColor: 'rgba(108, 99, 255, 0.2)' }
-                                                }}
-                                            >
-                                                <Typography variant="body2" sx={{ fontWeight: 600 }}>{item}</Typography>
-                                                <IconButton size="small" onClick={() => handleRemovePendingItem(index)} sx={{ color: 'text.disabled', '&:hover': { color: 'error.main' } }}>
-                                                    <CloseIcon sx={{ fontSize: 14 }} />
-                                                </IconButton>
-                                            </Paper>
-                                        ))}
-                                    </Box>
-                                    <Button
-                                        fullWidth
-                                        variant="contained"
-                                        onClick={handleSubmitBatch}
-                                        startIcon={<DoneAllIcon />}
-                                        sx={{
-                                            borderRadius: '18px',
-                                            py: 1.5,
-                                            textTransform: 'none',
-                                            fontWeight: 800,
-                                            fontSize: '0.95rem',
-                                            background: 'linear-gradient(135deg, #6C63FF 0%, #4f46e5 100%)',
-                                            boxShadow: '0 10px 20px rgba(108, 99, 255, 0.2)',
-                                            '&:hover': { background: 'linear-gradient(135deg, #7C73FF 0%, #5f56e5 100%)' }
-                                        }}
-                                    >
-                                        Push to Live List
-                                    </Button>
-                                </Box>
-                            )}
 
                             {/* Active Items */}
                             {activeTodos.length > 0 && (
@@ -413,26 +385,92 @@ export default function Todos() {
                     )}
                 </Container>
 
-                {/* --- Floating Action Dock --- */}
                 <Box sx={{
                     position: 'fixed',
-                    bottom: 80,
+                    bottom: isKeyboardOpen ? 20 : 80,
                     left: '50%',
                     transform: 'translateX(-50%)',
                     width: 'calc(100% - 32px)',
                     maxWidth: 500,
-                    zIndex: 100,
-                    animation: 'slideUpInput 0.6s cubic-bezier(0.16, 1, 0.3, 1)'
+                    zIndex: 1100, // Above everything
+                    animation: 'slideUpInput 0.6s cubic-bezier(0.16, 1, 0.3, 1)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 1.5
                 }}>
+                    {/* Batch List (Pending Items) - Moved here */}
+                    {pendingItems.length > 0 && (
+                        <Box
+                            sx={{
+                                p: 2,
+                                borderRadius: '24px',
+                                background: 'rgba(255, 255, 255, 0.9)',
+                                border: '1px solid rgba(108, 99, 255, 0.1)',
+                                backdropFilter: 'blur(20px)',
+                                boxShadow: '0 20px 40px rgba(0,0,0,0.1)',
+                                maxHeight: '40vh',
+                                overflowY: 'auto'
+                            }}
+                        >
+                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1.5, px: 1 }}>
+                                <Typography variant="overline" sx={{ fontWeight: 900, letterSpacing: 1, fontSize: '0.7rem', color: '#6C63FF' }}>
+                                    Staging Area ({pendingItems.length})
+                                </Typography>
+                                <Button
+                                    size="small"
+                                    variant="contained"
+                                    onClick={handleSubmitBatch}
+                                    startIcon={<DoneAllIcon sx={{ fontSize: '1rem !important' }} />}
+                                    sx={{
+                                        borderRadius: '12px',
+                                        py: 0.5,
+                                        px: 2,
+                                        textTransform: 'none',
+                                        fontWeight: 800,
+                                        fontSize: '0.75rem',
+                                        background: 'linear-gradient(135deg, #6C63FF 0%, #4f46e5 100%)',
+                                        boxShadow: '0 4px 12px rgba(108, 99, 255, 0.2)',
+                                    }}
+                                >
+                                    Push all
+                                </Button>
+                            </Box>
+                            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, justifyContent: 'flex-start' }}>
+                                {pendingItems.map((item, index) => (
+                                    <Paper
+                                        key={`pending-${index}`}
+                                        sx={{
+                                            py: 0.5,
+                                            pl: 1.5,
+                                            pr: 0.5,
+                                            borderRadius: '12px',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: 0.5,
+                                            background: 'rgba(108, 99, 255, 0.05)',
+                                            border: '1px solid rgba(108, 99, 255, 0.1)',
+                                            boxShadow: 'none'
+                                        }}
+                                    >
+                                        <Typography variant="body2" sx={{ fontWeight: 600, fontSize: '0.85rem' }}>{item}</Typography>
+                                        <IconButton size="small" onClick={() => handleRemovePendingItem(index)} sx={{ p: 0.5 }}>
+                                            <CloseIcon sx={{ fontSize: 12 }} />
+                                        </IconButton>
+                                    </Paper>
+                                ))}
+                            </Box>
+                        </Box>
+                    )}
+
                     <Paper
                         elevation={0}
                         sx={{
                             p: 1.5,
-                            background: 'rgba(255, 255, 255, 0.8)',
+                            background: 'rgba(255, 255, 255, 0.95)',
                             backdropFilter: 'blur(20px)',
                             borderRadius: '24px',
-                            border: '1px solid rgba(0, 0, 0, 0.08)',
-                            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.15)',
+                            border: '1px solid rgba(108, 99, 255, 0.2)',
+                            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.2)',
                             display: 'flex',
                             gap: 1.5,
                             alignItems: 'center'
@@ -460,6 +498,7 @@ export default function Todos() {
                         <Button
                             variant="contained"
                             onClick={handleAddPendingItem}
+                            onMouseDown={(e) => e.preventDefault()} // Prevent focus loss and UI shift
                             disabled={!todoInput.trim()}
                             sx={{
                                 minWidth: 48,
