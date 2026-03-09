@@ -60,3 +60,5 @@ scripts/test-offsets.js
 /functions/firebase-debug.log
 
 functions/check_db.js
+
+functions/debug_check.js

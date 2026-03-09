@@ -7,43 +7,41 @@ const db = admin.firestore();
 export const birthdayReminderCron = onSchedule('every 30 minutes', async (event) => {
     try {
         const nowUtc = new Date();
-
-        // 1. Calculate which utcOffsets are currently in our "Target Windows"
-        // We look for:
-        // - Users whose local time is 23:30 - 23:59 (Remind them about housemates tomorrow)
-        // - Users whose local time is 00:00 - 00:29 (Wish them Happy Birthday today)
+        console.log(`Starting birthdayReminderCron at ${nowUtc.toISOString()}`);
 
         const targetOffsets: number[] = [];
 
         // Check all standard 30-minute offsets (-12h to +14h)
-        // JS offsets are "minutes behind UTC", so UTC+2 is -120. Range: -840 to 720.
         for (let offset = -840; offset <= 720; offset += 30) {
             const localTime = new Date(nowUtc.getTime() - (offset * 60000));
             const h = localTime.getUTCHours();
-            const m = localTime.getUTCMinutes();
 
-            // Is it 23:30-23:59 OR 00:00-00:29?
-            if ((h === 23 && m >= 30) || (h === 0 && m < 30)) {
+            // When running hourly (e.g. at :15 past), we check if the user's LOCAL time 
+            // is within roughly 30 minutes of our targets (23:00 or 00:00).
+            // A more robust check for hourly runs:
+            // Is it 23:00-23:59 (Remind) or 00:00-00:59 (Wish)?
+            if (h === 23 || h === 0) {
                 targetOffsets.push(offset);
             }
         }
 
         if (targetOffsets.length === 0) {
-            console.log("No timezones currently in the 23:30 or 00:00 windows.");
+            console.log("No timezones currently in the 23:00 or 00:00 windows.");
             return;
         }
 
-        // 2. Query Firestore ONLY for users in these timezones
-        // This drastically reduces Firestore Reads from N (all users) to just the active timezones.
+        console.log(`Checking users in offsets: ${targetOffsets.join(', ')}`);
+
         const usersSnapshot = await db.collection('users')
             .where('utcOffset', 'in', targetOffsets)
             .get();
 
         if (usersSnapshot.empty) {
-            console.log(`No users found in timezones: ${targetOffsets.join(', ')}`);
+            console.log(`No users found in these timezones.`);
             return;
         }
 
+        console.log(`Processing ${usersSnapshot.size} users.`);
         const notificationsToSend: { token: string, title: string, body: string, icon?: string, badgeCount?: number }[] = [];
 
         // Pre-fetch all houses to check memberships
@@ -58,10 +56,9 @@ export const birthdayReminderCron = onSchedule('every 30 minutes', async (event)
 
             const userLocalTime = new Date(nowUtc.getTime() - (utcOffset * 60000));
             const localHours = userLocalTime.getUTCHours();
-            const localMinutes = userLocalTime.getUTCMinutes();
 
             // A. Birthday Reminder Logic (for housemates tomorrow)
-            if (localHours === 23 && localMinutes >= 30) {
+            if (localHours === 23) {
                 const tomorrowLocal = new Date(userLocalTime);
                 tomorrowLocal.setUTCDate(tomorrowLocal.getUTCDate() + 1);
                 const day = tomorrowLocal.getUTCDate().toString().padStart(2, '0');
@@ -79,12 +76,13 @@ export const birthdayReminderCron = onSchedule('every 30 minutes', async (event)
 
                         const memberData = memberDetails[memberEmail];
                         if (memberData?.birthday === tomorrowBirthdayStr) {
-                            const dateKey = userLocalTime.toISOString().split('T')[0];
+                            const dateKey = userLocalTime.getUTCFullYear() + '-' + (userLocalTime.getUTCMonth() + 1).toString().padStart(2, '0') + '-' + userLocalTime.getUTCDate().toString().padStart(2, '0');
                             const notifId = `cloud_bd_${memberEmail}_${dateKey}_for_${email}`;
                             const notifRef = db.collection('notifications').doc(notifId);
                             const notifSnap = await notifRef.get();
 
                             if (!notifSnap.exists) {
+                                console.log(`Sending reminder to ${email} about ${memberEmail}'s birthday tomorrow.`);
                                 let memberPhotoUrl = '';
                                 try {
                                     const memberUserSnap = await db.collection('users').doc(memberEmail).get();
@@ -126,18 +124,19 @@ export const birthdayReminderCron = onSchedule('every 30 minutes', async (event)
             }
 
             // B. Direct Birthday Wish Logic (at 12:00 AM)
-            if (localHours === 0 && localMinutes < 30) {
+            if (localHours === 0) {
                 const day = userLocalTime.getUTCDate().toString().padStart(2, '0');
                 const month = (userLocalTime.getUTCMonth() + 1).toString().padStart(2, '0');
                 const todayBirthdayStr = `${month}-${day}`;
 
                 if (userData.birthday === todayBirthdayStr) {
-                    const dateKey = userLocalTime.toISOString().split('T')[0];
+                    const dateKey = userLocalTime.getUTCFullYear() + '-' + (userLocalTime.getUTCMonth() + 1).toString().padStart(2, '0') + '-' + userLocalTime.getUTCDate().toString().padStart(2, '0');
                     const notifId = `cloud_bd_wish_${email}_${dateKey}`;
                     const notifRef = db.collection('notifications').doc(notifId);
                     const notifSnap = await notifRef.get();
 
                     if (!notifSnap.exists) {
+                        console.log(`Sending birthday wish to ${email}.`);
                         const title = 'Happy Birthday! 🎉🎂';
                         const message = `Wishing you a fantastic birthday from OurTab! Have a wonderful day! 🎊`;
 
@@ -169,6 +168,7 @@ export const birthdayReminderCron = onSchedule('every 30 minutes', async (event)
 
         // 3. Batch Send Notifications
         if (notificationsToSend.length > 0) {
+            console.log(`Sending ${notificationsToSend.length} push notifications.`);
             for (const n of notificationsToSend as any[]) {
                 try {
                     await admin.messaging().send({
@@ -197,7 +197,9 @@ export const birthdayReminderCron = onSchedule('every 30 minutes', async (event)
                     console.error("Error sending push:", e);
                 }
             }
-            console.log(`Sent ${notificationsToSend.length} birthday push notifications.`);
+            console.log(`Finished sending birthday push notifications.`);
+        } else {
+            console.log("No notifications needed this round.");
         }
         return;
     } catch (error) {
