@@ -2444,19 +2444,26 @@ export default function Dashboard() {
                     <DialogContent>
                         {selectedExpenseDetail && (() => {
                             const desc = selectedExpenseDetail.description;
-                            const itemsMatch = desc.match(/\(Items: (.*)\)$/);
-                            const noteMatch = desc.match(/^(.*) \(Items:/);
+                            let itemsMatch = desc.match(/\(Items: (.*)\)$/);
+                            let noteMatch = desc.match(/^(.*) \(Items:/);
+                            let isGrocery = selectedExpenseDetail.category?.toLowerCase() === 'groceries';
 
-                            const note = noteMatch ? noteMatch[1].trim() : (itemsMatch ? '' : desc);
-                            const itemsStr = itemsMatch ? itemsMatch[1] : (desc.includes('Items:') ? desc.split('Items:')[1].trim() : '');
+                            let note = noteMatch ? noteMatch[1].trim() : (itemsMatch ? '' : desc);
+                            let itemsStr = itemsMatch ? itemsMatch[1] : (desc.includes('Items:') ? desc.split('Items:')[1].trim() : '');
+
+                            // Enhanced parsing: If category is groceries and description has commas but no Items prefix, treat it as list
+                            if (isGrocery && !itemsStr && desc.includes(',') && desc.includes('৳')) {
+                                itemsStr = desc;
+                                note = ''; // Don't show it as a note if we show it as a list
+                            }
 
                             const itemsList = itemsStr ? itemsStr.split(', ').map(item => {
                                 const parts = item.split(/\s(?=[^ ]*$)/); // Split by last space
-                                if (parts.length === 2) {
+                                if (parts.length === 2 && (parts[1].includes('৳') || parts[1].includes('$') || parts[1].includes('€') || !isNaN(Number(parts[1].replace(/[^0-9.]/g, ''))))) {
                                     return { name: parts[0], price: parts[1] };
                                 }
                                 return { name: item, price: '' };
-                            }) : [];
+                            }).filter(it => it.name.trim() !== '') : [];
 
                             const member = allMembers.find(m => m.email === selectedExpenseDetail.userId);
                             const expenseDate = new Date(selectedExpenseDetail.date);
