@@ -12,6 +12,9 @@ import Chip from '@mui/material/Chip';
 import Alert from '@mui/material/Alert';
 import Checkbox from '@mui/material/Checkbox';
 import Divider from '@mui/material/Divider';
+import List from '@mui/material/List';
+import ListItem from '@mui/material/ListItem';
+import ListItemText from '@mui/material/ListItemText';
 import IconButton from '@mui/material/IconButton';
 import AddIcon from '@mui/icons-material/Add';
 import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
@@ -173,6 +176,10 @@ export default function Dashboard() {
     const [editAmount, setEditAmount] = useState('');
     const [editDescription, setEditDescription] = useState('');
     const [showAllExpenses, setShowAllExpenses] = useState(false);
+
+    // Expense Detail Modal State
+    const [openExpenseDetail, setOpenExpenseDetail] = useState(false);
+    const [selectedExpenseDetail, setSelectedExpenseDetail] = useState<Expense | null>(null);
 
     // Settle Money state
     const [openPayDialog, setOpenPayDialog] = useState(false);
@@ -1745,23 +1752,44 @@ export default function Dashboard() {
                                                 const canEdit = isOwner && diffInHours <= 48;
 
                                                 return (
-                                                    <Paper key={expense.id} className="glass" sx={{
-                                                        p: 2,
-                                                        borderRadius: 3,
-                                                        background: 'rgba(255, 255, 255, 0.03)',
-                                                        border: '1px solid rgba(255, 255, 255, 0.1)',
-                                                        transition: 'all 0.2s ease',
-                                                        '&:hover': {
-                                                            background: 'rgba(255, 255, 255, 0.06)',
-                                                            transform: 'translateX(4px)',
-                                                            borderColor: 'primary.main'
-                                                        }
-                                                    }}>
+                                                    <Paper
+                                                        key={expense.id}
+                                                        className="glass"
+                                                        onClick={() => {
+                                                            if (expense.category === 'groceries') {
+                                                                setSelectedExpenseDetail(expense);
+                                                                setOpenExpenseDetail(true);
+                                                            }
+                                                        }}
+                                                        sx={{
+                                                            p: 2,
+                                                            borderRadius: 3,
+                                                            background: 'rgba(255, 255, 255, 0.03)',
+                                                            border: '1px solid rgba(255, 255, 255, 0.1)',
+                                                            transition: 'all 0.2s ease',
+                                                            cursor: expense.category === 'groceries' ? 'pointer' : 'default',
+                                                            '&:hover': {
+                                                                background: 'rgba(255, 255, 255, 0.06)',
+                                                                transform: expense.category === 'groceries' ? 'translateY(-2px)' : 'none',
+                                                                borderColor: expense.category === 'groceries' ? 'secondary.main' : 'primary.main',
+                                                                boxShadow: expense.category === 'groceries' ? '0 8px 25px rgba(108, 99, 255, 0.15)' : 'none'
+                                                            }
+                                                        }}
+                                                    >
                                                         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                                                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flex: 1, minWidth: 0 }}>
                                                                 <Avatar src={member?.photoUrl} sx={{ width: 36, height: 36, border: '2px solid rgba(108, 99, 255, 0.2)' }} />
-                                                                <Box>
-                                                                    <Typography variant="body2" sx={{ fontWeight: 700, mb: 0.25 }}>
+                                                                <Box sx={{ minWidth: 0, flex: 1 }}>
+                                                                    <Typography
+                                                                        variant="body2"
+                                                                        sx={{
+                                                                            fontWeight: 700,
+                                                                            mb: 0.25,
+                                                                            overflow: 'hidden',
+                                                                            textOverflow: 'ellipsis',
+                                                                            whiteSpace: expense.category === 'groceries' ? 'nowrap' : 'normal'
+                                                                        }}
+                                                                    >
                                                                         {house?.typeOfHouse === 'meals_and_expenses' && expense.category
                                                                             ? `${expense.category.charAt(0).toUpperCase() + expense.category.slice(1)}: `
                                                                             : ''}
@@ -1801,7 +1829,7 @@ export default function Dashboard() {
                                                                     </Typography>
                                                                 </Box>
                                                             </Box>
-                                                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                                                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, ml: 2 }}>
                                                                 <Typography variant="h6" color="primary" sx={{ fontWeight: 900 }}>
                                                                     {displayCurrency}{expense.amount.toFixed(2)}
                                                                 </Typography>
@@ -1809,7 +1837,10 @@ export default function Dashboard() {
                                                                     <IconButton
                                                                         size="small"
                                                                         color="error"
-                                                                        onClick={() => handleDeleteExpense(expense.id)}
+                                                                        onClick={(e) => {
+                                                                            e.stopPropagation();
+                                                                            handleDeleteExpense(expense.id);
+                                                                        }}
                                                                         sx={{ bgcolor: 'rgba(244, 67, 54, 0.05)', '&:hover': { bgcolor: 'rgba(244, 67, 54, 0.1)' } }}
                                                                     >
                                                                         <DeleteIcon fontSize="small" />
@@ -2389,6 +2420,149 @@ export default function Dashboard() {
                         <Button onClick={() => setOpenDepositDetails(false)}>Close</Button>
                     </DialogActions>
                 </Dialog>
+
+                {/* Expense Detail Modal */}
+                <Dialog
+                    open={openExpenseDetail}
+                    onClose={() => setOpenExpenseDetail(false)}
+                    fullWidth
+                    maxWidth="sm"
+                    PaperProps={{
+                        className: 'glass',
+                        sx: {
+                            borderRadius: 4,
+                            backgroundImage: 'none',
+                        }
+                    }}
+                >
+                    <DialogTitle component="div" sx={{ pb: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <Typography variant="h5" sx={{ fontWeight: 800, background: 'linear-gradient(45deg, #6C63FF 30%, #FF6584 90%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+                            Expense Details
+                        </Typography>
+
+                    </DialogTitle>
+                    <DialogContent>
+                        {selectedExpenseDetail && (() => {
+                            const desc = selectedExpenseDetail.description;
+                            const itemsMatch = desc.match(/\(Items: (.*)\)$/);
+                            const noteMatch = desc.match(/^(.*) \(Items:/);
+
+                            const note = noteMatch ? noteMatch[1].trim() : (itemsMatch ? '' : desc);
+                            const itemsStr = itemsMatch ? itemsMatch[1] : (desc.includes('Items:') ? desc.split('Items:')[1].trim() : '');
+
+                            const itemsList = itemsStr ? itemsStr.split(', ').map(item => {
+                                const parts = item.split(/\s(?=[^ ]*$)/); // Split by last space
+                                if (parts.length === 2) {
+                                    return { name: parts[0], price: parts[1] };
+                                }
+                                return { name: item, price: '' };
+                            }) : [];
+
+                            const member = allMembers.find(m => m.email === selectedExpenseDetail.userId);
+                            const expenseDate = new Date(selectedExpenseDetail.date);
+
+                            return (
+                                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, pt: 1 }}>
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                                        <Avatar src={member?.photoUrl} sx={{ width: 50, height: 50, border: '2px solid rgba(108, 99, 255, 0.2)' }} />
+                                        <Box>
+                                            <Typography variant="subtitle1" sx={{ fontWeight: 800 }}>
+                                                {member?.name || selectedExpenseDetail.userId.split('@')[0]}
+                                            </Typography>
+                                            <Typography variant="caption" color="text.secondary">
+                                                {formatDateLocale(expenseDate)}, {formatTimeLocale(expenseDate)}
+                                            </Typography>
+                                        </Box>
+                                        <Box sx={{ ml: 'auto', textAlign: 'right' }}>
+                                            <Typography variant="h4" color="primary" sx={{ fontWeight: 900 }}>
+                                                {displayCurrency}{selectedExpenseDetail.amount.toFixed(2)}
+                                            </Typography>
+                                            <Chip
+                                                label={selectedExpenseDetail.category || 'Expense'}
+                                                size="small"
+                                                sx={{
+                                                    mt: 0.5,
+                                                    fontWeight: 700,
+                                                    textTransform: 'uppercase',
+                                                    fontSize: '0.65rem',
+                                                    bgcolor: 'rgba(108, 99, 255, 0.1)',
+                                                    color: 'primary.main'
+                                                }}
+                                            />
+                                        </Box>
+                                    </Box>
+
+                                    {note && (
+                                        <Box sx={{ p: 2, bgcolor: 'rgba(0,0,0,0.02)', borderRadius: 2, borderLeft: '4px solid #6C63FF' }}>
+                                            <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic' }}>
+                                                Note: {note}
+                                            </Typography>
+                                        </Box>
+                                    )}
+
+                                    {itemsList.length > 0 && (
+                                        <Box>
+                                            <Typography variant="subtitle2" sx={{ fontWeight: 800, mb: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}>
+                                                <FormatListBulletedIcon sx={{ fontSize: 18, color: 'primary.main' }} /> Items List
+                                            </Typography>
+                                            <Paper variant="outlined" sx={{ borderRadius: 3, overflow: 'hidden', border: '1px solid rgba(0,0,0,0.08)' }}>
+                                                <List disablePadding>
+                                                    {itemsList.map((item, idx) => (
+                                                        <Box key={idx}>
+                                                            <ListItem sx={{ py: 1.2 }}>
+                                                                <ListItemText
+                                                                    primary={item.name}
+                                                                    primaryTypographyProps={{ variant: 'body2', fontWeight: 600 }}
+                                                                />
+                                                                <Typography variant="body2" sx={{ fontWeight: 800, color: 'primary.main' }}>
+                                                                    {item.price}
+                                                                </Typography>
+                                                            </ListItem>
+                                                            {idx < itemsList.length - 1 && <Divider sx={{ opacity: 0.5 }} />}
+                                                        </Box>
+                                                    ))}
+                                                </List>
+                                            </Paper>
+                                        </Box>
+                                    )}
+
+                                    {selectedExpenseDetail.contributors && selectedExpenseDetail.contributors.length > 1 && (
+                                        <Box>
+                                            <Typography variant="subtitle2" sx={{ fontWeight: 800, mb: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}>
+                                                <GroupIcon sx={{ fontSize: 18, color: 'secondary.main' }} /> Split Details
+                                            </Typography>
+                                            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                                                {selectedExpenseDetail.contributors.map((contrib, idx) => {
+                                                    const cMember = allMembers.find(m => m.email === contrib.email);
+                                                    return (
+                                                        <Chip
+                                                            key={idx}
+                                                            avatar={<Avatar src={cMember?.photoUrl} />}
+                                                            label={`${cMember?.name || contrib.email.split('@')[0]}: ${displayCurrency}${contrib.amount.toFixed(2)}`}
+                                                            variant="outlined"
+                                                            sx={{ borderRadius: 2, fontWeight: 600 }}
+                                                        />
+                                                    );
+                                                })}
+                                            </Box>
+                                        </Box>
+                                    )}
+                                </Box>
+                            );
+                        })()}
+                    </DialogContent>
+                    <DialogActions sx={{ p: 3, pt: 0 }}>
+                        <Button
+                            fullWidth
+                            variant="outlined"
+                            onClick={() => setOpenExpenseDetail(false)}
+                            sx={{ borderRadius: 3, py: 1, fontWeight: 700, textTransform: 'none' }}
+                        >
+                            Close
+                        </Button>
+                    </DialogActions>
+                </Dialog>
+
                 {/* Fund History Dialog */}
                 <Dialog
                     open={openFundHistoryDialog}
