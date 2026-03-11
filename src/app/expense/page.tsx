@@ -11,6 +11,8 @@ import Box from '@mui/material/Box';
 import TextField from '@mui/material/TextField';
 import Button from '@mui/material/Button';
 import Paper from '@mui/material/Paper';
+import Alert from '@mui/material/Alert';
+import InfoIcon from '@mui/icons-material/Info';
 import IconButton from '@mui/material/IconButton';
 import DeleteIcon from '@mui/icons-material/Delete';
 import List from '@mui/material/List';
@@ -99,6 +101,7 @@ export default function ExpensePage() {
     const [myContribution, setMyContribution] = useState<string>('');
     const [scanning, setScanning] = useState(false);
     const [uploadAnchorEl, setUploadAnchorEl] = useState<null | HTMLElement>(null);
+    const [showAIWarning, setShowAIWarning] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const galleryInputRef = useRef<HTMLInputElement>(null);
 
@@ -118,6 +121,7 @@ export default function ExpensePage() {
         setItems([...items, newItem]);
         setItemName('');
         setItemPrice('');
+        setShowAIWarning(false);
     };
 
 
@@ -142,6 +146,7 @@ export default function ExpensePage() {
         if (!file) return;
 
         setScanning(true);
+        setShowAIWarning(false);
         showToast('Scanning receipt...', 'info');
 
         try {
@@ -175,6 +180,7 @@ export default function ExpensePage() {
                 }));
 
                 setItems(prev => [...prev, ...formattedItems]);
+                setShowAIWarning(true);
                 showToast(`Successfully added ${formattedItems.length} items from receipt!`, 'success');
             } else {
                 showToast('No items found on the receipt.', 'warning');
@@ -1173,7 +1179,7 @@ export default function ExpensePage() {
                                 </Button>
                                 <input
                                     type="file"
-                                    accept="image/*"
+                                    accept="image/*,.heic,.heif"
                                     capture="environment"
                                     hidden
                                     ref={fileInputRef}
@@ -1181,7 +1187,7 @@ export default function ExpensePage() {
                                 />
                                 <input
                                     type="file"
-                                    accept="image/*"
+                                    accept="image/*,.heic,.heif"
                                     hidden
                                     ref={galleryInputRef}
                                     onChange={handleScanReceipt}
@@ -1241,57 +1247,75 @@ export default function ExpensePage() {
 
                     {/* Items List */}
                     {items.length > 0 && (
-                        <Paper className="glass" sx={{ p: 2, mb: 2, background: 'rgba(255, 255, 255, 0.5)', backdropFilter: 'blur(10px)', borderRadius: 2, boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
-                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-                                <Typography variant="subtitle1" fontWeight="bold">Cart ({items.length})</Typography>
-                                <Typography variant="subtitle1" color="primary" fontWeight="bold">
-                                    {getCurrencySymbol()}{Number(total).toFixed(2)}
-                                </Typography>
-                            </Box>
-                            <List disablePadding>
-                                {items.map((item, index) => (
-                                    <div key={item.id}>
-                                        <ListItem
-                                            disableGutters
-                                            sx={{ py: 0.5 }}
-                                            secondaryAction={
-                                                <IconButton edge="end" size="small" onClick={() => handleRemoveItem(item.id)} disabled={loading} color="error">
-                                                    <DeleteIcon fontSize="small" />
-                                                </IconButton>
-                                            }
-                                        >
-                                            <ListItemText
-                                                primary={item.name}
-                                                primaryTypographyProps={{ variant: 'body2', fontWeight: 'medium' }}
-                                                secondaryTypographyProps={{ component: 'div' }}
-                                                secondary={
-                                                    <Box sx={{ display: 'flex', alignItems: 'center', mt: 0.5 }}>
-                                                        <Typography variant="caption" color="text.secondary" sx={{ mr: 1 }}>
-                                                            {getCurrencySymbol()}
-                                                        </Typography>
-                                                        <TextField
-                                                            size="small"
-                                                            type="number"
-                                                            variant="standard"
-                                                            value={item.price || ''}
-                                                            onChange={(e) => handleUpdateItemPrice(item.id, e.target.value)}
-                                                            inputProps={{
-                                                                step: '0.01',
-                                                                min: '0',
-                                                                style: { fontSize: '0.75rem', padding: '2px 0' }
-                                                            }}
-                                                            sx={{ width: '80px' }}
-                                                            disabled={loading}
-                                                        />
-                                                    </Box>
+                        <>
+                            {showAIWarning && (
+                                <Alert
+                                    severity="info"
+                                    icon={<InfoIcon fontSize="inherit" />}
+                                    sx={{
+                                        mb: 2,
+                                        borderRadius: 2,
+                                        background: 'rgba(224, 242, 255, 0.7)',
+                                        backdropFilter: 'blur(10px)',
+                                        border: '1px solid rgba(0, 145, 255, 0.2)',
+                                        '& .MuiAlert-message': { fontWeight: 500 }
+                                    }}
+                                >
+                                    AI may make mistakes. Please check and edit prices before submitting.
+                                </Alert>
+                            )}
+                            <Paper className="glass" sx={{ p: 2, mb: 2, background: 'rgba(255, 255, 255, 0.5)', backdropFilter: 'blur(10px)', borderRadius: 2, boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
+                                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+                                    <Typography variant="subtitle1" fontWeight="bold">Cart ({items.length})</Typography>
+                                    <Typography variant="subtitle1" color="primary" fontWeight="bold">
+                                        {getCurrencySymbol()}{Number(total).toFixed(2)}
+                                    </Typography>
+                                </Box>
+                                <List disablePadding>
+                                    {items.map((item, index) => (
+                                        <div key={item.id}>
+                                            <ListItem
+                                                disableGutters
+                                                sx={{ py: 0.5 }}
+                                                secondaryAction={
+                                                    <IconButton edge="end" size="small" onClick={() => handleRemoveItem(item.id)} disabled={loading} color="error">
+                                                        <DeleteIcon fontSize="small" />
+                                                    </IconButton>
                                                 }
-                                            />
-                                        </ListItem>
-                                        {index < items.length - 1 && <Divider component="li" />}
-                                    </div>
-                                ))}
-                            </List>
-                        </Paper>
+                                            >
+                                                <ListItemText
+                                                    primary={item.name}
+                                                    primaryTypographyProps={{ variant: 'body2', fontWeight: 'medium' }}
+                                                    secondaryTypographyProps={{ component: 'div' }}
+                                                    secondary={
+                                                        <Box sx={{ display: 'flex', alignItems: 'center', mt: 0.5 }}>
+                                                            <Typography variant="caption" color="text.secondary" sx={{ mr: 1 }}>
+                                                                {getCurrencySymbol()}
+                                                            </Typography>
+                                                            <TextField
+                                                                size="small"
+                                                                type="number"
+                                                                variant="standard"
+                                                                value={item.price || ''}
+                                                                onChange={(e) => handleUpdateItemPrice(item.id, e.target.value)}
+                                                                inputProps={{
+                                                                    step: '0.01',
+                                                                    min: '0',
+                                                                    style: { fontSize: '0.75rem', padding: '2px 0' }
+                                                                }}
+                                                                sx={{ width: '80px' }}
+                                                                disabled={loading}
+                                                            />
+                                                        </Box>
+                                                    }
+                                                />
+                                            </ListItem>
+                                            {index < items.length - 1 && <Divider component="li" />}
+                                        </div>
+                                    ))}
+                                </List>
+                            </Paper>
+                        </>
                     )}
 
                     {/* Contributor Selection */}
