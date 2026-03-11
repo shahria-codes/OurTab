@@ -2452,7 +2452,7 @@ export default function Dashboard() {
                             let itemsStr = itemsMatch ? itemsMatch[1] : (desc.includes('Items:') ? desc.split('Items:')[1].trim() : '');
 
                             // Enhanced parsing: If category is groceries and description has commas but no Items prefix, treat it as list
-                            if (isGrocery && !itemsStr && desc.includes(',') && desc.includes('৳')) {
+                            if (isGrocery && !itemsStr && desc.includes(',') && (desc.includes('৳') || desc.includes('€') || desc.includes('$'))) {
                                 itemsStr = desc;
                                 note = ''; // Don't show it as a note if we show it as a list
                             }
