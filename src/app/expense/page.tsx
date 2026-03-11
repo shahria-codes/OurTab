@@ -36,7 +36,11 @@ import AccordionSummary from '@mui/material/AccordionSummary';
 import AccordionDetails from '@mui/material/AccordionDetails';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import PeopleIcon from '@mui/icons-material/People';
+import PhotoCameraIcon from '@mui/icons-material/PhotoCamera';
+import CircularProgress from '@mui/material/CircularProgress';
 import { Contributor } from '@/types/settlement-types';
+import { useRef } from 'react';
+import Image from 'next/image';
 
 interface GroceryItem {
     id: string;
@@ -65,7 +69,6 @@ interface HouseMember {
     rentAmount?: number;
 }
 
-
 export default function ExpensePage() {
     const { user, currency, dbUser, house } = useAuth();
     const router = useRouter();
@@ -92,6 +95,8 @@ export default function ExpensePage() {
     const [contributors, setContributors] = useState<{ [email: string]: string }>({});
     const [selectedContributors, setSelectedContributors] = useState<Set<string>>(new Set());
     const [myContribution, setMyContribution] = useState<string>('');
+    const [scanning, setScanning] = useState(false);
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
 
     // Add item to list
@@ -115,6 +120,68 @@ export default function ExpensePage() {
     // Remove item from list
     const handleRemoveItem = (id: string) => {
         setItems(items.filter(item => item.id !== id));
+    };
+
+    // Update item price
+    const handleUpdateItemPrice = (id: string, newPrice: string) => {
+        setItems(items.map(item => {
+            if (item.id === id) {
+                return { ...item, price: parseFloat(newPrice) || 0 };
+            }
+            return item;
+        }));
+    };
+
+    // Handle Receipt Scan
+    const handleScanReceipt = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        setScanning(true);
+        showToast('Scanning receipt...', 'info');
+
+        try {
+            // Convert file to base64
+            const reader = new FileReader();
+            const base64Promise = new Promise<string>((resolve) => {
+                reader.onload = () => resolve(reader.result as string);
+                reader.readAsDataURL(file);
+            });
+
+            const base64Image = await base64Promise;
+
+            const res = await fetch('/api/ai/process-receipt', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ image: base64Image }),
+            });
+
+            if (!res.ok) {
+                const error = await res.json();
+                throw new Error(error.error || 'Failed to scan receipt');
+            }
+
+            const newItems = await res.json();
+
+            if (Array.isArray(newItems) && newItems.length > 0) {
+                const formattedItems: GroceryItem[] = newItems.map((item: any) => ({
+                    id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+                    name: item.name,
+                    price: typeof item.price === 'number' ? item.price : parseFloat(item.price) || 0
+                }));
+
+                setItems(prev => [...prev, ...formattedItems]);
+                showToast(`Successfully added ${formattedItems.length} items from receipt!`, 'success');
+            } else {
+                showToast('No items found on the receipt.', 'warning');
+            }
+        } catch (err: any) {
+            console.error('Scan error:', err);
+            showToast(err.message || 'Failed to scan receipt. Please try again.', 'error');
+        } finally {
+            setScanning(false);
+            if (fileInputRef.current) fileInputRef.current.value = '';
+        }
     };
 
     // Calculate total
@@ -153,6 +220,22 @@ export default function ExpensePage() {
         });
     };
 
+    const handleMyContributionChange = (amount: string) => {
+        setMyContribution(amount);
+        const amountNum = parseFloat(amount) || 0;
+
+        if (selectedContributors.size > 0 && total > 0) {
+            const remainingForOthers = Math.max(0, total - amountNum);
+            const sharePerOther = remainingForOthers / selectedContributors.size;
+
+            const newContributors: { [email: string]: string } = {};
+            selectedContributors.forEach(email => {
+                newContributors[email] = sharePerOther.toFixed(2);
+            });
+            setContributors(newContributors);
+        }
+    };
+
     const handleSplitEqually = () => {
         if (selectedContributors.size === 0) return;
 
@@ -186,9 +269,12 @@ export default function ExpensePage() {
     useEffect(() => {
         if (total > 0 && selectedContributors.size > 0) {
             const autoAmount = total - totalContributions;
-            setMyContribution(Math.max(0, autoAmount).toFixed(2));
+            // Only update if the difference is significant to avoid overwriting user typing
+            if (Math.abs((parseFloat(myContribution) || 0) - autoAmount) > 0.001) {
+                setMyContribution(Math.max(0, autoAmount).toFixed(2));
+            }
         }
-    }, [totalContributions, total, selectedContributors.size]);
+    }, [totalContributions, total, selectedContributors.size, myContribution]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -290,7 +376,7 @@ export default function ExpensePage() {
                 resolve(null);
                 return;
             }
-            const img = new Image();
+            const img = new window.Image();
             img.crossOrigin = 'Anonymous';
             img.onload = () => {
                 const canvas = document.createElement('canvas');
@@ -1070,15 +1156,38 @@ export default function ExpensePage() {
                                     sx={{ width: '100px' }}
                                 />
                             </Box>
-                            <Button
-                                type="submit"
-                                variant="contained"
-                                fullWidth
-                                sx={{ mt: 2, borderRadius: 2, textTransform: 'none', fontWeight: 'bold' }}
-                                disabled={loading}
-                            >
-                                Add to List
-                            </Button>
+                            <Box sx={{ mt: 2, display: 'flex', gap: 1 }}>
+                                <Button
+                                    type="submit"
+                                    variant="contained"
+                                    fullWidth
+                                    sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 'bold', flex: 1 }}
+                                    disabled={loading || scanning}
+                                >
+                                    Add to List
+                                </Button>
+                                <input
+                                    type="file"
+                                    accept="image/*"
+                                    capture="environment"
+                                    hidden
+                                    ref={fileInputRef}
+                                    onChange={handleScanReceipt}
+                                />
+                                <Button
+                                    variant="outlined"
+                                    onClick={() => fileInputRef.current?.click()}
+                                    disabled={loading || scanning}
+                                    sx={{
+                                        borderRadius: 2,
+                                        minWidth: '56px',
+                                        borderColor: 'primary.main',
+                                        '&:hover': { bgcolor: 'rgba(108, 99, 255, 0.05)' }
+                                    }}
+                                >
+                                    {scanning ? <CircularProgress size={24} color="inherit" /> : <PhotoCameraIcon color="primary" />}
+                                </Button>
+                            </Box>
                         </Box>
                     </Paper>
 
@@ -1104,8 +1213,30 @@ export default function ExpensePage() {
                                             }
                                         >
                                             <ListItemText
-                                                primary={<Typography variant="body2" fontWeight="medium">{item.name}</Typography>}
-                                                secondary={<Typography variant="caption" color="text.secondary">{getCurrencySymbol()}{Number(item.price).toFixed(2)}</Typography>}
+                                                primary={item.name}
+                                                primaryTypographyProps={{ variant: 'body2', fontWeight: 'medium' }}
+                                                secondaryTypographyProps={{ component: 'div' }}
+                                                secondary={
+                                                    <Box sx={{ display: 'flex', alignItems: 'center', mt: 0.5 }}>
+                                                        <Typography variant="caption" color="text.secondary" sx={{ mr: 1 }}>
+                                                            {getCurrencySymbol()}
+                                                        </Typography>
+                                                        <TextField
+                                                            size="small"
+                                                            type="number"
+                                                            variant="standard"
+                                                            value={item.price || ''}
+                                                            onChange={(e) => handleUpdateItemPrice(item.id, e.target.value)}
+                                                            inputProps={{
+                                                                step: '0.01',
+                                                                min: '0',
+                                                                style: { fontSize: '0.75rem', padding: '2px 0' }
+                                                            }}
+                                                            sx={{ width: '80px' }}
+                                                            disabled={loading}
+                                                        />
+                                                    </Box>
+                                                }
                                             />
                                         </ListItem>
                                         {index < items.length - 1 && <Divider component="li" />}
@@ -1175,7 +1306,7 @@ export default function ExpensePage() {
                                                 size="small"
                                                 fullWidth
                                                 value={myContribution}
-                                                onChange={(e) => setMyContribution(e.target.value)}
+                                                onChange={(e) => handleMyContributionChange(e.target.value)}
                                                 disabled={loading}
                                                 inputProps={{ step: '0.01', min: '0' }}
                                             />
@@ -1274,10 +1405,22 @@ export default function ExpensePage() {
                         </Paper>
                     )}
 
-                    {items.length === 0 && (
+                    {items.length === 0 && !scanning && (
                         <Box sx={{ textAlign: 'center', py: 4 }}>
                             <Typography color="text.secondary">
                                 Add items to your expense to get started
+                            </Typography>
+                        </Box>
+                    )}
+
+                    {scanning && (
+                        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', py: 8 }}>
+                            <CircularProgress size={60} thickness={4} />
+                            <Typography variant="h6" sx={{ mt: 3, fontWeight: 'bold', color: 'primary.main' }}>
+                                AI is processing your receipt...
+                            </Typography>
+                            <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                                Please wait while we extract items and prices
                             </Typography>
                         </Box>
                     )}
