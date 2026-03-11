@@ -45,6 +45,7 @@ import CircularProgress from '@mui/material/CircularProgress';
 import { Contributor } from '@/types/settlement-types';
 import { useRef } from 'react';
 import Image from 'next/image';
+import ReceiptProcessor from '@/components/ReceiptProcessor';
 
 interface GroceryItem {
     id: string;
@@ -1512,14 +1513,8 @@ export default function ExpensePage() {
                     )}
 
                     {scanning && (
-                        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', py: 8 }}>
-                            <CircularProgress size={60} thickness={4} />
-                            <Typography variant="h6" sx={{ mt: 3, fontWeight: 'bold', color: 'primary.main' }}>
-                                AI is processing your receipt...
-                            </Typography>
-                            <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                                Please wait while we extract items and prices
-                            </Typography>
+                        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', py: 1 }}>
+                            <ReceiptProcessor />
                         </Box>
                     )}
                 </Container>
