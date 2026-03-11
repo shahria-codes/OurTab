@@ -150,11 +150,37 @@ export default function ExpensePage() {
         showToast('Scanning receipt...', 'info');
 
         try {
+            let fileToProcess = file;
+
+            // Check if file is HEIC/HEIF
+            const isHEIC = file.type === 'image/heic' || file.type === 'image/heif' ||
+                file.name.toLowerCase().endsWith('.heic') || file.name.toLowerCase().endsWith('.heif');
+
+            if (isHEIC) {
+                showToast('Converting iPhone photo...', 'info');
+                try {
+                    const heic2any = (await import('heic2any')).default;
+                    const result = await heic2any({
+                        blob: file,
+                        toType: 'image/jpeg',
+                        quality: 0.8
+                    });
+
+                    const blob = Array.isArray(result) ? result[0] : result;
+                    fileToProcess = new File([blob], file.name.replace(/\.(heic|heif)$/i, '.jpg'), {
+                        type: 'image/jpeg'
+                    });
+                } catch (convErr) {
+                    console.error('HEIC conversion failed:', convErr);
+                    // Fallback to original file
+                }
+            }
+
             // Convert file to base64
             const reader = new FileReader();
             const base64Promise = new Promise<string>((resolve) => {
                 reader.onload = () => resolve(reader.result as string);
-                reader.readAsDataURL(file);
+                reader.readAsDataURL(fileToProcess);
             });
 
             const base64Image = await base64Promise;
@@ -1179,7 +1205,7 @@ export default function ExpensePage() {
                                 </Button>
                                 <input
                                     type="file"
-                                    accept="image/*,.heic,.heif"
+                                    accept="image/*,image/heic,image/heif,.heic,.heif"
                                     capture="environment"
                                     hidden
                                     ref={fileInputRef}
@@ -1187,7 +1213,7 @@ export default function ExpensePage() {
                                 />
                                 <input
                                     type="file"
-                                    accept="image/*,.heic,.heif"
+                                    accept="image/*,image/heic,image/heif,.heic,.heif"
                                     hidden
                                     ref={galleryInputRef}
                                     onChange={handleScanReceipt}
