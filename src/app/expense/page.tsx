@@ -3,6 +3,7 @@
 import Container from '@mui/material/Container';
 import Select from '@mui/material/Select';
 import MenuItem from '@mui/material/MenuItem';
+import Menu from '@mui/material/Menu';
 import InputLabel from '@mui/material/InputLabel';
 import FormControl from '@mui/material/FormControl';
 import Typography from '@mui/material/Typography';
@@ -37,6 +38,7 @@ import AccordionDetails from '@mui/material/AccordionDetails';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import PeopleIcon from '@mui/icons-material/People';
 import PhotoCameraIcon from '@mui/icons-material/PhotoCamera';
+import PhotoLibraryIcon from '@mui/icons-material/PhotoLibrary';
 import CircularProgress from '@mui/material/CircularProgress';
 import { Contributor } from '@/types/settlement-types';
 import { useRef } from 'react';
@@ -96,7 +98,9 @@ export default function ExpensePage() {
     const [selectedContributors, setSelectedContributors] = useState<Set<string>>(new Set());
     const [myContribution, setMyContribution] = useState<string>('');
     const [scanning, setScanning] = useState(false);
+    const [uploadAnchorEl, setUploadAnchorEl] = useState<null | HTMLElement>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const galleryInputRef = useRef<HTMLInputElement>(null);
 
 
     // Add item to list
@@ -181,6 +185,7 @@ export default function ExpensePage() {
         } finally {
             setScanning(false);
             if (fileInputRef.current) fileInputRef.current.value = '';
+            if (galleryInputRef.current) galleryInputRef.current.value = '';
         }
     };
 
@@ -1174,9 +1179,16 @@ export default function ExpensePage() {
                                     ref={fileInputRef}
                                     onChange={handleScanReceipt}
                                 />
+                                <input
+                                    type="file"
+                                    accept="image/*"
+                                    hidden
+                                    ref={galleryInputRef}
+                                    onChange={handleScanReceipt}
+                                />
                                 <Button
                                     variant="outlined"
-                                    onClick={() => fileInputRef.current?.click()}
+                                    onClick={(e) => setUploadAnchorEl(e.currentTarget)}
                                     disabled={loading || scanning}
                                     sx={{
                                         borderRadius: 2,
@@ -1187,6 +1199,42 @@ export default function ExpensePage() {
                                 >
                                     {scanning ? <CircularProgress size={24} color="inherit" /> : <PhotoCameraIcon color="primary" />}
                                 </Button>
+                                <Menu
+                                    anchorEl={uploadAnchorEl}
+                                    open={Boolean(uploadAnchorEl)}
+                                    onClose={() => setUploadAnchorEl(null)}
+                                    anchorOrigin={{
+                                        vertical: 'top',
+                                        horizontal: 'right',
+                                    }}
+                                    transformOrigin={{
+                                        vertical: 'bottom',
+                                        horizontal: 'right',
+                                    }}
+                                    PaperProps={{
+                                        sx: {
+                                            borderRadius: 2,
+                                            mt: -1,
+                                            boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
+                                            border: '1px solid rgba(0,0,0,0.05)'
+                                        }
+                                    }}
+                                >
+                                    <MenuItem onClick={() => {
+                                        setUploadAnchorEl(null);
+                                        fileInputRef.current?.click();
+                                    }}>
+                                        <PhotoCameraIcon sx={{ mr: 1, fontSize: 20 }} color="primary" />
+                                        Take Photo
+                                    </MenuItem>
+                                    <MenuItem onClick={() => {
+                                        setUploadAnchorEl(null);
+                                        galleryInputRef.current?.click();
+                                    }}>
+                                        <PhotoLibraryIcon sx={{ mr: 1, fontSize: 20 }} color="primary" />
+                                        Select from device
+                                    </MenuItem>
+                                </Menu>
                             </Box>
                         </Box>
                     </Paper>
