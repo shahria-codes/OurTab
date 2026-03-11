@@ -17,7 +17,7 @@
 - **Role System** — **Managers** can update member settings (Rent, Role) and approve requests. **Members** have standard access.
 - **Manager Promotion** — dynamic role switching; if a non-creator manager promotes someone else, they revert to member status.
 - **Meal Management** — toggle "Meals On/Off" with a manager approval flow and automatic transition periods.
-- **Fund Deposits** — members can deposit funds into the house account (e.g., for rent or utilities), requiring manager verification.
+- **Fund Deposits & Refunds** — members can deposit funds into the house account (e.g., for rent or utilities), requiring manager verification. Includes support for **Refunded Deposits** when members leave.
 - **Collaborative Deletion** — house deletion requires approval from all members to prevent accidental data loss.
 
 ### 📊 Financial Dashboard
@@ -32,6 +32,8 @@
 - **Shortcut Actions** — "I Pay All" or "Split Equally" for rapid entry.
 - **Interactive Buy List** — shared list with auto-capitalization and check-off history.
 - **✨ Smart Auto-Mark** — when an expense is added (e.g., "Bread"), the matching item on the buy list is automatically ticked.
+- **🤖 AI Receipt Scanner** — extract items and prices directly from receipts using Google Gemini AI.
+- **📸 HEIC/HEIF Support** — seamless upload and conversion of iPhone photos.
 - **Cleanup Automation** — completed items auto-delete after 12 hours, with a 5-minute safety window for accidental unmarking.
 
 ---
@@ -81,11 +83,13 @@ OurTab keeps the whole house in sync with real-time, categorized alerts:
 |---|---|---|
 | **Framework** | [Next.js 16](https://nextjs.org/) | App Router, API Routes, SSR |
 | **Language** | TypeScript 5 | End-to-end type safety |
+| **AI Processing** | [Google Gemini AI](https://ai.google.dev/) | Receipt extraction & itemization |
 | **UI Library** | [Material UI v7](https://mui.com/) | Components, icons, theming |
 | **Styling** | MUI Emotion + Vanilla CSS | Glassmorphism design system |
 | **Auth + DB** | [Firebase v12](https://firebase.google.com/) | Auth (Google), Firestore |
 | **Data Fetching** | [SWR v2](https://swr.vercel.app/) | React Hooks for data fetching with caching |
 | **PDF Generation** | [jsPDF v4](https://github.com/parallax/jsPDF) + [jspdf-autotable](https://github.com/simonbengtsson/jsPDF-AutoTable) | Expense report PDF export |
+| **Image Handling** | [heic2any](https://alexcorvi.github.io/heic2any/) | Client-side HEIC to JPEG conversion |
 | **PWA** | [@ducanh2912/next-pwa](https://github.com/DuCanh2912/next-pwa) | Installable as a mobile app |
 
 ---
@@ -98,8 +102,8 @@ OurTab keeps the whole house in sync with real-time, categorized alerts:
 
 ### 1. Clone the repo
 ```bash
-git clone https://github.com/your-username/our-tab.git
-cd our-tab
+git clone https://github.com/your-username/OurTab.git
+cd OurTab
 ```
 
 ### 2. Install dependencies
@@ -117,7 +121,7 @@ NEXT_PUBLIC_FIREBASE_PROJECT_ID=your_project_id
 NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your_project.appspot.com
 NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
 NEXT_PUBLIC_FIREBASE_APP_ID=your_app_id
-IREBASE_ADMIN_CREDENTIALS=your_admin_credentials
+FIREBASE_ADMIN_CREDENTIALS=your_admin_credentials
 ```
 
 ### 4. Run the development server
@@ -135,6 +139,7 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 src/
 ├── app/
 │   ├── api/                  # Next.js API routes (Firestore operations)
+│   │   ├── ai/               # AI Receipt processing (Gemini API)
 │   │   ├── auth/             # Firebase Authentication logic
 │   │   ├── expenses/         # Create, read, update, delete expenses
 │   │   ├── fund-deposits/    # Managing house fund deposits and approvals
@@ -158,6 +163,7 @@ src/
 │   ├── BottomNav.tsx         # Mobile-first bottom navigation
 │   ├── Navbar.tsx            # Sticky top bar with theme toggle
 │   ├── NotificationBell.tsx  # Drawer-based notification UI
+│   ├── ReceiptProcessor.tsx  # Animated AI processing UI
 │   ├── ThemeRegistry.tsx     # MUI Emotion & SSR provider
 │   └── ToastContext.tsx      # Global dynamic toast alerts
 ├── hooks/
@@ -175,6 +181,7 @@ src/
 │   ├── notification.ts       # Unified notification schema
 │   └── settlement-types.ts   # Debt & credit interfaces
 ├── utils/
+│   ├── accounting.ts         # Centralized financial & fund logic
 │   ├── currency.ts           # Currency formatting & symbol helpers
 │   ├── date.ts               # Locale-aware time & frequency formatting
 │   └── notificationSound.ts  # Feedback audio utility
