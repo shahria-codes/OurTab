@@ -729,7 +729,7 @@ export default function Dashboard() {
                                             color: houseFundStats.remaining < 0 ? 'error.main' : 'success.main'
                                         }}>
                                             <Box component="span" sx={{ fontSize: '0.6em', opacity: 0.7, mr: 0.5 }}>{displayCurrency}</Box>
-                                            {houseFundStats.remaining.toFixed(0)}
+                                            {Math.floor(houseFundStats.remaining)}
                                             <Box component="span" sx={{ fontSize: '0.4em', opacity: 0.5, ml: 0.5 }}>.{houseFundStats.remaining.toFixed(2).split('.')[1]}</Box>
                                         </Typography>
 
@@ -826,7 +826,7 @@ export default function Dashboard() {
                                     <Box sx={{ flexGrow: 1 }}>
                                         <Typography variant="h3" sx={{ fontWeight: 900, mb: 1, display: 'flex', alignItems: 'baseline' }}>
                                             <Box component="span" sx={{ fontSize: '0.6em', opacity: 0.7, mr: 0.5 }}>{displayCurrency}</Box>
-                                            {totalFilteredExpenses.toFixed(0)}
+                                            {Math.floor(totalFilteredExpenses)}
                                             <Box component="span" sx={{ fontSize: '0.4em', opacity: 0.5, ml: 0.5 }}>.{totalFilteredExpenses.toFixed(2).split('.')[1]}</Box>
                                         </Typography>
                                         <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600 }}>
@@ -1586,9 +1586,9 @@ export default function Dashboard() {
                                                                     </Box>
                                                                 </Box>
                                                                 <Typography variant="body2" sx={{ flex: 1, textAlign: 'center', color: hasLeft ? 'text.disabled' : 'inherit' }}>{mStats.periodicMealCount}</Typography>
-                                                                <Typography variant="body2" sx={{ flex: 1, textAlign: 'center', color: hasLeft ? 'text.disabled' : 'inherit' }}>{displayCurrency}{mStats.periodicMealCost.toFixed(0)}</Typography>
+                                                                <Typography variant="body2" sx={{ flex: 1, textAlign: 'center', color: hasLeft ? 'text.disabled' : 'inherit' }}>{displayCurrency}{mStats.periodicMealCost.toFixed(2)}</Typography>
                                                                 <Typography variant="body2" sx={{ flex: 1, textAlign: 'right', fontWeight: 800, color: hasLeft ? 'text.disabled' : remaining >= 0 ? 'success.main' : 'error.main' }}>
-                                                                    {displayCurrency}{remaining.toFixed(0)}
+                                                                    {displayCurrency}{remaining.toFixed(2)}
                                                                 </Typography>
                                                             </Box>
                                                         );
@@ -1597,7 +1597,7 @@ export default function Dashboard() {
                                                 <Box sx={{ display: 'flex', mt: 1, pt: 1, borderTop: '1px dashed rgba(0,0,0,0.1)' }}>
                                                     <Typography variant="body2" sx={{ flex: 1.5, fontWeight: 800, fontSize: '0.8rem' }}>Total</Typography>
                                                     <Typography variant="body2" sx={{ flex: 1, textAlign: 'center', fontWeight: 800, fontSize: '0.8rem' }}>{houseFundStatsResult.periodicTotalMeals}</Typography>
-                                                    <Typography variant="body2" sx={{ flex: 1, textAlign: 'center', fontWeight: 800, fontSize: '0.8rem' }}>{displayCurrency}{houseFundStatsResult.periodicTotalGroceries.toFixed(0)}</Typography>
+                                                    <Typography variant="body2" sx={{ flex: 1, textAlign: 'center', fontWeight: 800, fontSize: '0.8rem' }}>{displayCurrency}{houseFundStatsResult.periodicTotalGroceries.toFixed(2)}</Typography>
                                                     <Typography variant="body2" sx={{ flex: 1, textAlign: 'right', fontWeight: 800, color: 'primary.main', fontSize: '0.75rem' }}>
                                                         {displayCurrency}{houseFundStatsResult.periodicCostPerMeal.toFixed(2)}/meal
                                                     </Typography>
