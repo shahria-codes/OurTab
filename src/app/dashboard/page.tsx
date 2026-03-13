@@ -2451,19 +2451,65 @@ export default function Dashboard() {
                             let note = noteMatch ? noteMatch[1].trim() : (itemsMatch ? '' : desc);
                             let itemsStr = itemsMatch ? itemsMatch[1] : (desc.includes('Items:') ? desc.split('Items:')[1].trim() : '');
 
-                            // Enhanced parsing: If category is groceries and description has commas but no Items prefix, treat it as list
-                            if (isGrocery && !itemsStr && desc.includes(',') && (desc.includes('৳') || desc.includes('€') || desc.includes('$'))) {
+                            const isPrice = (str: string) => {
+                                if (str.includes('৳') || str.includes('$') || str.includes('€')) return true;
+                                const num = str.replace(/[^0-9.]/g, '');
+                                return num !== '' && !isNaN(Number(num));
+                            };
+
+                            let isSinglePriceItem = false;
+                            if (!itemsStr && !desc.includes('Items:')) {
+                                const lastSpaceIdx = desc.lastIndexOf(' ');
+                                if (lastSpaceIdx !== -1) {
+                                    const potentialPrice = desc.substring(lastSpaceIdx + 1);
+                                    if (isPrice(potentialPrice)) {
+                                        isSinglePriceItem = true;
+                                    }
+                                }
+                            }
+
+                            // Enhanced parsing: If description is a comma-separated list or a single item with a price, treat it as list
+                            let isItemsList = !itemsStr && (desc.includes(',') || isSinglePriceItem) && (desc.includes('৳') || desc.includes('€') || desc.includes('$'));
+                            if (isItemsList) {
                                 itemsStr = desc;
                                 note = ''; // Don't show it as a note if we show it as a list
                             }
 
-                            const itemsList = itemsStr ? itemsStr.split(', ').map(item => {
+                            // (isPrice function moved up)
+
+                            const rawParts = itemsStr ? itemsStr.split(', ') : [];
+                            const mergedParts = [];
+                            let currentPart = '';
+
+                            for (const part of rawParts) {
+                                if (currentPart) {
+                                    currentPart += ', ' + part;
+                                } else {
+                                    currentPart = part;
+                                }
+
+                                // Check if currentPart ends with a price
+                                const lastSpaceIdx = currentPart.lastIndexOf(' ');
+                                if (lastSpaceIdx !== -1) {
+                                    const potentialPrice = currentPart.substring(lastSpaceIdx + 1);
+                                    if (isPrice(potentialPrice)) {
+                                        mergedParts.push(currentPart);
+                                        currentPart = '';
+                                        continue;
+                                    }
+                                }
+                            }
+                            if (currentPart) {
+                                mergedParts.push(currentPart);
+                            }
+
+                            const itemsList = mergedParts.map(item => {
                                 const parts = item.split(/\s(?=[^ ]*$)/); // Split by last space
-                                if (parts.length === 2 && (parts[1].includes('৳') || parts[1].includes('$') || parts[1].includes('€') || !isNaN(Number(parts[1].replace(/[^0-9.]/g, ''))))) {
+                                if (parts.length === 2 && isPrice(parts[1])) {
                                     return { name: parts[0], price: parts[1] };
                                 }
                                 return { name: item, price: '' };
-                            }).filter(it => it.name.trim() !== '') : [];
+                            }).filter(it => it.name.trim() !== '');
 
                             const member = allMembers.find(m => m.email === selectedExpenseDetail.userId);
                             const expenseDate = new Date(selectedExpenseDetail.date);
