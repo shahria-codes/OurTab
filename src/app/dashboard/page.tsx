@@ -2579,7 +2579,7 @@ export default function Dashboard() {
                                         </Box>
                                     )}
 
-                                    {selectedExpenseDetail.contributors && selectedExpenseDetail.contributors.length > 1 && (
+                                    {selectedExpenseDetail.contributors && (selectedExpenseDetail.contributors.length > 1 || (selectedExpenseDetail.contributors.length === 1 && selectedExpenseDetail.contributors[0].email !== selectedExpenseDetail.userId)) && (
                                         <Box>
                                             <Typography variant="subtitle2" sx={{ fontWeight: 800, mb: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}>
                                                 <GroupIcon sx={{ fontSize: 18, color: 'secondary.main' }} /> Split Details
