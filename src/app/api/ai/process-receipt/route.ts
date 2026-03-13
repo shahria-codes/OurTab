@@ -35,7 +35,7 @@ export async function POST(req: NextRequest) {
         const prompt = `
       Extract a JSON array of items from this receipt.
       For each item:
-      - "name": English translation of the item.
+      - "name": English translation of the item. Do NOT include any commas (",") in the name. Replace commas with spaces if necessary. Example: "Pears, 1kg pack €1.49" and "Hot peppers, 100g €0.69". There should not be "," after Pears and Hot peppers.
       - "price": Net price paid (actual price = price - discount) as a number.
       same name, same price, same quantity, same weight must be sum up to one item. Then "Name x count" format.
       Handle voids and discounts carefully. Do NOT include taxes or totals.
