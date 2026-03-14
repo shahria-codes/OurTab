@@ -12,6 +12,8 @@ import Button from '@mui/material/Button';
 import IconButton from '@mui/material/IconButton';
 import TextField from '@mui/material/TextField';
 import MenuItem from '@mui/material/MenuItem';
+import Tooltip from '@mui/material/Tooltip';
+import InfoIcon from '@mui/icons-material/Info';
 import { useAuth } from '@/components/AuthContext';
 import { useUserData, UserData } from '@/hooks/useUserData';
 import { useToast } from '@/components/ToastContext';
@@ -643,10 +645,10 @@ function ProfileContent() {
                                                     sx={{ flex: 1, '& .MuiInputBase-root': { borderRadius: '20px', background: 'rgba(255,255,255,0.05)' } }}
                                                     autoFocus
                                                 />
-                                                <IconButton 
-                                                    size="small" 
-                                                    color="success" 
-                                                    disabled={savingFields} 
+                                                <IconButton
+                                                    size="small"
+                                                    color="success"
+                                                    disabled={savingFields}
                                                     onClick={async () => {
                                                         if (await handleSaveFields({ profession: professionValue.trim() })) {
                                                             setEditingProfession(false);
@@ -656,8 +658,8 @@ function ProfileContent() {
                                                 >
                                                     <CheckIcon fontSize="small" />
                                                 </IconButton>
-                                                <IconButton 
-                                                    size="small" 
+                                                <IconButton
+                                                    size="small"
                                                     onClick={() => { setEditingProfession(false); setProfessionValue(dbUser?.profession || ''); }}
                                                     aria-label="Cancel editing profession"
                                                 >
@@ -731,10 +733,10 @@ function ProfileContent() {
                                                         ))}
                                                     </TextField>
                                                 </Box>
-                                                <IconButton 
-                                                    size="small" 
-                                                    color="success" 
-                                                    disabled={savingFields} 
+                                                <IconButton
+                                                    size="small"
+                                                    color="success"
+                                                    disabled={savingFields}
                                                     onClick={async () => {
                                                         if (await handleSaveFields({ birthday: birthdayValue })) {
                                                             setEditingBirthday(false);
@@ -744,8 +746,8 @@ function ProfileContent() {
                                                 >
                                                     <CheckIcon sx={{ fontSize: 14 }} />
                                                 </IconButton>
-                                                <IconButton 
-                                                    size="small" 
+                                                <IconButton
+                                                    size="small"
                                                     onClick={() => { setEditingBirthday(false); setBirthdayValue(dbUser?.birthday || ''); }}
                                                     aria-label="Cancel editing birthday"
                                                 >
@@ -812,17 +814,17 @@ function ProfileContent() {
                                                             sx={{ '& .MuiInputBase-root': { borderRadius: '12px', background: 'rgba(255,255,255,0.05)', fontSize: '0.8rem' } }}
                                                             autoFocus
                                                         />
-                                                        <IconButton 
-                                                            size="small" 
-                                                            color="success" 
-                                                            disabled={savingHouseName} 
+                                                        <IconButton
+                                                            size="small"
+                                                            color="success"
+                                                            disabled={savingHouseName}
                                                             onClick={handleUpdateHouseName}
                                                             aria-label="Save house name"
                                                         >
                                                             <CheckIcon fontSize="small" />
                                                         </IconButton>
-                                                        <IconButton 
-                                                            size="small" 
+                                                        <IconButton
+                                                            size="small"
                                                             onClick={() => setEditingHouseName(false)}
                                                             aria-label="Cancel editing house name"
                                                         >
@@ -836,9 +838,9 @@ function ProfileContent() {
                                                         </Box>
                                                         {' '}<Box component="span" sx={{ opacity: 0.5 }}>[{houseDetails.currency === 'EUR' ? '€' : houseDetails.currency === 'BDT' ? '৳' : '$'}]</Box>
                                                         {isManager && (
-                                                            <IconButton 
-                                                                size="small" 
-                                                                onClick={() => { setTempHouseName(houseDetails.name || ''); setEditingHouseName(true); }} 
+                                                            <IconButton
+                                                                size="small"
+                                                                onClick={() => { setTempHouseName(houseDetails.name || ''); setEditingHouseName(true); }}
                                                                 sx={{ ml: 0.5, p: 0.5 }}
                                                                 aria-label="Edit house name"
                                                             >
@@ -861,13 +863,37 @@ function ProfileContent() {
                             {/* Social Section */}
                             <Box>
                                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5 }}>
-                                    <Typography variant="subtitle2" sx={{ fontWeight: 900, fontSize: '0.65rem', textTransform: 'uppercase', letterSpacing: '0.1em', opacity: 0.5 }}>
-                                        Social Network
-                                    </Typography>
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                        <Typography variant="subtitle2" sx={{ fontWeight: 900, fontSize: '0.65rem', textTransform: 'uppercase', letterSpacing: '0.1em', opacity: 0.5 }}>
+                                            Social Network
+                                        </Typography>
+                                        <Tooltip
+                                            title={
+                                                <Box sx={{ p: 0.5 }}>
+                                                    <Typography variant="caption" sx={{ display: 'block', fontWeight: 700, mb: 0.5 }}>
+                                                        How to find Messenger username:
+                                                    </Typography>
+                                                    <Typography variant="caption" sx={{ display: 'block', opacity: 0.9 }}>
+                                                        1. Open Messenger app
+                                                    </Typography>
+                                                    <Typography variant="caption" sx={{ display: 'block', opacity: 0.9 }}>
+                                                        2. Tap Menu (three lines) &gt; Settings (gear icon)
+                                                    </Typography>
+                                                    <Typography variant="caption" sx={{ display: 'block', opacity: 0.9 }}>
+                                                        3. Tap 'Username' to see and copy it
+                                                    </Typography>
+                                                </Box>
+                                            }
+                                            arrow
+                                            placement="top"
+                                        >
+                                            <InfoIcon sx={{ fontSize: 14, opacity: 0.5, cursor: 'help' }} />
+                                        </Tooltip>
+                                    </Box>
                                     {!editingSocial && (
-                                        <IconButton 
-                                            size="small" 
-                                            onClick={() => setEditingSocial(true)} 
+                                        <IconButton
+                                            size="small"
+                                            onClick={() => setEditingSocial(true)}
                                             sx={{ p: 0.5 }}
                                             aria-label="Edit social network"
                                         >
@@ -927,9 +953,9 @@ function ProfileContent() {
                                             Banking Details
                                         </Typography>
                                         {!editingIban && (
-                                            <IconButton 
-                                                size="small" 
-                                                onClick={() => setEditingIban(true)} 
+                                            <IconButton
+                                                size="small"
+                                                onClick={() => setEditingIban(true)}
                                                 sx={{ p: 0.5 }}
                                                 aria-label="Edit banking details"
                                             >
@@ -1242,13 +1268,13 @@ function ProfileContent() {
                                                         </Box>
                                                     </Box>
                                                     {isManager && editingMember !== member.email && (
-                                                        <IconButton 
-                                                            size="small" 
+                                                        <IconButton
+                                                            size="small"
                                                             onClick={() => {
                                                                 setEditingMember(member.email);
                                                                 setEditRole(member.role || 'member');
                                                                 setEditRent(member.rentAmount || 0);
-                                                            }} 
+                                                            }}
                                                             sx={{ p: 0.25 }}
                                                             aria-label="Edit member settings"
                                                         >
@@ -1586,7 +1612,7 @@ function ProfileContent() {
                         )}
                     </Paper>
 
-                    <Box className="animate-stagger" sx={{ transitionDelay: '0.45s', mt: 3 }}>
+                    <Box className="animate-stagger" sx={{ transitionDelay: '0.45s', mt: 5 }}>
                         <Button
                             fullWidth
                             variant="contained"
@@ -1617,7 +1643,7 @@ function ProfileContent() {
                     </Box>
 
                     {/* ── Footer: Feedback link ── */}
-                    <Box className="animate-stagger" sx={{ textAlign: 'center', pt: 1, transitionDelay: '0.5s' }}>
+                    <Box className="animate-stagger" sx={{ textAlign: 'center', pt: 3, transitionDelay: '0.5s' }}>
                         <Typography
                             variant="body2"
                             color="text.disabled"

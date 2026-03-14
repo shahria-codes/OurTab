@@ -45,3 +45,25 @@ export function formatDetailedDateTime(date: Date | string): string {
         hour12: true
     });
 }
+/**
+ * Formats a birthday string (MM-DD) into a human-readable format like "21st March".
+ */
+export function formatBirthday(birthday?: string): string | null {
+    if (!birthday || birthday === '') return null;
+    const parts = birthday.split('-');
+    if (parts.length !== 2) return birthday;
+    const month = parseInt(parts[0]);
+    const day = parseInt(parts[1]);
+    if (isNaN(month) || isNaN(day)) return birthday;
+    const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+    const suffix = (d: number) => {
+        if (d > 3 && d < 21) return 'th';
+        switch (d % 10) {
+            case 1: return 'st';
+            case 2: return 'nd';
+            case 3: return 'rd';
+            default: return 'th';
+        }
+    };
+    return `${day}${suffix(day)} ${months[month - 1]}`;
+}

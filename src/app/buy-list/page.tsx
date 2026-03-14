@@ -87,7 +87,8 @@ export default function Todos() {
 
         const handleResize = () => {
             if (window.visualViewport) {
-                const isOpen = window.visualViewport.height < window.innerHeight * 0.8;
+                // Robust check: if viewport is less than 75% of screen height, keyboard is likely open
+                const isOpen = window.visualViewport.height < window.screen.height * 0.75;
                 setIsKeyboardOpen(isOpen);
             }
         };
@@ -346,9 +347,9 @@ export default function Todos() {
                                                         </Typography>
                                                     </Box>
                                                     {canDeleteItem(todo) && (
-                                                        <IconButton 
-                                                            size="small" 
-                                                            onClick={() => deleteTodo(todo.id)} 
+                                                        <IconButton
+                                                            size="small"
+                                                            onClick={() => deleteTodo(todo.id)}
                                                             aria-label="Delete item"
                                                             sx={{ color: 'text.disabled', '&:hover': { color: 'error.main' } }}
                                                         >
@@ -459,9 +460,9 @@ export default function Todos() {
                                         }}
                                     >
                                         <Typography variant="body2" sx={{ fontWeight: 600, fontSize: '0.85rem' }}>{item}</Typography>
-                                        <IconButton 
-                                            size="small" 
-                                            onClick={() => handleRemovePendingItem(index)} 
+                                        <IconButton
+                                            size="small"
+                                            onClick={() => handleRemovePendingItem(index)}
                                             aria-label="Remove item from staging"
                                             sx={{ p: 0.5 }}
                                         >
@@ -499,7 +500,7 @@ export default function Todos() {
                                 ml: 2,
                                 '& .MuiInput-root': {
                                     color: 'text.primary',
-                                    fontSize: '0.95rem',
+                                    fontSize: '1rem',
                                     fontWeight: 600,
                                     '&:before, &:after': { display: 'none' }
                                 },
@@ -512,9 +513,9 @@ export default function Todos() {
                             onMouseDown={(e) => e.preventDefault()} // Prevent focus loss and UI shift
                             disabled={!todoInput.trim()}
                             sx={{
-                                minWidth: 48,
-                                width: 48,
-                                height: 48,
+                                minWidth: 40,
+                                width: 40,
+                                height: 40,
                                 borderRadius: '16px',
                                 p: 0,
                                 background: 'linear-gradient(135deg, #6C63FF 0%, #4f46e5 100%)',

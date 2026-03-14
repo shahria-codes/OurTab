@@ -22,8 +22,8 @@ export default function BottomNav() {
         // Detect keyboard on mobile
         const handleResize = () => {
             if (window.visualViewport) {
-                // If viewport height is significantly less than screen height, keyboard is likely open
-                const isKeyboardOpen = window.visualViewport.height < window.innerHeight * 0.8;
+                // Robust check: if viewport is less than 75% of screen height, keyboard is likely open
+                const isKeyboardOpen = window.visualViewport.height < window.screen.height * 0.75;
                 setIsVisible(!isKeyboardOpen);
             }
         };

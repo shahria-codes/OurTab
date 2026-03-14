@@ -48,53 +48,32 @@ import Loader from '@/components/Loader';
 import BottomNav from '@/components/BottomNav';
 import AuthGuard from '@/components/AuthGuard';
 import Avatar from '@mui/material/Avatar';
-import Dialog from '@mui/material/Dialog';
-import DialogActions from '@mui/material/DialogActions';
-import DialogContent from '@mui/material/DialogContent';
-import DialogTitle from '@mui/material/DialogTitle';
-import TextField from '@mui/material/TextField';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import PaymentsIcon from '@mui/icons-material/Payments';
 import DeleteIcon from '@mui/icons-material/Delete';
 import HowToVoteIcon from '@mui/icons-material/HowToVote';
 import FormatListBulletedIcon from '@mui/icons-material/FormatListBulleted';
-import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import IosShareIcon from '@mui/icons-material/IosShare';
-import WorkIcon from '@mui/icons-material/Work';
-import CakeIcon from '@mui/icons-material/Cake';
-import WhatsAppIcon from '@mui/icons-material/WhatsApp';
-import FacebookIcon from '@mui/icons-material/Facebook';
-import TelegramIcon from '@mui/icons-material/Telegram';
-import SendIcon from '@mui/icons-material/Send';
-import { MessengerIcon } from '@/components/Icons';
 import NotificationBell from '@/components/NotificationBell';
-import InputAdornment from '@mui/material/InputAdornment';
-import EmailIcon from '@mui/icons-material/Email';
-import CloseIcon from '@mui/icons-material/Close';
-import { formatDateLocale, formatTimeLocale, formatTimeStr } from '@/utils/date';
+import dynamic from 'next/dynamic';
+import { formatDateLocale, formatTimeLocale, formatTimeStr, formatBirthday } from '@/utils/date';
 import { isTakingMeal, countMemberMeals } from '@/utils/meals';
 import JoinDayMealDialog from '@/components/JoinDayMealDialog';
 
+const ExpenseDetailDialog = dynamic(() => import('@/components/dashboard/ExpenseDetailDialog'));
+const DepositDetailsDialog = dynamic(() => import('@/components/dashboard/DepositDetailsDialog'));
+const ShareHouseDialog = dynamic(() => import('@/components/dashboard/ShareHouseDialog'));
+const MemberDetailsDialog = dynamic(() => import('@/components/dashboard/MemberDetailsDialog'));
+const SettlementHistoryDialog = dynamic(() => import('@/components/dashboard/SettlementHistoryDialog'));
+const CancelPaymentDialog = dynamic(() => import('@/components/dashboard/CancelPaymentDialog'));
+const ConfirmPaymentDialog = dynamic(() => import('@/components/dashboard/ConfirmPaymentDialog'));
+const SubmitDepositDialog = dynamic(() => import('@/components/dashboard/SubmitDepositDialog'));
+const FundHistoryDialog = dynamic(() => import('@/components/dashboard/FundHistoryDialog'));
+const AddMemberDialog = dynamic(() => import('@/components/dashboard/AddMemberDialog'));
+const EditExpenseDialog = dynamic(() => import('@/components/dashboard/EditExpenseDialog'));
+const DeleteConfirmationDialog = dynamic(() => import('@/components/dashboard/DeleteConfirmationDialog'));
 
-const formatBirthday = (birthday?: string) => {
-    if (!birthday || birthday === '') return null;
-    const parts = birthday.split('-');
-    if (parts.length !== 2) return birthday;
-    const month = parseInt(parts[0]);
-    const day = parseInt(parts[1]);
-    if (isNaN(month) || isNaN(day)) return birthday;
-    const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-    const suffix = (d: number) => {
-        if (d > 3 && d < 21) return 'th';
-        switch (d % 10) {
-            case 1: return 'st';
-            case 2: return 'nd';
-            case 3: return 'rd';
-            default: return 'th';
-        }
-    };
-    return `${day}${suffix(day)} ${months[month - 1]}`;
-};
+
 
 
 interface Expense {
@@ -233,6 +212,13 @@ export default function Dashboard() {
         showToast('Copied to clipboard!', 'success');
     };
 
+    const getShareLinks = () => {
+        if (typeof window === 'undefined' || !house) return { url: '', text: '' };
+        const url = `${window.location.origin}/join?houseId=${house.id}`;
+        const text = `Join my house "${house.name}" on OurTab to track our shared expenses!`;
+        return { url, text };
+    };
+
     const handleShareHouse = async () => {
         if (!house?.id) return;
         const { url, text } = getShareLinks();
@@ -253,12 +239,6 @@ export default function Dashboard() {
         }
     };
 
-    const getShareLinks = () => {
-        if (!house) return { url: '', text: '' };
-        const url = `${window.location.origin}/join?houseId=${house.id}`;
-        const text = `Join my house "${house.name}" on OurTab to track our shared expenses!`;
-        return { url, text };
-    };
 
 
     const handleSaveEdit = async () => {
@@ -387,6 +367,60 @@ export default function Dashboard() {
             }
         } catch {
             showToast('Error cancelling deposit', 'error');
+        }
+    };
+
+    const handleCancelPayment = async () => {
+        if (!cancelPaymentId || !house || !user) return;
+        try {
+            const res = await fetch('/api/houses/cancel-payment', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    houseId: house.id,
+                    paymentId: cancelPaymentId,
+                    cancellerEmail: user.email,
+                }),
+            });
+            if (res.ok) {
+                showToast('Payment request cancelled.', 'success');
+                mutateHouse();
+                setCancelPaymentId(null);
+            } else {
+                const d = await res.json();
+                showToast(d.error || 'Failed to cancel', 'error');
+            }
+        } catch {
+            showToast('Error cancelling request', 'error');
+        }
+    };
+
+    const handleConfirmPayment = async () => {
+        if (!paySettlement || !house || !user?.email) return;
+        try {
+            const res = await fetch('/api/houses/request-payment', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    houseId: house.id,
+                    from: paySettlement.from,
+                    to: paySettlement.to,
+                    amount: payAmount,
+                    method: payMethod,
+                }),
+            });
+            if (res.ok) {
+                showToast('Payment request sent!', 'success');
+                setOpenPayDialog(false);
+                setPaySettlement(null);
+                setPayAmount('');
+                mutateHouse();
+            } else {
+                const d = await res.json();
+                showToast(d.error || 'Failed to send request', 'error');
+            }
+        } catch {
+            showToast('Error sending request', 'error');
         }
     };
 
@@ -1140,12 +1174,12 @@ export default function Dashboard() {
                                                 gap: 2
                                             }}>
                                                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                                                    <Avatar src={fromMember?.photoUrl} sx={{ width: 40, height: 40, border: '2px solid rgba(2, 136, 209, 0.2)' }} />
+                                                    <Avatar src={fromMember?.photoUrl} alt={fromMember?.name || 'Member'} sx={{ width: 40, height: 40, border: '2px solid rgba(2, 136, 209, 0.2)' }} />
                                                     <Box>
                                                         <Typography variant="body2" sx={{ fontWeight: 700 }}>
                                                             {fromName} sent {displayCurrency}{payment.amount.toFixed(2)}
                                                         </Typography>
-                                                        <Typography variant="caption" color="text.secondary">
+                                                        <Typography variant="caption" color="text.primary" sx={{ opacity: 0.8 }}>
                                                             Status: Waiting for your approval
                                                         </Typography>
                                                         {payment.method && (
@@ -1373,7 +1407,7 @@ export default function Dashboard() {
                                                             transition: 'all 0.2s ease',
                                                             '&:hover': { transform: 'scale(1.02)', bgcolor: 'white' }
                                                         }}>
-                                                            <Avatar src={member.photoUrl} sx={{ width: 36, height: 36, mb: 1, border: '2px solid', borderColor: hasAny ? 'primary.light' : 'error.light', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
+                                                            <Avatar src={member.photoUrl} alt={member.name || 'Member'} sx={{ width: 36, height: 36, mb: 1, border: '2px solid', borderColor: hasAny ? 'primary.light' : 'error.light', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
                                                                 {member.name ? member.name[0].toUpperCase() : member.email[0].toUpperCase()}
                                                             </Avatar>
                                                             <Typography variant="caption" noWrap sx={{ fontWeight: 800, width: '100%', textAlign: 'center', mb: 1, fontSize: '0.7rem' }}>
@@ -1436,12 +1470,12 @@ export default function Dashboard() {
                                                 gap: 2
                                             }}>
                                                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                                                    <Avatar src={fromMember?.photoUrl} sx={{ width: 40, height: 40, border: '2px solid rgba(76, 175, 80, 0.2)' }} />
+                                                    <Avatar src={fromMember?.photoUrl} alt={fromMember?.name || 'Member'} sx={{ width: 40, height: 40, border: '2px solid rgba(76, 175, 80, 0.2)' }} />
                                                     <Box>
                                                         <Typography variant="body2" sx={{ fontWeight: 700 }}>
                                                             {fromName} requested to deposit {displayCurrency}{deposit.amount.toFixed(2)}
                                                         </Typography>
-                                                        <Typography variant="caption" color="text.secondary">
+                                                        <Typography variant="caption" color="text.primary" sx={{ opacity: 0.8 }}>
                                                             Verify the transfer and approve
                                                         </Typography>
                                                     </Box>
@@ -1578,11 +1612,11 @@ export default function Dashboard() {
                                                         return (
                                                             <Box key={member.email} sx={{ display: 'flex', alignItems: 'center', opacity: hasLeft ? 0.65 : 1 }}>
                                                                 <Box sx={{ flex: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}>
-                                                                    <Avatar src={member.photoUrl} sx={{ width: 20, height: 20, fontSize: '0.6rem', filter: hasLeft ? 'grayscale(1)' : 'none' }}>{member.name?.[0]}</Avatar>
+                                                                    <Avatar src={member.photoUrl} alt={member.name || 'Member'} sx={{ width: 20, height: 20, fontSize: '0.6rem', filter: hasLeft ? 'grayscale(1)' : 'none' }}>{member.name?.[0]}</Avatar>
                                                                     <Box sx={{ display: 'flex', flexDirection: 'column' }}>
                                                                         <Typography variant="body2" sx={{ fontWeight: 600, fontSize: '0.8rem', color: hasLeft ? 'text.disabled' : 'inherit', lineHeight: 1.2 }}>{member.name?.split(' ').slice(0, 2).join(' ')}</Typography>
                                                                         {leftLabel && (
-                                                                            <Typography variant="caption" sx={{ fontSize: '0.65rem', color: 'text.disabled', fontStyle: 'italic', whiteSpace: 'nowrap', lineHeight: 1.2 }}>
+                                                                            <Typography variant="caption" sx={{ fontSize: '0.65rem', color: 'text.primary', opacity: 0.7, fontStyle: 'italic', whiteSpace: 'nowrap', lineHeight: 1.2 }}>
                                                                                 {leftLabel}
                                                                             </Typography>
                                                                         )}
@@ -1781,7 +1815,7 @@ export default function Dashboard() {
                                                     >
                                                         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flex: 1, minWidth: 0 }}>
-                                                                <Avatar src={member?.photoUrl} sx={{ width: 36, height: 36, border: '2px solid rgba(108, 99, 255, 0.2)' }} />
+                                                                <Avatar src={member?.photoUrl} alt={member?.name || 'Member'} sx={{ width: 36, height: 36, border: '2px solid rgba(108, 99, 255, 0.2)' }} />
                                                                 <Box sx={{ minWidth: 0, flex: 1 }}>
                                                                     <Typography
                                                                         variant="body2"
@@ -1798,7 +1832,7 @@ export default function Dashboard() {
                                                                             : ''}
                                                                         {expense.description}
                                                                     </Typography>
-                                                                    <Typography variant="caption" color="text.secondary" sx={{ display: 'flex', alignItems: 'center', gap: 0.5, flexWrap: 'wrap' }}>
+                                                                    <Typography variant="caption" color="text.primary" sx={{ display: 'flex', alignItems: 'center', gap: 0.5, flexWrap: 'wrap', opacity: 0.8 }}>
                                                                         {(() => {
                                                                             const hasOtherContributors = expense.contributors && expense.contributors.some(c => c.email !== expense.userId);
                                                                             const shopperContrib = expense.contributors?.find(c => c.email === expense.userId);
@@ -1885,1254 +1919,120 @@ export default function Dashboard() {
                     <BottomNav />
                 </Box>
 
-                {/* Delete Confirmation Dialog */}
-                <Dialog open={openDeleteConfirm} onClose={() => setOpenDeleteConfirm(false)}>
-                    <DialogTitle>Delete Expense</DialogTitle>
-                    <DialogContent>
-                        <Typography>
-                            Are you sure you want to delete this expense? This action cannot be undone.
-                        </Typography>
-                    </DialogContent>
-                    <DialogActions>
-                        <Button onClick={() => setOpenDeleteConfirm(false)}>Cancel</Button>
-                        <Button onClick={confirmDeleteExpense} color="error" variant="contained" autoFocus>
-                            Delete
-                        </Button>
-                    </DialogActions>
-                </Dialog>
+                <DeleteConfirmationDialog
+                    open={openDeleteConfirm}
+                    onClose={() => setOpenDeleteConfirm(false)}
+                    onConfirm={confirmDeleteExpense}
+                    title="Delete Expense"
+                    message="Are you sure you want to delete this expense? This action cannot be undone."
+                />
 
-                {/* Add Member Dialog */}
-                <Dialog
+                <AddMemberDialog
                     open={openAddMember}
                     onClose={() => setOpenAddMember(false)}
-                    PaperProps={{
-                        className: 'glass',
-                        sx: {
-                            borderRadius: 4,
-                            backgroundImage: 'none',
-                            p: 1
-                        }
-                    }}
-                >
-                    <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1.5, pb: 1 }}>
-                        <Box sx={{
-                            display: 'flex',
-                            p: 1,
-                            borderRadius: 2,
-                            background: 'linear-gradient(45deg, #6C63FF 30%, #FF6584 90%)',
-                            color: 'white'
-                        }}>
-                            <PersonAddIcon />
-                        </Box>
-                        <Typography variant="h5" component="span" sx={{ fontWeight: 800 }}>Add Member</Typography>
-                    </DialogTitle>
-                    <DialogContent>
-                        <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-                            Invite someone to join your house. They'll be able to track expenses and contribute.
-                        </Typography>
-                        <TextField
-                            autoFocus
-                            label="Email Address"
-                            type="email"
-                            fullWidth
-                            variant="outlined"
-                            value={newMemberEmail}
-                            onChange={(e) => setNewMemberEmail(e.target.value)}
-                            error={!!newMemberEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newMemberEmail)}
-                            helperText={!!newMemberEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newMemberEmail) ? "Please enter a valid email address" : ""}
-                            sx={{
-                                '& .MuiOutlinedInput-root': {
-                                    borderRadius: 3,
-                                }
-                            }}
-                        />
-                    </DialogContent>
-                    <DialogActions sx={{ p: 3, pt: 0 }}>
-                        <Button
-                            onClick={() => setOpenAddMember(false)}
-                            sx={{ color: 'text.secondary', fontWeight: 600 }}
-                        >
-                            Cancel
-                        </Button>
-                        <Button
-                            onClick={handleAddMember}
-                            disabled={!newMemberEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newMemberEmail)}
-                            variant="contained"
-                            sx={{
-                                borderRadius: 2.5,
-                                px: 4,
-                                py: 1,
-                                fontWeight: 700,
-                                textTransform: 'none',
-                                background: 'linear-gradient(45deg, #6C63FF 30%, #FF6584 90%)',
-                                boxShadow: '0 4px 15px rgba(108, 99, 255, 0.3)',
-                                '&:hover': {
-                                    background: 'linear-gradient(45deg, #5b54d6 30%, #e55a76 90%)',
-                                    boxShadow: '0 6px 20px rgba(108, 99, 255, 0.4)',
-                                }
-                            }}
-                        >
-                            Add Member
-                        </Button>
-                    </DialogActions>
-                </Dialog>
+                    newMemberEmail={newMemberEmail}
+                    setNewMemberEmail={setNewMemberEmail}
+                    onConfirm={handleAddMember}
+                />
 
-                {/* Edit Expense Dialog */}
-                <Dialog open={openEditExpense} onClose={() => setOpenEditExpense(false)}>
-                    <DialogTitle>Edit Expense</DialogTitle>
-                    <DialogContent>
-                        <TextField
-                            autoFocus
-                            margin="dense"
-                            id="description"
-                            label="Description"
-                            type="text"
-                            fullWidth
-                            variant="outlined"
-                            value={editDescription}
-                            onChange={(e) => setEditDescription(e.target.value)}
-                            sx={{ mb: 2 }}
-                        />
-                        <TextField
-                            margin="dense"
-                            id="amount"
-                            label="Amount"
-                            type="number"
-                            fullWidth
-                            variant="outlined"
-                            value={editAmount}
-                            onChange={(e) => setEditAmount(e.target.value)}
-                        />
-                    </DialogContent>
-                    <DialogActions>
-                        <Button onClick={() => setOpenEditExpense(false)}>Cancel</Button>
-                        <Button onClick={handleSaveEdit} variant="contained" color="primary">Save</Button>
-                    </DialogActions>
-                </Dialog>
+                <EditExpenseDialog
+                    open={openEditExpense}
+                    onClose={() => setOpenEditExpense(false)}
+                    editDescription={editDescription}
+                    setEditDescription={setEditDescription}
+                    editAmount={editAmount}
+                    setEditAmount={setEditAmount}
+                    onConfirm={handleSaveEdit}
+                />
 
-                {/* Cancel Payment Confirmation Dialog */}
-                <Dialog open={!!cancelPaymentId} onClose={() => setCancelPaymentId(null)} fullWidth maxWidth="xs">
-                    <DialogTitle>Cancel Payment Request</DialogTitle>
-                    <DialogContent>
-                        <Typography>Are you sure you want to cancel this payment request? The receiver will no longer be able to approve it.</Typography>
-                    </DialogContent>
-                    <DialogActions>
-                        <Button onClick={() => setCancelPaymentId(null)}>Back</Button>
-                        <Button
-                            variant="contained"
-                            color="error"
-                            onClick={async () => {
-                                if (!cancelPaymentId || !house || !user) return;
-                                try {
-                                    const res = await fetch('/api/houses/cancel-payment', {
-                                        method: 'POST',
-                                        headers: { 'Content-Type': 'application/json' },
-                                        body: JSON.stringify({
-                                            houseId: house.id,
-                                            paymentId: cancelPaymentId,
-                                            cancellerEmail: user.email,
-                                        }),
-                                    });
-                                    if (res.ok) {
-                                        showToast('Payment request cancelled.', 'success');
-                                        mutateHouse();
-                                        setCancelPaymentId(null);
-                                    } else {
-                                        const d = await res.json();
-                                        showToast(d.error || 'Failed to cancel', 'error');
-                                    }
-                                } catch {
-                                    showToast('Error cancelling request', 'error');
-                                }
-                            }}
-                        >
-                            Cancel Request
-                        </Button>
-                    </DialogActions>
-                </Dialog>
+                <CancelPaymentDialog
+                    open={!!cancelPaymentId}
+                    onClose={() => setCancelPaymentId(null)}
+                    onConfirm={handleCancelPayment}
+                />
 
-                {/* Pay Now Confirmation Dialog */}
-                <Dialog open={openPayDialog} onClose={() => setOpenPayDialog(false)} fullWidth maxWidth="xs">
-                    <DialogTitle>Confirm Payment</DialogTitle>
-                    <DialogContent>
-                        {paySettlement && (() => {
-                            const toMember = allMembers.find(m => m.email === paySettlement.to);
-                            const toName = toMember?.name || paySettlement.to.split('@')[0];
-                            return (
-                                <Box sx={{ pt: 1, display: 'flex', flexDirection: 'column', gap: 2 }}>
-                                    <Typography>
-                                        Paying <strong>{toName}</strong>
-                                    </Typography>
+                <ConfirmPaymentDialog
+                    open={openPayDialog}
+                    onClose={() => setOpenPayDialog(false)}
+                    paySettlement={paySettlement}
+                    allMembers={allMembers}
+                    payAmount={payAmount}
+                    setPayAmount={setPayAmount}
+                    payMethod={payMethod}
+                    setPayMethod={setPayMethod}
+                    displayCurrency={displayCurrency}
+                    onConfirm={handleConfirmPayment}
+                />
 
-                                    {/* Manual amount input */}
-                                    <TextField
-                                        label="Amount"
-                                        type="number"
-                                        fullWidth
-                                        value={payAmount}
-                                        onChange={(e) => {
-                                            const val = e.target.value;
-                                            const max = paySettlement?.amount ?? Infinity;
-                                            if (val === '' || Number(val) <= max) {
-                                                setPayAmount(val);
-                                            } else {
-                                                setPayAmount(String(max));
-                                            }
-                                        }}
-                                        inputProps={{ min: 0.01, step: '0.01', max: paySettlement?.amount }}
-                                        helperText={`Max: ${displayCurrency}${paySettlement?.amount.toFixed(2)}`}
-                                        InputProps={{
-                                            startAdornment: (
-                                                <Box component="span" sx={{ mr: 0.5, color: 'text.secondary' }}>{displayCurrency}</Box>
-                                            ),
-                                        }}
-                                    />
+                <SubmitDepositDialog
+                    open={openDepositDialog}
+                    onClose={() => setOpenDepositDialog(false)}
+                    depositAmount={depositAmount}
+                    setDepositAmount={setDepositAmount}
+                    displayCurrency={displayCurrency}
+                    onConfirm={handleRequestDeposit}
+                />
 
-                                    {/* Payment method tags */}
-                                    <Box>
-                                        <Typography variant="caption" color="text.secondary" sx={{ mb: 1, display: 'block' }}>Payment method</Typography>
-                                        <Box sx={{ display: 'flex', gap: 1 }}>
-                                            <Chip
-                                                label="🏦 Bank"
-                                                clickable
-                                                color={payMethod === 'bank' ? 'primary' : 'default'}
-                                                variant={payMethod === 'bank' ? 'filled' : 'outlined'}
-                                                onClick={() => setPayMethod('bank')}
-                                                sx={{ fontWeight: payMethod === 'bank' ? 'bold' : 'normal' }}
-                                            />
-                                            <Chip
-                                                label="💵 Cash"
-                                                clickable
-                                                color={payMethod === 'cash' ? 'success' : 'default'}
-                                                variant={payMethod === 'cash' ? 'filled' : 'outlined'}
-                                                onClick={() => setPayMethod('cash')}
-                                                sx={{ fontWeight: payMethod === 'cash' ? 'bold' : 'normal' }}
-                                            />
-                                        </Box>
-                                    </Box>
+                <DepositDetailsDialog
+                    open={openDepositDetails}
+                    onClose={() => setOpenDepositDetails(false)}
+                    pendingDeposits={pendingDeposits}
+                    allMembers={allMembers}
+                    user={user}
+                    house={house}
+                    displayCurrency={displayCurrency}
+                    monthName={monthName}
+                    memberFundAccounting={memberFundAccounting}
+                    houseFundStatsResult={houseFundStatsResult}
+                    handleCancelDeposit={handleCancelDeposit}
+                    monthStr={getYYYYMM(selectedDate)}
+                />
 
-                                    <Typography variant="body2" color="text.secondary">
-                                        {toName} will receive a notification to approve. Once approved, the settlement will update automatically.
-                                    </Typography>
-                                </Box>
-                            );
-                        })()}
-                    </DialogContent>
-                    <DialogActions>
-                        <Button onClick={() => setOpenPayDialog(false)}>Cancel</Button>
-                        <Button
-                            variant="contained"
-                            color="success"
-                            startIcon={<PaymentsIcon />}
-                            disabled={!payAmount || Number(payAmount) <= 0 || Number(payAmount) > (paySettlement?.amount ?? Infinity)}
-                            onClick={async () => {
-                                if (!paySettlement || !house || !user?.email) return;
-                                try {
-                                    const res = await fetch('/api/houses/request-payment', {
-                                        method: 'POST',
-                                        headers: { 'Content-Type': 'application/json' },
-                                        body: JSON.stringify({
-                                            houseId: house.id,
-                                            fromEmail: user.email,
-                                            toEmail: paySettlement.to,
-                                            amount: Number(payAmount),
-                                            method: payMethod,
-                                        }),
-                                    });
-                                    const data = await res.json();
-                                    if (res.ok) {
-                                        showToast('Payment request sent! Waiting for approval.', 'success');
-                                        mutateHouse();
-                                        setOpenPayDialog(false);
-                                        setPaySettlement(null);
-                                    } else {
-                                        showToast(data.error || 'Failed to send payment request', 'error');
-                                    }
-                                } catch {
-                                    showToast('Error sending payment request', 'error');
-                                }
-                            }}
-                        >
-                            Confirm Payment
-                        </Button>
-                    </DialogActions>
-                </Dialog>
-
-                {/* Submit Deposit Request Dialog */}
-                <Dialog open={openDepositDialog} onClose={() => setOpenDepositDialog(false)} maxWidth="xs" fullWidth>
-                    <DialogTitle>Submit Fund Deposit</DialogTitle>
-                    <DialogContent>
-                        <Box sx={{ pt: 1, display: 'flex', flexDirection: 'column', gap: 2 }}>
-                            <Typography variant="body2" color="text.secondary">
-                                Enter the amount you transferred to the central house account. This will need approval by the manager.
-                            </Typography>
-                            <TextField
-                                label="Amount"
-                                type="number"
-                                fullWidth
-                                value={depositAmount}
-                                onChange={(e) => setDepositAmount(e.target.value)}
-                                InputProps={{
-                                    startAdornment: (
-                                        <Box component="span" sx={{ mr: 0.5, color: 'text.secondary' }}>{displayCurrency}</Box>
-                                    ),
-                                }}
-                            />
-                        </Box>
-                    </DialogContent>
-                    <DialogActions>
-                        <Button onClick={() => setOpenDepositDialog(false)}>Cancel</Button>
-                        <Button
-                            variant="contained"
-                            color="success"
-                            onClick={handleRequestDeposit}
-                            disabled={!depositAmount || Number(depositAmount) <= 0}
-                        >
-                            Request Approval
-                        </Button>
-                    </DialogActions>
-                </Dialog>
-
-                {/* Deposit Details Dialog */}
-                <Dialog open={openDepositDetails} onClose={() => setOpenDepositDetails(false)} maxWidth="sm" fullWidth>
-                    <DialogTitle>House Fund — Deposit Contributions</DialogTitle>
-                    <DialogContent>
-                        {(() => {
-                            const approvedDeposits = (fundDeposits || []).filter(d => d.status === 'approved');
-                            const monthStr = getYYYYMM(selectedDate);
-                            const members = [...allMembers].filter((m: any) => {
-                                const email = typeof m === 'string' ? m : m.email;
-                                const details = house?.memberDetails?.[email];
-                                if (details?.joinedAt && details.joinedAt.substring(0, 7) > monthStr) {
-                                    return false;
-                                }
-                                if (details?.leftDate && details.leftDate.substring(0, 7) < monthStr) {
-                                    return false;
-                                }
-                                return true;
-                            }).sort((a, b) => {
-                                const emailA = typeof a === 'string' ? a : a.email;
-                                const emailB = typeof b === 'string' ? b : b.email;
-                                if (emailA === user?.email) return -1;
-                                if (emailB === user?.email) return 1;
-                                return 0;
-                            });
-
-                            return (
-                                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, mt: 1 }}>
-                                    {/* Pending Deposits Section */}
-                                    {pendingDeposits.length > 0 && (
-                                        <Box>
-                                            <Typography variant="subtitle2" sx={{ mb: 1.5, fontWeight: 'bold', color: 'warning.main', display: 'flex', alignItems: 'center', gap: 1 }}>
-                                                <AccessTimeIcon sx={{ fontSize: '1.2rem' }} /> Pending Requests
-                                            </Typography>
-                                            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                                                {pendingDeposits.map((d: any) => {
-                                                    const isMyDeposit = d.email === user?.email;
-                                                    const name = (allMembers.find((m: any) => (typeof m === 'string' ? m : m.email) === d.email)?.name) || d.email.split('@')[0];
-
-                                                    return (
-                                                        <Box key={d.id} sx={{ p: 1.5, bgcolor: 'rgba(237, 108, 2, 0.05)', borderRadius: 2, border: '1px solid', borderColor: 'warning.light', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                                            <Box>
-                                                                <Typography variant="body2" sx={{ fontWeight: 'bold' }}>{displayCurrency}{d.amount.toFixed(2)}</Typography>
-                                                                <Typography variant="caption" color="text.secondary">{name} • {formatDateLocale(d.createdAt)} • {formatTimeLocale(d.createdAt)}</Typography>
-                                                            </Box>
-                                                            {isMyDeposit && (
-                                                                <Button
-                                                                    size="small"
-                                                                    color="error"
-                                                                    onClick={() => handleCancelDeposit(d.id)}
-                                                                >
-                                                                    Cancel
-                                                                </Button>
-                                                            )}
-                                                        </Box>
-                                                    );
-                                                })}
-                                            </Box>
-                                        </Box>
-                                    )}
-
-                                    {/* Member Breakdown Section */}
-                                    <Box>
-                                        <Typography variant="subtitle2" sx={{ mb: 1.5, fontWeight: 'bold', color: 'text.secondary', textTransform: 'uppercase', letterSpacing: 1 }}>
-                                            Monthly Breakdown ({monthName})
-                                        </Typography>
-                                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                                            {members.map((m: any) => {
-                                                const email = typeof m === 'string' ? m : m.email;
-                                                const mStats = memberFundAccounting[email] || {
-                                                    deposits: 0, rent: 0, utilities: 0, wage: 0, mealCount: 0, mealCost: 0,
-                                                    periodicDeposits: 0, periodicRent: 0, periodicUtilities: 0, periodicWage: 0,
-                                                    periodicMealCount: 0, periodicMealCost: 0,
-                                                    openingBalance: 0, closingBalance: 0
-                                                };
-                                                const name = (typeof m === 'object' && m?.name) || email.split('@')[0];
-                                                const photoUrl = typeof m === 'object' ? m?.photoUrl : undefined;
-                                                const remaining = mStats.closingBalance;
-
-                                                return (
-                                                    <Box key={email} sx={{ p: 2, bgcolor: 'rgba(0,0,0,0.02)', borderRadius: 2, border: '1px solid', borderColor: 'divider' }}>
-                                                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5 }}>
-                                                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                                                                <Avatar src={photoUrl} sx={{ width: 40, height: 40, bgcolor: 'primary.main', fontSize: '1rem' }}>
-                                                                    {name[0]?.toUpperCase()}
-                                                                </Avatar>
-                                                                <Box>
-                                                                    <Typography variant="subtitle1" sx={{ fontWeight: 'bold', lineHeight: 1.2 }}>{name}</Typography>
-                                                                </Box>
-                                                            </Box>
-                                                            <Box sx={{ textAlign: 'right' }}>
-                                                                <Typography variant="caption" color="text.secondary" display="block">Opening Balance</Typography>
-                                                                <Typography variant="subtitle1" sx={{ fontWeight: 'bold', color: mStats.openingBalance >= 0 ? 'success.main' : 'error.main' }}>
-                                                                    {displayCurrency}{mStats.openingBalance.toFixed(2)}
-                                                                </Typography>
-                                                            </Box>
-                                                        </Box>
-
-                                                        <Box sx={{ pl: 1, display: 'flex', flexDirection: 'column', gap: 0.75 }}>
-                                                            <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                                                                <Typography variant="body2" color="text.secondary">Deposits</Typography>
-                                                                <Typography variant="body2" sx={{ fontWeight: 'medium', color: 'success.main' }}>
-                                                                    + {displayCurrency}{mStats.periodicDeposits.toFixed(2)}
-                                                                </Typography>
-                                                            </Box>
-                                                            <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                                                                <Typography variant="body2" color="text.secondary">Rent</Typography>
-                                                                <Typography variant="body2" sx={{ fontWeight: 'medium', color: 'error.main' }}>
-                                                                    - {displayCurrency}{mStats.periodicRent.toFixed(2)}
-                                                                </Typography>
-                                                            </Box>
-                                                            <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                                                                <Typography variant="body2" color="text.secondary">Utilities</Typography>
-                                                                <Typography variant="body2" sx={{ fontWeight: 'medium', color: 'error.main' }}>
-                                                                    - {displayCurrency}{mStats.periodicUtilities.toFixed(2)}
-                                                                </Typography>
-                                                            </Box>
-                                                            <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                                                                <Typography variant="body2" color="text.secondary">Worker Wage</Typography>
-                                                                <Typography variant="body2" sx={{ fontWeight: 'medium', color: 'error.main' }}>
-                                                                    - {displayCurrency}{mStats.periodicWage.toFixed(2)}
-                                                                </Typography>
-                                                            </Box>
-                                                            <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                                                                <Typography variant="body2" color="text.secondary">
-                                                                    Meals ({mStats.periodicMealCount})
-                                                                </Typography>
-                                                                <Typography variant="body2" sx={{ fontWeight: 'medium', color: 'error.main' }}>
-                                                                    - {displayCurrency}{mStats.periodicMealCost.toFixed(2)}
-                                                                </Typography>
-                                                            </Box>
-
-                                                            <Divider sx={{ my: 1, opacity: 0.6 }} />
-
-                                                            <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                                                                <Typography variant="body2" sx={{ fontWeight: 'bold' }}>Closing Balance</Typography>
-                                                                <Typography variant="body2" sx={{ fontWeight: 'bold', color: remaining >= 0 ? 'success.main' : 'error.main' }}>
-                                                                    {remaining >= 0 ? '' : '-'}{displayCurrency}{Math.abs(remaining).toFixed(2)}
-                                                                </Typography>
-                                                            </Box>
-                                                        </Box>
-                                                    </Box>
-                                                );
-                                            })}
-
-                                            <Box sx={{ mt: 1, pt: 2, borderTop: '2px dashed', borderColor: 'divider' }}>
-                                                <Typography variant="subtitle2" sx={{ mb: 1.5, fontWeight: 'bold', color: 'text.secondary', textTransform: 'uppercase', letterSpacing: 1 }}>
-                                                    House Totals Summary
-                                                </Typography>
-                                                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
-                                                    <Typography variant="body2">Previous Remaining</Typography>
-                                                    <Typography variant="body2" sx={{ fontWeight: 'bold', color: houseFundStatsResult.previousMonthsRemaining >= 0 ? 'success.main' : 'error.main' }}>
-                                                        {displayCurrency}{houseFundStatsResult.previousMonthsRemaining.toFixed(2)}
-                                                    </Typography>
-                                                </Box>
-                                                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
-                                                    <Typography variant="body2">Collected</Typography>
-                                                    <Typography variant="body2" sx={{ fontWeight: 'bold', color: 'success.main' }}>
-                                                        + {displayCurrency}{houseFundStatsResult.periodicTotalDeposits.toFixed(2)}
-                                                    </Typography>
-                                                </Box>
-                                                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
-                                                    <Typography variant="body2">Rent</Typography>
-                                                    <Typography variant="body2" sx={{ fontWeight: 'bold', color: 'error.main' }}>
-                                                        - {displayCurrency}{houseFundStatsResult.periodicTotalRent.toFixed(2)}
-                                                    </Typography>
-                                                </Box>
-                                                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
-                                                    <Typography variant="body2">Utilities</Typography>
-                                                    <Typography variant="body2" sx={{ fontWeight: 'bold', color: 'error.main' }}>
-                                                        - {displayCurrency}{houseFundStatsResult.periodicTotalUtilities.toFixed(2)}
-                                                    </Typography>
-                                                </Box>
-                                                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
-                                                    <Typography variant="body2">Worker Wage</Typography>
-                                                    <Typography variant="body2" sx={{ fontWeight: 'bold', color: 'error.main' }}>
-                                                        - {displayCurrency}{houseFundStatsResult.periodicTotalWages.toFixed(2)}
-                                                    </Typography>
-                                                </Box>
-                                                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
-                                                    <Typography variant="body2">Groceries</Typography>
-                                                    <Typography variant="body2" sx={{ fontWeight: 'bold', color: 'error.main' }}>
-                                                        - {displayCurrency}{houseFundStatsResult.periodicTotalGroceries.toFixed(2)}
-                                                    </Typography>
-                                                </Box>
-                                                {houseFundStatsResult.refundedDeposits > 0 && (
-                                                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
-                                                        <Typography variant="body2">Refunded Deposits (Left Members)</Typography>
-                                                        <Typography variant="body2" sx={{ fontWeight: 'bold', color: 'error.main' }}>
-                                                            - {displayCurrency}{houseFundStatsResult.refundedDeposits.toFixed(2)}
-                                                        </Typography>
-                                                    </Box>
-                                                )}
-                                                {houseFundStatsResult.periodicTotalMisc > 0 && (
-                                                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
-                                                        <Typography variant="body2">Other/Misc</Typography>
-                                                        <Typography variant="body2" sx={{ fontWeight: 'bold', color: 'error.main' }}>
-                                                            - {displayCurrency}{houseFundStatsResult.periodicTotalMisc.toFixed(2)}
-                                                        </Typography>
-                                                    </Box>
-                                                )}
-                                                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
-                                                    <Typography variant="body2">Total Meals</Typography>
-                                                    <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
-                                                        {houseFundStatsResult.periodicTotalMeals}
-                                                    </Typography>
-                                                </Box>
-                                                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
-                                                    <Typography variant="body2">Avg Meal Cost</Typography>
-                                                    <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
-                                                        {displayCurrency}{houseFundStatsResult.periodicCostPerMeal.toFixed(2)}
-                                                    </Typography>
-                                                </Box>
-                                                <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 1, pt: 1, borderTop: '1px solid', borderColor: 'divider' }}>
-                                                    <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>Remaining Fund</Typography>
-                                                    <Typography variant="subtitle1" sx={{ fontWeight: 'bold', color: houseFundStatsResult.remainingFund >= 0 ? 'success.main' : 'error.main' }}>
-                                                        {displayCurrency}{houseFundStatsResult.remainingFund.toFixed(2)}
-                                                    </Typography>
-                                                </Box>
-                                            </Box>
-                                        </Box>
-                                    </Box>
-
-                                    {/* Deposit History Section has been moved out */}
-                                </Box>
-                            );
-                        })()}
-                    </DialogContent>
-                    <DialogActions>
-                        <Button onClick={() => setOpenDepositDetails(false)}>Close</Button>
-                    </DialogActions>
-                </Dialog>
-
-                {/* Expense Detail Modal */}
-                <Dialog
+                <ExpenseDetailDialog
                     open={openExpenseDetail}
                     onClose={() => setOpenExpenseDetail(false)}
-                    fullWidth
-                    maxWidth="sm"
-                    PaperProps={{
-                        className: 'glass',
-                        sx: {
-                            borderRadius: 4,
-                            backgroundImage: 'none',
-                        }
-                    }}
-                >
-                    <DialogTitle component="div" sx={{ pb: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <Typography variant="h5" sx={{ fontWeight: 800, background: 'linear-gradient(45deg, #6C63FF 30%, #FF6584 90%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-                            Expense Details
-                        </Typography>
+                    expense={selectedExpenseDetail}
+                    allMembers={allMembers}
+                    displayCurrency={displayCurrency}
+                />
 
-                    </DialogTitle>
-                    <DialogContent>
-                        {selectedExpenseDetail && (() => {
-                            const desc = selectedExpenseDetail.description;
-                            let itemsMatch = desc.match(/\(Items: (.*)\)$/);
-                            let noteMatch = desc.match(/^(.*) \(Items:/);
-                            let isGrocery = selectedExpenseDetail.category?.toLowerCase() === 'groceries';
-
-                            let note = noteMatch ? noteMatch[1].trim() : (itemsMatch ? '' : desc);
-                            let itemsStr = itemsMatch ? itemsMatch[1] : (desc.includes('Items:') ? desc.split('Items:')[1].trim() : '');
-
-                            const isPrice = (str: string) => {
-                                if (str.includes('৳') || str.includes('$') || str.includes('€')) return true;
-                                const num = str.replace(/[^0-9.]/g, '');
-                                return num !== '' && !isNaN(Number(num));
-                            };
-
-                            let isSinglePriceItem = false;
-                            if (!itemsStr && !desc.includes('Items:')) {
-                                const lastSpaceIdx = desc.lastIndexOf(' ');
-                                if (lastSpaceIdx !== -1) {
-                                    const potentialPrice = desc.substring(lastSpaceIdx + 1);
-                                    if (isPrice(potentialPrice)) {
-                                        isSinglePriceItem = true;
-                                    }
-                                }
-                            }
-
-                            // Enhanced parsing: If description is a comma-separated list or a single item with a price, treat it as list
-                            let isItemsList = !itemsStr && (desc.includes(',') || isSinglePriceItem) && (desc.includes('৳') || desc.includes('€') || desc.includes('$'));
-                            if (isItemsList) {
-                                itemsStr = desc;
-                                note = ''; // Don't show it as a note if we show it as a list
-                            }
-
-                            // (isPrice function moved up)
-
-                            const rawParts = itemsStr ? itemsStr.split(', ') : [];
-                            const mergedParts = [];
-                            let currentPart = '';
-
-                            for (const part of rawParts) {
-                                if (currentPart) {
-                                    currentPart += ', ' + part;
-                                } else {
-                                    currentPart = part;
-                                }
-
-                                // Check if currentPart ends with a price
-                                const lastSpaceIdx = currentPart.lastIndexOf(' ');
-                                if (lastSpaceIdx !== -1) {
-                                    const potentialPrice = currentPart.substring(lastSpaceIdx + 1);
-                                    if (isPrice(potentialPrice)) {
-                                        mergedParts.push(currentPart);
-                                        currentPart = '';
-                                        continue;
-                                    }
-                                }
-                            }
-                            if (currentPart) {
-                                mergedParts.push(currentPart);
-                            }
-
-                            const itemsList = mergedParts.map(item => {
-                                const parts = item.split(/\s(?=[^ ]*$)/); // Split by last space
-                                if (parts.length === 2 && isPrice(parts[1])) {
-                                    return { name: parts[0], price: parts[1] };
-                                }
-                                return { name: item, price: '' };
-                            }).filter(it => it.name.trim() !== '');
-
-                            const member = allMembers.find(m => m.email === selectedExpenseDetail.userId);
-                            const expenseDate = new Date(selectedExpenseDetail.date);
-
-                            return (
-                                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, pt: 1 }}>
-                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                                        <Avatar src={member?.photoUrl} sx={{ width: 50, height: 50, border: '2px solid rgba(108, 99, 255, 0.2)' }} />
-                                        <Box>
-                                            <Typography variant="subtitle1" sx={{ fontWeight: 800 }}>
-                                                {member?.name || selectedExpenseDetail.userId.split('@')[0]}
-                                            </Typography>
-                                            <Typography variant="caption" color="text.secondary">
-                                                {formatDateLocale(expenseDate)}, {formatTimeLocale(expenseDate)}
-                                            </Typography>
-                                        </Box>
-                                        <Box sx={{ ml: 'auto', textAlign: 'right' }}>
-                                            <Typography variant="h4" color="primary" sx={{ fontWeight: 900 }}>
-                                                {displayCurrency}{selectedExpenseDetail.amount.toFixed(2)}
-                                            </Typography>
-                                            <Chip
-                                                label={selectedExpenseDetail.category || 'Expense'}
-                                                size="small"
-                                                sx={{
-                                                    mt: 0.5,
-                                                    fontWeight: 700,
-                                                    textTransform: 'uppercase',
-                                                    fontSize: '0.65rem',
-                                                    bgcolor: 'rgba(108, 99, 255, 0.1)',
-                                                    color: 'primary.main'
-                                                }}
-                                            />
-                                        </Box>
-                                    </Box>
-
-                                    {note && (
-                                        <Box sx={{ p: 2, bgcolor: 'rgba(0,0,0,0.02)', borderRadius: 2, borderLeft: '4px solid #6C63FF' }}>
-                                            <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic' }}>
-                                                Note: {note}
-                                            </Typography>
-                                        </Box>
-                                    )}
-
-                                    {itemsList.length > 0 && (
-                                        <Box>
-                                            <Typography variant="subtitle2" sx={{ fontWeight: 800, mb: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}>
-                                                <FormatListBulletedIcon sx={{ fontSize: 18, color: 'primary.main' }} /> Items List
-                                            </Typography>
-                                            <Paper variant="outlined" sx={{ borderRadius: 3, overflow: 'hidden', border: '1px solid rgba(0,0,0,0.08)' }}>
-                                                <List disablePadding>
-                                                    {itemsList.map((item, idx) => (
-                                                        <Box key={idx}>
-                                                            <ListItem sx={{ py: 1.2 }}>
-                                                                <ListItemText
-                                                                    primary={item.name}
-                                                                    primaryTypographyProps={{ variant: 'body2', fontWeight: 600 }}
-                                                                />
-                                                                <Typography variant="body2" sx={{ fontWeight: 800, color: 'primary.main' }}>
-                                                                    {item.price}
-                                                                </Typography>
-                                                            </ListItem>
-                                                            {idx < itemsList.length - 1 && <Divider sx={{ opacity: 0.5 }} />}
-                                                        </Box>
-                                                    ))}
-                                                </List>
-                                            </Paper>
-                                        </Box>
-                                    )}
-
-                                    {selectedExpenseDetail.contributors && (selectedExpenseDetail.contributors.length > 1 || (selectedExpenseDetail.contributors.length === 1 && selectedExpenseDetail.contributors[0].email !== selectedExpenseDetail.userId)) && (
-                                        <Box>
-                                            <Typography variant="subtitle2" sx={{ fontWeight: 800, mb: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}>
-                                                <GroupIcon sx={{ fontSize: 18, color: 'secondary.main' }} /> Split Details
-                                            </Typography>
-                                            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                                                {selectedExpenseDetail.contributors.map((contrib, idx) => {
-                                                    const cMember = allMembers.find(m => m.email === contrib.email);
-                                                    return (
-                                                        <Chip
-                                                            key={idx}
-                                                            avatar={<Avatar src={cMember?.photoUrl} />}
-                                                            label={`${cMember?.name || contrib.email.split('@')[0]}: ${displayCurrency}${contrib.amount.toFixed(2)}`}
-                                                            variant="outlined"
-                                                            sx={{ borderRadius: 2, fontWeight: 600 }}
-                                                        />
-                                                    );
-                                                })}
-                                            </Box>
-                                        </Box>
-                                    )}
-                                </Box>
-                            );
-                        })()}
-                    </DialogContent>
-                    <DialogActions sx={{ p: 3, pt: 0 }}>
-                        <Button
-                            fullWidth
-                            variant="outlined"
-                            onClick={() => setOpenExpenseDetail(false)}
-                            sx={{ borderRadius: 3, py: 1, fontWeight: 700, textTransform: 'none' }}
-                        >
-                            Close
-                        </Button>
-                    </DialogActions>
-                </Dialog>
-
-                {/* Fund History Dialog */}
-                <Dialog
+                <FundHistoryDialog
                     open={openFundHistoryDialog}
                     onClose={() => setOpenFundHistoryDialog(false)}
-                    maxWidth="sm"
-                    fullWidth
-                    PaperProps={{
-                        sx: { borderRadius: 4, bgcolor: 'background.paper', overflow: 'hidden' }
-                    }}
-                >
-                    <DialogTitle sx={{ fontWeight: 800, textAlign: 'center', py: 2, bgcolor: 'rgba(76, 175, 80, 0.05)' }}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 2 }}>
-                            <Box sx={{ width: 36, height: 36, borderRadius: '50%', bgcolor: 'success.main', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 8px rgba(76, 175, 80, 0.15)' }}>
-                                <HistoryIcon sx={{ fontSize: '1.2rem' }} />
-                            </Box>
-                            <Box sx={{ textAlign: 'left' }}>
-                                <Typography variant="h6" sx={{ fontWeight: 800, color: 'success.main', lineHeight: 1.1, fontSize: '1.1rem' }}>Fund Deposit History</Typography>
-                                <Typography variant="caption" sx={{ color: 'success.main', opacity: 0.8, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5 }}>
-                                    {monthName}
-                                </Typography>
-                            </Box>
-                        </Box>
-                    </DialogTitle>
-                    <DialogContent sx={{ px: 2, py: 2.5 }}>
-                        {(() => {
-                            const approvedDeposits = (fundDeposits || []).filter(d => d.status === 'approved');
-                            const monthStr = getYYYYMM(selectedDate);
-                            const currentMonthDeposits = approvedDeposits
-                                .filter(d => d.date.startsWith(monthStr))
-                                .sort((a, b) => new Date(b.approvedAt || b.createdAt).getTime() - new Date(a.approvedAt || a.createdAt).getTime());
+                    monthName={monthName}
+                    fundDeposits={fundDeposits}
+                    selectedDate={selectedDate}
+                    allMembers={allMembers}
+                    currency={currency}
+                    currencySymbols={currencySymbols}
+                    getYYYYMM={getYYYYMM}
+                    formatDateLocale={formatDateLocale}
+                    formatTimeLocale={formatTimeLocale}
+                />
 
-                            return (
-                                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                                    {currentMonthDeposits.length === 0 ? (
-                                        <Box sx={{ p: 4, textAlign: 'center', bgcolor: 'rgba(0,0,0,0.02)', borderRadius: 3, border: '1px dashed divider' }}>
-                                            <AccountBalanceWalletIcon sx={{ fontSize: 48, color: 'text.disabled', opacity: 0.5, mb: 1 }} />
-                                            <Typography variant="body1" color="text.secondary" sx={{ fontWeight: 600 }}>
-                                                No deposits this month.
-                                            </Typography>
-                                        </Box>
-                                    ) : (
-                                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-                                            {currentMonthDeposits.map((d: any) => {
-                                                const member = allMembers.find((m: any) => (typeof m === 'string' ? m : m.email) === d.email);
-                                                const name = (typeof member === 'object' && member?.name) ? member.name : d.email.split('@')[0];
-                                                const photoUrl = typeof member === 'object' ? member?.photoUrl : undefined;
-                                                const displayCurrency = currencySymbols[currency || 'BDT'] || currency || '৳';
-
-                                                return (
-                                                    <Paper key={d.id} elevation={0} sx={{
-                                                        p: 1.5,
-                                                        bgcolor: 'background.paper',
-                                                        borderRadius: 2.5,
-                                                        display: 'flex',
-                                                        justifyContent: 'space-between',
-                                                        alignItems: 'center',
-                                                        border: '1px solid',
-                                                        borderColor: 'rgba(76, 175, 80, 0.15)',
-                                                        boxShadow: '0 2px 6px rgba(0,0,0,0.01)',
-                                                        transition: 'transform 0.2s',
-                                                        '&:hover': { transform: 'translateY(-1px)', boxShadow: '0 4px 12px rgba(76, 175, 80, 0.08)' }
-                                                    }}>
-                                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                                                            <Avatar src={photoUrl} sx={{ width: 32, height: 32, bgcolor: 'success.light', color: '#fff', fontSize: '0.85rem', fontWeight: 'bold' }}>
-                                                                {name[0]?.toUpperCase()}
-                                                            </Avatar>
-                                                            <Box>
-                                                                <Typography variant="subtitle1" sx={{ fontWeight: 800, color: 'success.main', lineHeight: 1.1, fontSize: '1rem' }}>
-                                                                    {displayCurrency}{d.amount.toFixed(2)}
-                                                                </Typography>
-                                                                <Typography variant="body2" sx={{ fontWeight: 600, color: 'text.primary', fontSize: '0.85rem', opacity: 0.9 }}>
-                                                                    {name}
-                                                                </Typography>
-                                                            </Box>
-                                                        </Box>
-                                                        <Box sx={{ textAlign: 'right' }}>
-                                                            <Typography variant="caption" sx={{ display: 'block', color: 'text.secondary', fontWeight: 600, fontSize: '0.75rem' }}>
-                                                                {formatDateLocale(d.approvedAt || d.createdAt)}
-                                                            </Typography>
-                                                            <Typography variant="caption" sx={{ color: 'text.disabled', fontWeight: 500, fontSize: '0.7rem' }}>
-                                                                {formatTimeLocale(d.approvedAt || d.createdAt)}
-                                                            </Typography>
-                                                        </Box>
-                                                    </Paper>
-                                                );
-                                            })}
-                                        </Box>
-                                    )}
-                                </Box>
-                            );
-                        })()}
-                    </DialogContent>
-                    <DialogActions sx={{ p: 3, pt: 0 }}>
-                        <Button
-                            onClick={() => setOpenFundHistoryDialog(false)}
-                            fullWidth
-                            variant="contained"
-                            color="success"
-                            sx={{ borderRadius: 3, py: 1, fontWeight: 700 }}
-                        >
-                            Close
-                        </Button>
-                    </DialogActions>
-                </Dialog>
-
-                {/* Member Details Dialog */}
-                <Dialog
+                <MemberDetailsDialog
                     open={openMemberDialog}
                     onClose={() => setOpenMemberDialog(false)}
-                    maxWidth="xs"
-                    fullWidth
-                    PaperProps={{
-                        sx: { borderRadius: 4, bgcolor: 'background.paper', overflow: 'hidden' }
-                    }}
-                >
-                    <DialogTitle sx={{ fontWeight: 800, textAlign: 'center', pb: 1 }}>Member Details</DialogTitle>
-                    <DialogContent>
-                        {selectedMember && (
-                            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5, py: 1 }}>
-                                {/* Header: Image and Name */}
-                                <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1.5, mb: 1 }}>
-                                    <Avatar
-                                        src={selectedMember.photoUrl}
-                                        alt={selectedMember.name}
-                                        sx={{ width: 80, height: 80, border: '3px solid', borderColor: 'primary.light', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
-                                    />
-                                    <Typography variant="h6" sx={{ fontWeight: 800, textAlign: 'center' }}>
-                                        {selectedMember.name || selectedMember.email.split('@')[0]}
-                                    </Typography>
-                                </Box>
+                    member={selectedMember}
+                    house={house}
+                    handleCopy={handleCopy}
+                />
 
-                                <Divider sx={{ opacity: 0.6 }} />
-
-                                {/* Details Grid */}
-                                <Stack spacing={2}>
-                                    {/* Profession */}
-                                    {selectedMember.profession && (
-                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                                            <WorkIcon sx={{ color: 'primary.main', fontSize: 20 }} />
-                                            <Box>
-                                                <Typography variant="caption" color="text.secondary" sx={{ display: 'block', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                                                    Profession
-                                                </Typography>
-                                                <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                                                    {selectedMember.profession}
-                                                </Typography>
-                                            </Box>
-                                        </Box>
-                                    )}
-
-                                    {/* Birthday */}
-                                    {selectedMember.birthday && (
-                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                                            <CakeIcon sx={{ color: 'error.light', fontSize: 20 }} />
-                                            <Box>
-                                                <Typography variant="caption" color="text.secondary" sx={{ display: 'block', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                                                    Birthday
-                                                </Typography>
-                                                <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                                                    {formatBirthday(selectedMember.birthday)}
-                                                </Typography>
-                                            </Box>
-                                        </Box>
-                                    )}
-
-                                    {/* IBAN - Only show for Expenses Tracking houses */}
-                                    {house?.typeOfHouse === 'expenses' && (
-                                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', bgcolor: 'rgba(0,0,0,0.02)', p: 1.5, borderRadius: 2, border: '1px dashed', borderColor: 'divider' }}>
-                                            <Box>
-                                                <Typography variant="caption" color="text.secondary" sx={{ display: 'block', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                                                    IBAN
-                                                </Typography>
-                                                <Typography variant="body2" sx={{ fontWeight: 600, wordBreak: 'break-all', pr: 1 }}>
-                                                    {selectedMember.iban || 'Not provided'}
-                                                </Typography>
-                                            </Box>
-                                            {selectedMember.iban && (
-                                                <Tooltip title="Copy IBAN">
-                                                    <IconButton 
-                                                        onClick={() => handleCopy(selectedMember.iban!)} 
-                                                        size="small" 
-                                                        sx={{ bgcolor: 'white' }}
-                                                        aria-label="Copy IBAN"
-                                                    >
-                                                        <ContentCopyIcon fontSize="small" />
-                                                    </IconButton>
-                                                </Tooltip>
-                                            )}
-                                        </Box>
-                                    )}
-                                </Stack>
-
-                                {/* Social Links */}
-                                <Box sx={{ mt: 1 }}>
-                                    <Typography variant="caption" color="text.secondary" sx={{ display: 'block', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', mb: 1.5, textAlign: 'center' }}>
-                                        Social Connect
-                                    </Typography>
-                                    <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2 }}>
-                                        <Button
-                                            variant="outlined"
-                                            startIcon={<WhatsAppIcon />}
-                                            disabled={!selectedMember.whatsapp}
-                                            onClick={() => selectedMember.whatsapp && window.open(selectedMember.whatsapp.startsWith('http') ? selectedMember.whatsapp : `https://wa.me/${selectedMember.whatsapp}`, '_blank')}
-                                            sx={{ borderRadius: 3, textTransform: 'none', fontWeight: 700 }}
-                                        >
-                                            WhatsApp
-                                        </Button>
-                                        <Button
-                                            variant="outlined"
-                                            startIcon={<MessengerIcon />}
-                                            disabled={!selectedMember.messenger}
-                                            onClick={() => selectedMember.messenger && window.open(selectedMember.messenger.startsWith('http') ? selectedMember.messenger : `https://m.me/${selectedMember.messenger}`, '_blank')}
-                                            sx={{ borderRadius: 3, textTransform: 'none', fontWeight: 700 }}
-                                        >
-                                            Messenger
-                                        </Button>
-                                    </Box>
-                                </Box>
-                            </Box>
-                        )}
-                    </DialogContent>
-                    <DialogActions sx={{ p: 2, pt: 0 }}>
-                        <Button onClick={() => setOpenMemberDialog(false)} fullWidth variant="contained" sx={{ borderRadius: 3, py: 1, fontWeight: 700 }}>
-                            Close
-                        </Button>
-                    </DialogActions>
-                </Dialog>
-
-                {/* Settlement History Dialog */}
-                <Dialog open={openHistoryDialog} onClose={() => setOpenHistoryDialog(false)} maxWidth="sm" fullWidth>
-                    <DialogTitle>Settlement History</DialogTitle>
-                    <DialogContent>
-                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
-                            {expenses.filter(exp => exp.isSettlementPayment && (exp.userId === user?.email || exp.settlementBetween?.includes(user?.email || ''))).length === 0 ? (
-                                <Typography color="text.secondary" textAlign="center" sx={{ py: 4 }}>No past settlements found.</Typography>
-                            ) : (
-                                expenses
-                                    .filter(exp => exp.isSettlementPayment && (exp.userId === user?.email || exp.settlementBetween?.includes(user?.email || '')))
-                                    .sort((a, b) => new Date(b.createdAt || b.date).getTime() - new Date(a.createdAt || a.date).getTime())
-                                    .map(exp => {
-                                        const fromEmail = exp.userId;
-                                        const toEmail = exp.settlementBetween?.find((e: string) => e !== fromEmail) || '';
-                                        const fromMember = allMembers.find(m => m.email === fromEmail);
-                                        const toMember = allMembers.find(m => m.email === toEmail);
-                                        const createdDate = new Date(exp.createdAt || exp.date);
-                                        const approvedDate = exp.approvedAt ? new Date(exp.approvedAt) : createdDate;
-                                        const dateOptions: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'short', year: 'numeric' };
-                                        const timeOptions: Intl.DateTimeFormatOptions = { hour: '2-digit', minute: '2-digit' };
-                                        const formattedCreatedDate = `${createdDate.toLocaleDateString('en-GB', dateOptions)}, ${createdDate.toLocaleTimeString('en-GB', timeOptions)}`;
-                                        const formattedApprovedDate = `${approvedDate.toLocaleDateString('en-GB', dateOptions)}, ${approvedDate.toLocaleTimeString('en-GB', timeOptions)}`;
-
-                                        return (
-                                            <Paper key={exp.id} sx={{
-                                                p: 2,
-                                                position: 'relative',
-                                                overflow: 'hidden',
-                                                border: '1px solid rgba(0,0,0,0.08)',
-                                                bgcolor: 'rgba(0,0,0,0.02)'
-                                            }}>
-                                                {/* Watermark Tag */}
-                                                <Box sx={{
-                                                    position: 'absolute',
-                                                    right: -10,
-                                                    top: 10,
-                                                    opacity: 0.05,
-                                                    transform: 'rotate(-15deg)'
-                                                }}>
-                                                    {exp.method === 'cash' ? (
-                                                        <PaymentsIcon sx={{ fontSize: 80, color: 'text.primary' }} />
-                                                    ) : (
-                                                        <AccountBalanceIcon sx={{ fontSize: 80, color: 'text.primary' }} />
-                                                    )}
-                                                </Box>
-
-                                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2, position: 'relative', zIndex: 1 }}>
-                                                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                                                        <Avatar src={fromMember?.photoUrl} alt={fromMember?.name} sx={{ width: 40, height: 40 }} />
-                                                        <Typography variant="caption" noWrap sx={{ maxWidth: 60 }}>
-                                                            {fromEmail === user?.email ? 'You' : (fromMember?.name?.split(' ')[0] || fromEmail.split('@')[0])}
-                                                        </Typography>
-                                                    </Box>
-                                                    <ArrowForwardIosIcon color="action" sx={{ fontSize: 16 }} />
-                                                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                                                        <Avatar src={toMember?.photoUrl} alt={toMember?.name} sx={{ width: 40, height: 40 }} />
-                                                        <Typography variant="caption" noWrap sx={{ maxWidth: 60 }}>
-                                                            {toEmail === user?.email ? 'You' : (toMember?.name?.split(' ')[0] || toEmail.split('@')[0])}
-                                                        </Typography>
-                                                    </Box>
-                                                    <Box sx={{ flex: 1, textAlign: 'right' }}>
-                                                        <Typography variant="h6" color="success.main" fontWeight="bold">
-                                                            {displayCurrency}{exp.amount.toFixed(2)}
-                                                        </Typography>
-                                                    </Box>
-                                                </Box>
-
-                                                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px dashed rgba(0,0,0,0.1)', pt: 1, position: 'relative', zIndex: 1 }}>
-                                                    <Typography variant="caption" color="text.secondary" sx={{ display: 'flex', alignItems: 'center', gap: 0.5, fontSize: '0.65rem' }}>
-                                                        <ArrowForwardIcon sx={{ fontSize: 13 }} /> {formattedCreatedDate}
-                                                    </Typography>
-                                                    <Typography variant="caption" color="success.main" sx={{ display: 'flex', alignItems: 'center', gap: 0.5, fontSize: '0.65rem' }}>
-                                                        <DoneAllIcon sx={{ fontSize: 13 }} /> {formattedApprovedDate}
-                                                    </Typography>
-                                                </Box>
-                                            </Paper>
-                                        );
-                                    })
-                            )}
-                        </Box>
-                    </DialogContent>
-                    <DialogActions>
-                        <Button onClick={() => setOpenHistoryDialog(false)}>Close</Button>
-                    </DialogActions>
-                </Dialog>
+                <SettlementHistoryDialog
+                    open={openHistoryDialog}
+                    onClose={() => setOpenHistoryDialog(false)}
+                    expenses={expenses}
+                    allMembers={allMembers}
+                    user={user}
+                    displayCurrency={displayCurrency}
+                />
             </main>
-            {/* Premium Share Dialog */}
-            <Dialog
-                open={openShareDialog}
-                onClose={() => setOpenShareDialog(false)}
-                fullWidth
-                maxWidth="xs"
-                PaperProps={{
-                    sx: {
-                        borderRadius: 2,
-                        overflow: 'hidden',
-                        background: 'rgba(255, 255, 255, 0.85)',
-                        backdropFilter: 'blur(25px) saturate(180%)',
-                        border: '1px solid rgba(255, 255, 255, 0.4)',
-                        boxShadow: '0 30px 60px rgba(0,0,0,0.12)',
-                    }
-                }}
-            >
-                <Box sx={{
-                    height: 60,
-                    background: 'linear-gradient(135deg, #6C63FF 0%, #FF6584 100%)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    position: 'relative'
-                }}>
-                    <Typography variant="h6" sx={{ color: 'white', fontWeight: 900, letterSpacing: '0.05em' }}>
-                        SHARE INVITE
-                    </Typography>
-                    <IconButton
-                        onClick={() => setOpenShareDialog(false)}
-                        sx={{ position: 'absolute', top: 10, right: 10, color: 'white', opacity: 0.8 }}
-                        aria-label="Close share dialog"
-                    >
-                        <CloseIcon />
-                    </IconButton>
-                </Box>
-
-                <DialogContent sx={{ p: 3 }}>
-                    <Box sx={{ textAlign: 'center', mb: 2.5 }}>
-                        <Avatar sx={{
-                            width: 52,
-                            height: 52,
-                            bgcolor: 'rgba(108, 99, 255, 0.1)',
-                            color: '#6C63FF',
-                            mx: 'auto',
-                            mb: 1.5,
-                            boxShadow: '0 10px 20px rgba(108, 99, 255, 0.1)'
-                        }}>
-                            <GroupIcon sx={{ fontSize: 26 }} />
-                        </Avatar>
-                        <Typography variant="h6" sx={{ fontWeight: 900, color: '#1a202c', mb: 0.5 }}>
-                            Invite to {house?.name}
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 600, opacity: 0.7 }}>
-                            Grow your household and manage expenses together
-                        </Typography>
-                    </Box>
-
-                    <Box sx={{
-                        p: 1.5,
-                        bgcolor: 'rgba(0,0,0,0.03)',
-                        borderRadius: 3,
-                        mb: 3,
-                        display: 'flex',
-                        alignItems: 'center',
-                        border: '1px dashed rgba(0,0,0,0.1)'
-                    }}>
-                        <Typography variant="caption" sx={{
-                            flex: 1,
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis',
-                            whiteSpace: 'nowrap',
-                            fontWeight: 700,
-                            color: 'primary.main',
-                            px: 1
-                        }}>
-                            {getShareLinks().url}
-                        </Typography>
-                        <Button
-                            size="small"
-                            onClick={() => handleCopy(getShareLinks().url)}
-                            sx={{ minWidth: 'auto', fontWeight: 800, textTransform: 'none' }}
-                        >
-                            Copy
-                        </Button>
-                    </Box>
-
-                    <Grid container spacing={2}>
-                        <Grid size={4}>
-                            <Stack alignItems="center" spacing={1}>
-                                <IconButton
-                                    onClick={() => {
-                                        const { url, text } = getShareLinks();
-                                        window.open(`https://wa.me/?text=${encodeURIComponent(text + ' ' + url)}`, '_blank');
-                                    }}
-                                    sx={{
-                                        width: 56,
-                                        height: 56,
-                                        bgcolor: '#25D366',
-                                        color: 'white',
-                                        boxShadow: '0 8px 15px rgba(37, 211, 102, 0.3)',
-                                        '&:hover': { bgcolor: '#128C7E', transform: 'translateY(-3px)' },
-                                        transition: 'all 0.3s ease'
-                                    }}
-                                    aria-label="Share via WhatsApp"
-                                >
-                                    <WhatsAppIcon />
-                                </IconButton>
-                                <Typography variant="caption" sx={{ fontWeight: 700 }}>WhatsApp</Typography>
-                            </Stack>
-                        </Grid>
-
-                        <Grid size={4}>
-                            <Stack alignItems="center" spacing={1}>
-                                <IconButton
-                                    onClick={() => {
-                                        const { url } = getShareLinks();
-                                        window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`, '_blank');
-                                    }}
-                                    sx={{
-                                        width: 56,
-                                        height: 56,
-                                        bgcolor: '#1877F2',
-                                        color: 'white',
-                                        boxShadow: '0 8px 15px rgba(24, 119, 242, 0.3)',
-                                        '&:hover': { bgcolor: '#0d65d9', transform: 'translateY(-3px)' },
-                                        transition: 'all 0.3s ease'
-                                    }}
-                                    aria-label="Share via Messenger"
-                                >
-                                    <MessengerIcon />
-                                </IconButton>
-                                <Typography variant="caption" sx={{ fontWeight: 700 }}>Messenger</Typography>
-                            </Stack>
-                        </Grid>
-
-                        <Grid size={4}>
-                            <Stack alignItems="center" spacing={1}>
-                                <IconButton
-                                    onClick={() => {
-                                        const { url, text } = getShareLinks();
-                                        window.open(`https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text)}`, '_blank');
-                                    }}
-                                    sx={{
-                                        width: 56,
-                                        height: 56,
-                                        bgcolor: '#0088cc',
-                                        color: 'white',
-                                        boxShadow: '0 8px 15px rgba(0, 136, 204, 0.3)',
-                                        '&:hover': { bgcolor: '#0077b3', transform: 'translateY(-3px)' },
-                                        transition: 'all 0.3s ease'
-                                    }}
-                                    aria-label="Share via Telegram"
-                                >
-                                    <TelegramIcon />
-                                </IconButton>
-                                <Typography variant="caption" sx={{ fontWeight: 700 }}>Telegram</Typography>
-                            </Stack>
-                        </Grid>
-                    </Grid>
-
-                    {navigator.share && (
-                        <Button
-                            fullWidth
-                            variant="contained"
-                            startIcon={<IosShareIcon />}
-                            onClick={async () => {
-                                const { url, text } = getShareLinks();
-                                try {
-                                    await navigator.share({
-                                        title: 'Join my House on OurTab',
-                                        text: text,
-                                        url: url,
-                                    });
-                                } catch (err) {
-                                    if ((err as Error).name !== 'AbortError') handleCopy(url);
-                                }
-                            }}
-                            sx={{
-                                mt: 3,
-                                borderRadius: 3,
-                                py: 1.2,
-                                textTransform: 'none',
-                                fontWeight: 800,
-                                background: 'linear-gradient(135deg, #6C63FF 0%, #FF6584 100%)',
-                                color: 'white',
-                                boxShadow: '0 8px 20px rgba(108, 99, 255, 0.2)',
-                                border: 'none',
-                                '&:hover': {
-                                    boxShadow: '0 12px 25px rgba(108, 99, 255, 0.3)',
-                                    filter: 'brightness(1.05)'
-                                }
-                            }}
-                        >
-                            Open System Share
-                        </Button>
-                    )}
-                </DialogContent>
-            </Dialog>
+                <ShareHouseDialog
+                    open={openShareDialog}
+                    onClose={() => setOpenShareDialog(false)}
+                    house={house}
+                    handleCopy={handleCopy}
+                />
             {house?.typeOfHouse === 'meals_and_expenses' && (
                 <JoinDayMealDialog
                     house={house ?? undefined}

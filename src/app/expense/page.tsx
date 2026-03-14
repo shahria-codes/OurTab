@@ -1336,7 +1336,7 @@ export default function ExpensePage() {
                                                                 inputProps={{
                                                                     step: '0.01',
                                                                     min: '0',
-                                                                    style: { fontSize: '0.75rem', padding: '2px 0' }
+                                                                    style: { fontSize: '1rem', padding: '2px 0' }
                                                                 }}
                                                                 sx={{ width: '80px' }}
                                                                 disabled={loading}
