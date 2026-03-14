@@ -3120,11 +3120,13 @@ export default function Dashboard() {
                     )}
                 </DialogContent>
             </Dialog>
-            <JoinDayMealDialog
-                house={house ?? undefined}
-                userEmail={user?.email}
-                onSuccess={() => mutateHouse()}
-            />
+            {house?.typeOfHouse === 'meals_and_expenses' && (
+                <JoinDayMealDialog
+                    house={house ?? undefined}
+                    userEmail={user?.email}
+                    onSuccess={() => mutateHouse()}
+                />
+            )}
         </AuthGuard >
     );
 }
