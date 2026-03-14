@@ -643,14 +643,24 @@ function ProfileContent() {
                                                     sx={{ flex: 1, '& .MuiInputBase-root': { borderRadius: '20px', background: 'rgba(255,255,255,0.05)' } }}
                                                     autoFocus
                                                 />
-                                                <IconButton size="small" color="success" disabled={savingFields} onClick={async () => {
-                                                    if (await handleSaveFields({ profession: professionValue.trim() })) {
-                                                        setEditingProfession(false);
-                                                    }
-                                                }}>
+                                                <IconButton 
+                                                    size="small" 
+                                                    color="success" 
+                                                    disabled={savingFields} 
+                                                    onClick={async () => {
+                                                        if (await handleSaveFields({ profession: professionValue.trim() })) {
+                                                            setEditingProfession(false);
+                                                        }
+                                                    }}
+                                                    aria-label="Save profession"
+                                                >
                                                     <CheckIcon fontSize="small" />
                                                 </IconButton>
-                                                <IconButton size="small" onClick={() => { setEditingProfession(false); setProfessionValue(dbUser?.profession || ''); }}>
+                                                <IconButton 
+                                                    size="small" 
+                                                    onClick={() => { setEditingProfession(false); setProfessionValue(dbUser?.profession || ''); }}
+                                                    aria-label="Cancel editing profession"
+                                                >
                                                     <CloseIcon fontSize="small" />
                                                 </IconButton>
                                             </Box>
@@ -721,14 +731,24 @@ function ProfileContent() {
                                                         ))}
                                                     </TextField>
                                                 </Box>
-                                                <IconButton size="small" color="success" disabled={savingFields} onClick={async () => {
-                                                    if (await handleSaveFields({ birthday: birthdayValue })) {
-                                                        setEditingBirthday(false);
-                                                    }
-                                                }}>
+                                                <IconButton 
+                                                    size="small" 
+                                                    color="success" 
+                                                    disabled={savingFields} 
+                                                    onClick={async () => {
+                                                        if (await handleSaveFields({ birthday: birthdayValue })) {
+                                                            setEditingBirthday(false);
+                                                        }
+                                                    }}
+                                                    aria-label="Save birthday"
+                                                >
                                                     <CheckIcon sx={{ fontSize: 14 }} />
                                                 </IconButton>
-                                                <IconButton size="small" onClick={() => { setEditingBirthday(false); setBirthdayValue(dbUser?.birthday || ''); }}>
+                                                <IconButton 
+                                                    size="small" 
+                                                    onClick={() => { setEditingBirthday(false); setBirthdayValue(dbUser?.birthday || ''); }}
+                                                    aria-label="Cancel editing birthday"
+                                                >
                                                     <CloseIcon fontSize="small" />
                                                 </IconButton>
                                             </Box>
@@ -792,10 +812,20 @@ function ProfileContent() {
                                                             sx={{ '& .MuiInputBase-root': { borderRadius: '12px', background: 'rgba(255,255,255,0.05)', fontSize: '0.8rem' } }}
                                                             autoFocus
                                                         />
-                                                        <IconButton size="small" color="success" disabled={savingHouseName} onClick={handleUpdateHouseName}>
+                                                        <IconButton 
+                                                            size="small" 
+                                                            color="success" 
+                                                            disabled={savingHouseName} 
+                                                            onClick={handleUpdateHouseName}
+                                                            aria-label="Save house name"
+                                                        >
                                                             <CheckIcon fontSize="small" />
                                                         </IconButton>
-                                                        <IconButton size="small" onClick={() => setEditingHouseName(false)}>
+                                                        <IconButton 
+                                                            size="small" 
+                                                            onClick={() => setEditingHouseName(false)}
+                                                            aria-label="Cancel editing house name"
+                                                        >
                                                             <CloseIcon fontSize="small" />
                                                         </IconButton>
                                                     </Box>
@@ -806,7 +836,12 @@ function ProfileContent() {
                                                         </Box>
                                                         {' '}<Box component="span" sx={{ opacity: 0.5 }}>[{houseDetails.currency === 'EUR' ? '€' : houseDetails.currency === 'BDT' ? '৳' : '$'}]</Box>
                                                         {isManager && (
-                                                            <IconButton size="small" onClick={() => { setTempHouseName(houseDetails.name || ''); setEditingHouseName(true); }} sx={{ ml: 0.5, p: 0.5 }}>
+                                                            <IconButton 
+                                                                size="small" 
+                                                                onClick={() => { setTempHouseName(houseDetails.name || ''); setEditingHouseName(true); }} 
+                                                                sx={{ ml: 0.5, p: 0.5 }}
+                                                                aria-label="Edit house name"
+                                                            >
                                                                 <EditIcon sx={{ fontSize: 14, opacity: 0.6 }} />
                                                             </IconButton>
                                                         )}
@@ -830,7 +865,12 @@ function ProfileContent() {
                                         Social Network
                                     </Typography>
                                     {!editingSocial && (
-                                        <IconButton size="small" onClick={() => setEditingSocial(true)} sx={{ p: 0.5 }}>
+                                        <IconButton 
+                                            size="small" 
+                                            onClick={() => setEditingSocial(true)} 
+                                            sx={{ p: 0.5 }}
+                                            aria-label="Edit social network"
+                                        >
                                             <EditIcon sx={{ fontSize: 12 }} />
                                         </IconButton>
                                     )}
@@ -887,7 +927,12 @@ function ProfileContent() {
                                             Banking Details
                                         </Typography>
                                         {!editingIban && (
-                                            <IconButton size="small" onClick={() => setEditingIban(true)} sx={{ p: 0.5 }}>
+                                            <IconButton 
+                                                size="small" 
+                                                onClick={() => setEditingIban(true)} 
+                                                sx={{ p: 0.5 }}
+                                                aria-label="Edit banking details"
+                                            >
                                                 <EditIcon sx={{ fontSize: 12 }} />
                                             </IconButton>
                                         )}
@@ -1197,11 +1242,16 @@ function ProfileContent() {
                                                         </Box>
                                                     </Box>
                                                     {isManager && editingMember !== member.email && (
-                                                        <IconButton size="small" onClick={() => {
-                                                            setEditingMember(member.email);
-                                                            setEditRole(member.role || 'member');
-                                                            setEditRent(member.rentAmount || 0);
-                                                        }} sx={{ p: 0.25 }}>
+                                                        <IconButton 
+                                                            size="small" 
+                                                            onClick={() => {
+                                                                setEditingMember(member.email);
+                                                                setEditRole(member.role || 'member');
+                                                                setEditRent(member.rentAmount || 0);
+                                                            }} 
+                                                            sx={{ p: 0.25 }}
+                                                            aria-label="Edit member settings"
+                                                        >
                                                             <EditIcon sx={{ fontSize: 12 }} />
                                                         </IconButton>
                                                     )}

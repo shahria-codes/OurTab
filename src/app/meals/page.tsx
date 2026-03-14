@@ -206,6 +206,7 @@ export default function MealsPage() {
                                 (selectedDate.getFullYear() < houseCreatedAt.getFullYear() ||
                                     (selectedDate.getFullYear() === houseCreatedAt.getFullYear() && selectedDate.getMonth() <= houseCreatedAt.getMonth()))
                             }
+                            aria-label="Previous month"
                             sx={{
                                 color: 'primary.main',
                                 bgcolor: 'rgba(108, 99, 255, 0.05)',
@@ -225,6 +226,7 @@ export default function MealsPage() {
                         <IconButton
                             onClick={handleNextMonth}
                             disabled={selectedDate.getFullYear() > new Date().getFullYear() || (selectedDate.getFullYear() === new Date().getFullYear() && selectedDate.getMonth() >= new Date().getMonth())}
+                            aria-label="Next month"
                             sx={{
                                 color: 'primary.main',
                                 bgcolor: 'rgba(108, 99, 255, 0.05)',

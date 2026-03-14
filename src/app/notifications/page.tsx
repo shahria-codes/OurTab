@@ -413,6 +413,7 @@ export default function NotificationsPage() {
                                     size="small"
                                     startIcon={<DoneAllIcon />}
                                     onClick={() => markAllAsRead()}
+                                    aria-label="Mark all notifications as read"
                                     sx={{
                                         borderRadius: '12px',
                                         fontWeight: 700,
@@ -459,6 +460,7 @@ export default function NotificationsPage() {
                                 variant="contained"
                                 onClick={handleRequestPermission}
                                 disabled={permissionLoading}
+                                aria-label="Enable push notifications"
                                 startIcon={permissionLoading ? <CircularProgress size={16} color="inherit" /> : <CheckCircleIcon />}
                                 sx={{
                                     borderRadius: '16px',

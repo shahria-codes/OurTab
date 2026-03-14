@@ -9,6 +9,7 @@ import { useAuth } from '@/components/AuthContext';
 import Loader from '@/components/Loader';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
+import Image from 'next/image';
 
 export default function Home() {
   const { user, loading } = useAuth();
@@ -68,20 +69,28 @@ export default function Home() {
             textAlign: 'center',
           }}
         >
+
           <Box
-            component="img"
-            src="/icon.png"
-            alt="OurTab Icon"
             sx={{
               width: { xs: 80, md: 100 },
               height: { xs: 80, md: 100 },
               mb: 3,
+              position: 'relative',
               borderRadius: '24px',
+              overflow: 'hidden',
               boxShadow: '0 10px 20px rgba(0,0,0,0.1)',
               transition: 'transform 0.5s ease',
               '&:hover': { transform: 'scale(1.05) rotate(5deg)' }
             }}
-          />
+          >
+            <Image
+              src="/icon.png"
+              alt="OurTab Icon"
+              fill
+              style={{ objectFit: 'cover' }}
+              priority
+            />
+          </Box>
 
           <Typography
             variant="h2"

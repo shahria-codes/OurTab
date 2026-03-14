@@ -1135,6 +1135,7 @@ export default function ExpensePage() {
                         <IconButton
                             color="primary"
                             onClick={handleOpenHistory}
+                            aria-label="View history"
                             sx={{
                                 bgcolor: 'background.paper',
                                 boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
@@ -1305,7 +1306,14 @@ export default function ExpensePage() {
                                                 disableGutters
                                                 sx={{ py: 0.5 }}
                                                 secondaryAction={
-                                                    <IconButton edge="end" size="small" onClick={() => handleRemoveItem(item.id)} disabled={loading} color="error">
+                                                    <IconButton 
+                                                        edge="end" 
+                                                        size="small" 
+                                                        onClick={() => handleRemoveItem(item.id)} 
+                                                        disabled={loading} 
+                                                        color="error"
+                                                        aria-label="Remove item"
+                                                    >
                                                         <DeleteIcon fontSize="small" />
                                                     </IconButton>
                                                 }
@@ -1529,7 +1537,11 @@ export default function ExpensePage() {
                         <List>
                             {Object.keys(monthlyExpenses).map(month => (
                                 <ListItem key={month} secondaryAction={
-                                    <IconButton edge="end" onClick={() => downloadPDF(month)}>
+                                    <IconButton 
+                                        edge="end" 
+                                        onClick={() => downloadPDF(month)}
+                                        aria-label="Download PDF"
+                                    >
                                         <DownloadIcon />
                                     </IconButton>
                                 }>

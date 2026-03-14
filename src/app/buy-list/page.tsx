@@ -275,6 +275,7 @@ export default function Todos() {
                                                                 size="small"
                                                                 className="delete-btn"
                                                                 onClick={() => deleteTodo(todo.id)}
+                                                                aria-label="Delete item"
                                                                 sx={{ opacity: { xs: 1, sm: 0 }, mr: 1, transition: 'opacity 0.2s', color: 'text.disabled', '&:hover': { color: 'error.main' } }}
                                                             >
                                                                 <DeleteIcon fontSize="small" />
@@ -345,7 +346,12 @@ export default function Todos() {
                                                         </Typography>
                                                     </Box>
                                                     {canDeleteItem(todo) && (
-                                                        <IconButton size="small" onClick={() => deleteTodo(todo.id)} sx={{ color: 'text.disabled', '&:hover': { color: 'error.main' } }}>
+                                                        <IconButton 
+                                                            size="small" 
+                                                            onClick={() => deleteTodo(todo.id)} 
+                                                            aria-label="Delete item"
+                                                            sx={{ color: 'text.disabled', '&:hover': { color: 'error.main' } }}
+                                                        >
                                                             <DeleteIcon sx={{ fontSize: 16 }} />
                                                         </IconButton>
                                                     )}
@@ -453,7 +459,12 @@ export default function Todos() {
                                         }}
                                     >
                                         <Typography variant="body2" sx={{ fontWeight: 600, fontSize: '0.85rem' }}>{item}</Typography>
-                                        <IconButton size="small" onClick={() => handleRemovePendingItem(index)} sx={{ p: 0.5 }}>
+                                        <IconButton 
+                                            size="small" 
+                                            onClick={() => handleRemovePendingItem(index)} 
+                                            aria-label="Remove item from staging"
+                                            sx={{ p: 0.5 }}
+                                        >
                                             <CloseIcon sx={{ fontSize: 12 }} />
                                         </IconButton>
                                     </Paper>

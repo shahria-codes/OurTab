@@ -75,6 +75,7 @@ export default function NotificationBell() {
         <IconButton
             color="primary"
             onClick={() => router.push('/notifications')}
+            aria-label="Notifications"
             sx={{
                 bgcolor: 'background.paper',
                 boxShadow: '0 2px 8px rgba(0,0,0,0.1)',

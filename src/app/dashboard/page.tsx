@@ -608,7 +608,7 @@ export default function Dashboard() {
                         }}>
                             Dashboard
                         </Typography>
-                        <NotificationBell />
+                        <NotificationBell aria-label="Notifications" />
                     </Box>
                     <Typography variant="body1" color="text.secondary" sx={{ opacity: 0.8, fontWeight: 500 }}>
                         Overview of your household finances and expenses
@@ -635,6 +635,7 @@ export default function Dashboard() {
                                 (selectedDate.getFullYear() < new Date(house.createdAt).getFullYear() ||
                                     (selectedDate.getFullYear() === new Date(house.createdAt).getFullYear() && selectedDate.getMonth() <= new Date(house.createdAt).getMonth()))
                             }
+                            aria-label="Previous Month"
                             sx={{
                                 color: 'primary.main',
                                 bgcolor: 'rgba(108, 99, 255, 0.05)',
@@ -654,6 +655,7 @@ export default function Dashboard() {
                         <IconButton
                             onClick={handleNextMonth}
                             disabled={selectedDate.getFullYear() > new Date().getFullYear() || (selectedDate.getFullYear() === new Date().getFullYear() && selectedDate.getMonth() >= new Date().getMonth())}
+                            aria-label="Next Month"
                             sx={{
                                 color: 'primary.main',
                                 bgcolor: 'rgba(108, 99, 255, 0.05)',
@@ -709,6 +711,7 @@ export default function Dashboard() {
                                         <IconButton
                                             size="small"
                                             onClick={(e) => { e.stopPropagation(); setOpenFundHistoryDialog(true); }}
+                                            aria-label="Fund History"
                                             sx={{
                                                 color: 'success.main',
                                                 background: 'rgba(76, 175, 80, 0.1)',
@@ -1842,6 +1845,7 @@ export default function Dashboard() {
                                                                             handleDeleteExpense(expense.id);
                                                                         }}
                                                                         sx={{ bgcolor: 'rgba(244, 67, 54, 0.05)', '&:hover': { bgcolor: 'rgba(244, 67, 54, 0.1)' } }}
+                                                                        aria-label="Delete expense"
                                                                     >
                                                                         <DeleteIcon fontSize="small" />
                                                                     </IconButton>
@@ -2794,7 +2798,12 @@ export default function Dashboard() {
                                             </Box>
                                             {selectedMember.iban && (
                                                 <Tooltip title="Copy IBAN">
-                                                    <IconButton onClick={() => handleCopy(selectedMember.iban!)} size="small" sx={{ bgcolor: 'white' }}>
+                                                    <IconButton 
+                                                        onClick={() => handleCopy(selectedMember.iban!)} 
+                                                        size="small" 
+                                                        sx={{ bgcolor: 'white' }}
+                                                        aria-label="Copy IBAN"
+                                                    >
                                                         <ContentCopyIcon fontSize="small" />
                                                     </IconButton>
                                                 </Tooltip>
@@ -2956,6 +2965,7 @@ export default function Dashboard() {
                     <IconButton
                         onClick={() => setOpenShareDialog(false)}
                         sx={{ position: 'absolute', top: 10, right: 10, color: 'white', opacity: 0.8 }}
+                        aria-label="Close share dialog"
                     >
                         <CloseIcon />
                     </IconButton>
@@ -3028,6 +3038,7 @@ export default function Dashboard() {
                                         '&:hover': { bgcolor: '#128C7E', transform: 'translateY(-3px)' },
                                         transition: 'all 0.3s ease'
                                     }}
+                                    aria-label="Share via WhatsApp"
                                 >
                                     <WhatsAppIcon />
                                 </IconButton>
@@ -3051,6 +3062,7 @@ export default function Dashboard() {
                                         '&:hover': { bgcolor: '#0d65d9', transform: 'translateY(-3px)' },
                                         transition: 'all 0.3s ease'
                                     }}
+                                    aria-label="Share via Messenger"
                                 >
                                     <MessengerIcon />
                                 </IconButton>
@@ -3074,6 +3086,7 @@ export default function Dashboard() {
                                         '&:hover': { bgcolor: '#0077b3', transform: 'translateY(-3px)' },
                                         transition: 'all 0.3s ease'
                                     }}
+                                    aria-label="Share via Telegram"
                                 >
                                     <TelegramIcon />
                                 </IconButton>

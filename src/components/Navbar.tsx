@@ -12,6 +12,7 @@ import Link from 'next/link';
 import { useAuth } from '@/components/AuthContext';
 import { usePathname } from 'next/navigation';
 import NotificationBell from '@/components/NotificationBell';
+import Image from 'next/image';
 
 interface NavbarProps {
     actions?: React.ReactNode;
@@ -30,7 +31,14 @@ export default function Navbar({ actions }: NavbarProps) {
                 <Toolbar>
                     <Link href={user ? "/dashboard" : "/"} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'black', textDecoration: 'none', flexGrow: 1 }}>
                         <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                            <Box component="img" src="/icon.png" alt="OurTab Icon" sx={{ width: 32, height: 32, mr: 1, borderRadius: 1 }} />
+                        <Box sx={{ position: 'relative', width: 32, height: 32, mr: 1, borderRadius: 1, overflow: 'hidden' }}>
+                            <Image
+                                src="/icon.png"
+                                alt="OurTab Icon"
+                                fill
+                                style={{ objectFit: 'cover' }}
+                            />
+                        </Box>
                             <Typography variant="h6" component="div" sx={{ fontWeight: 'bold', fontFamily: 'var(--font-abril)', letterSpacing: 1, textShadow: '2px 2px 4px rgba(0,0,0,0.3)' }}>
                                 OurTab
                             </Typography>
