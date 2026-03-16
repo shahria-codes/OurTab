@@ -56,23 +56,6 @@ export default function MealsPage() {
         setSelectedDate(newDate);
     };
 
-    if (loading) return <Loader />;
-
-    if (!house || house.typeOfHouse !== 'meals_and_expenses') {
-        return (
-            <AuthGuard>
-                <Container maxWidth="lg" sx={{ mt: 4, display: 'flex', flexDirection: 'column', alignItems: 'center', pt: 10 }}>
-                    <RestaurantMenuIcon sx={{ fontSize: 80, color: 'text.disabled', mb: 2 }} />
-                    <Typography variant="h5" color="text.secondary">Meal tracking is not enabled for this house.</Typography>
-                    <Typography variant="body1" color="text.secondary" sx={{ mt: 1 }}>Change house settings in Profile to use this feature.</Typography>
-                </Container>
-                <BottomNav />
-            </AuthGuard>
-        );
-    }
-
-    const { mealsPerDay = 3 } = house;
-
     const displayMembers = useMemo(() => {
         if (!house) return [];
         const membersMap = new Map();
@@ -117,6 +100,23 @@ export default function MealsPage() {
 
         return Array.from(membersMap.values());
     }, [house, selectedDate]);
+
+    if (loading) return <Loader />;
+
+    if (!house || house.typeOfHouse !== 'meals_and_expenses') {
+        return (
+            <AuthGuard>
+                <Container maxWidth="lg" sx={{ mt: 4, display: 'flex', flexDirection: 'column', alignItems: 'center', pt: 10 }}>
+                    <RestaurantMenuIcon sx={{ fontSize: 80, color: 'text.disabled', mb: 2 }} />
+                    <Typography variant="h5" color="text.secondary">Meal tracking is not enabled for this house.</Typography>
+                    <Typography variant="body1" color="text.secondary" sx={{ mt: 1 }}>Change house settings in Profile to use this feature.</Typography>
+                </Container>
+                <BottomNav />
+            </AuthGuard>
+        );
+    }
+
+    const { mealsPerDay = 3 } = house || {};
 
     const houseCreatedAt = house.createdAt ? new Date(house.createdAt) : null;
     const houseCreationDateOnly = houseCreatedAt

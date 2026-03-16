@@ -47,6 +47,8 @@ import AccountTreeIcon from '@mui/icons-material/AccountTree';
 import HourglassEmptyIcon from '@mui/icons-material/HourglassEmpty';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import NotificationsIcon from '@mui/icons-material/Notifications';
+import MenuIcon from '@mui/icons-material/Menu';
+import SettingsIcon from '@mui/icons-material/Settings';
 import Dialog from '@mui/material/Dialog';
 import DialogTitle from '@mui/material/DialogTitle';
 import DialogContent from '@mui/material/DialogContent';
@@ -871,21 +873,23 @@ function ProfileContent() {
                                             title={
                                                 <Box sx={{ p: 0.5 }}>
                                                     <Typography variant="caption" sx={{ display: 'block', fontWeight: 700, mb: 0.5 }}>
-                                                        How to find Messenger username:
+                                                        Find Messenger username:
                                                     </Typography>
                                                     <Typography variant="caption" sx={{ display: 'block', opacity: 0.9 }}>
                                                         1. Open Messenger app
                                                     </Typography>
-                                                    <Typography variant="caption" sx={{ display: 'block', opacity: 0.9 }}>
-                                                        2. Tap Menu (three lines) &gt; Settings (gear icon)
+                                                    <Typography variant="caption" sx={{ display: 'flex', alignItems: 'center', opacity: 0.9, gap: 0.5 }}>
+                                                        2. Tap Menu <MenuIcon sx={{ fontSize: 14 }} /> → Settings <SettingsIcon sx={{ fontSize: 14 }} />
                                                     </Typography>
                                                     <Typography variant="caption" sx={{ display: 'block', opacity: 0.9 }}>
-                                                        3. Tap 'Username' to see and copy it
+                                                        3. Tap '@Username' to see and copy it
                                                     </Typography>
                                                 </Box>
                                             }
                                             arrow
                                             placement="top"
+                                            enterTouchDelay={0}
+                                            leaveTouchDelay={5000}
                                         >
                                             <InfoIcon sx={{ fontSize: 14, opacity: 0.5, cursor: 'help' }} />
                                         </Tooltip>
