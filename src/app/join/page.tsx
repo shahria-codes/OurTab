@@ -21,7 +21,7 @@ import Loader from '@/components/Loader';
 function JoinContent() {
     const searchParams = useSearchParams();
     const router = useRouter();
-    const { user, loading: authLoading, mutateHouse, mutateUser } = useAuth();
+    const { user, loading: authLoading, mutateHouse, mutateUser, dbUser, house } = useAuth();
     const { showToast } = useToast();
 
     const houseId = searchParams.get('houseId');
@@ -69,6 +69,17 @@ function JoinContent() {
 
         fetchHouseInfo();
     }, [houseId, user?.email]);
+
+    // --- REAL-TIME MEMBERSHIP DETECTION ---
+    useEffect(() => {
+        if (user?.email && houseId) {
+            const isMember = dbUser?.houseId === houseId || house?.id === houseId;
+            if (isMember) {
+                showToast('You are already a member of this house!', 'success');
+                router.push('/dashboard');
+            }
+        }
+    }, [dbUser?.houseId, house?.id, houseId, user?.email, router, showToast]);
 
     const handleJoin = async () => {
         if (!user?.email || !houseId) return;
