@@ -1383,7 +1383,7 @@ function ProfileContent() {
                                 {!deletionRequest && otherLeaveRequests.length === 0 && (
                                     <Box sx={{ mt: 3, pt: 2, borderTop: '1px solid rgba(255,255,255,0.05)' }}>
                                         <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 2, textTransform: 'uppercase', letterSpacing: 1, fontSize: '0.7rem' }}>
-                                            House Management
+                                            House Action
                                         </Typography>
                                         <Box sx={{ display: 'flex', gap: 1.5, flexWrap: 'wrap' }}>
                                             {memberCount > 1 && !myLeaveRequest && (
