@@ -46,6 +46,7 @@ import { Contributor } from '@/types/settlement-types';
 import { useRef } from 'react';
 import Image from 'next/image';
 import ReceiptProcessor from '@/components/ReceiptProcessor';
+import ShoppingIllustration from '@/components/expense/ShoppingIllustration';
 
 interface GroceryItem {
     id: string;
@@ -1513,10 +1514,11 @@ export default function ExpensePage() {
                     )}
 
                     {items.length === 0 && !scanning && (
-                        <Box sx={{ textAlign: 'center', py: 4 }}>
+                        <Box sx={{ textAlign: 'center', py: 4, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
                             <Typography color="text.secondary">
                                 Add items to your expense to get started
                             </Typography>
+                            <ShoppingIllustration />
                         </Box>
                     )}
 
