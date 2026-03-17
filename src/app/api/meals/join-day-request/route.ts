@@ -103,7 +103,7 @@ export async function POST(request: Request) {
             }, { merge: true });
 
             // Create meal status records directly
-            const mealsRef = adminDb.collection('meals').doc(`${houseId}_${joinedDateStr}`);
+            const mealsRef = adminDb.collection('mealStatuses').doc(`${houseId}_${joinedDateStr}`);
             const mealMap: Record<string, boolean> = {
                 breakfast: validRequested.includes('breakfast'),
                 lunch: validRequested.includes('lunch'),
@@ -116,7 +116,8 @@ export async function POST(request: Request) {
                 date: joinedDateStr,
                 meals: {
                     [memberEmail]: mealMap
-                }
+                },
+                updatedAt: new Date().toISOString()
             }, { merge: true });
 
             return NextResponse.json({ success: true, autoApproved: true });

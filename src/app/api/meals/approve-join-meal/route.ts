@@ -79,8 +79,7 @@ export async function POST(request: Request) {
             }, { merge: true });
 
             // 2. Write/merge the meal record for the join date
-            //    meals collection: doc id = joinDate, field: meals[email][mealType] = bool
-            const mealsRef = adminDb.collection('meals').doc(`${houseId}_${joinDate}`);
+            const mealsRef = adminDb.collection('mealStatuses').doc(`${houseId}_${joinDate}`);
             const mealMap: Record<string, boolean> = {
                 breakfast: mealsToApprove.includes('breakfast'),
                 lunch: mealsToApprove.includes('lunch'),
@@ -95,7 +94,8 @@ export async function POST(request: Request) {
                 date: joinDate,
                 meals: {
                     [memberEmail]: mealMap
-                }
+                },
+                updatedAt: new Date().toISOString()
             }, { merge: true });
 
             // 3. Notify the new member
