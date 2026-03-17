@@ -403,8 +403,8 @@ export default function Dashboard() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     houseId: house.id,
-                    from: paySettlement.from,
-                    to: paySettlement.to,
+                    fromEmail: paySettlement.from,
+                    toEmail: paySettlement.to,
                     amount: payAmount,
                     method: payMethod,
                 }),
