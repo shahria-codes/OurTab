@@ -835,7 +835,7 @@ function ProfileContent() {
                                                     </Box>
                                                 ) : (
                                                     <Typography variant="body2" sx={{ fontWeight: 600, display: 'flex', alignItems: 'center', gap: 1 }}>
-                                                        <Box component="span" sx={{ color: 'primary.main', fontFamily: 'var(--font-abril)', letterSpacing: '0.05em' }}>
+                                                        <Box component="span" sx={{ color: 'primary.main', fontFamily: 'var(--font-outfit)', letterSpacing: '0.05em' }}>
                                                             {houseDetails.name}
                                                         </Box>
                                                         {' '}<Box component="span" sx={{ opacity: 0.5 }}>[{houseDetails.currency === 'EUR' ? '€' : houseDetails.currency === 'BDT' ? '৳' : '$'}]</Box>

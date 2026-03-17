@@ -1,11 +1,10 @@
 import type { Metadata, Viewport } from 'next';
-import { Outfit, Abril_Fatface } from 'next/font/google';
+import { Outfit } from 'next/font/google';
 import ThemeRegistry from '@/components/ThemeRegistry';
 import { AuthProvider } from '@/components/AuthContext';
 import { ToastProvider } from '@/components/ToastContext';
 
-const outfit = Outfit({ subsets: ['latin'] });
-const abril = Abril_Fatface({ weight: '400', subsets: ['latin'], variable: '--font-abril' });
+const outfit = Outfit({ subsets: ['latin'], variable: '--font-outfit', preload: false });
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://app.ourtab.online'),
@@ -67,7 +66,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={`${outfit.className} ${abril.variable}`}>
+      <body className={`${outfit.className} ${outfit.variable}`}>
         <ThemeRegistry>
           <AuthProvider>
             <ToastProvider>
