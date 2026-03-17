@@ -517,10 +517,11 @@ export default function Dashboard() {
                 const relevantMembers = activeMembersAtTime.length > 0 ? activeMembersAtTime : allMembers;
 
 
+                // Settlement Payment Logic
                 if (exp.isSettlementPayment && exp.settlementBetween && exp.settlementBetween.length === 2) {
                     const [p, r] = [exp.userId, exp.settlementBetween.find(e => e !== exp.userId)!];
-                    if (memberBalances[p] !== undefined) memberBalances[p] += amount;
-                    if (memberBalances[r] !== undefined) memberBalances[r] -= amount;
+                    if (memberBalances[p] !== undefined) memberBalances[p] = Math.round((memberBalances[p] + amount) * 100) / 100;
+                    if (memberBalances[r] !== undefined) memberBalances[r] = Math.round((memberBalances[r] - amount) * 100) / 100;
                     return;
                 }
 
@@ -529,21 +530,31 @@ export default function Dashboard() {
                     let contributorTotal = 0;
                     exp.contributors.forEach(contributor => {
                         if (memberBalances[contributor.email] !== undefined) {
-                            memberBalances[contributor.email] += contributor.amount;
+                            memberBalances[contributor.email] = Math.round((memberBalances[contributor.email] + contributor.amount) * 100) / 100;
                         }
                         contributorTotal += contributor.amount;
                     });
-                    const remainder = amount - contributorTotal;
-                    if (remainder > 0.01) {
-                        if (memberBalances[payer] !== undefined) memberBalances[payer] += remainder;
+                    const remainingToPayer = Math.round((amount - contributorTotal) * 100) / 100;
+                    if (remainingToPayer > 0) {
+                        if (memberBalances[payer] !== undefined) {
+                            memberBalances[payer] = Math.round((memberBalances[payer] + remainingToPayer) * 100) / 100;
+                        }
                     }
                 } else {
-                    if (memberBalances[payer] !== undefined) memberBalances[payer] += amount;
+                    if (memberBalances[payer] !== undefined) {
+                        memberBalances[payer] = Math.round((memberBalances[payer] + amount) * 100) / 100;
+                    }
                 }
 
-                const sharePerPerson = amount / relevantMembers.length;
-                relevantMembers.forEach(m => {
-                    memberBalances[m.email] -= sharePerPerson;
+                // Divide the expense among active members using cent-based math to handle remainders fairly
+                const amountInCents = Math.round(amount * 100);
+                const shareInCents = Math.floor(amountInCents / relevantMembers.length);
+                const remainderCents = amountInCents % relevantMembers.length;
+
+                relevantMembers.forEach((m, index) => {
+                    const extraCent = index < remainderCents ? 1 : 0;
+                    const memberShare = (shareInCents + extraCent) / 100;
+                    memberBalances[m.email] = Math.round((memberBalances[m.email] - memberShare) * 100) / 100;
                 });
             });
         }

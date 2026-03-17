@@ -260,37 +260,85 @@ export function calculateMemberFundAccounting(
 
         // Shares only split among ACTIVE members
         const activeCount = activeMembersForMonth.length;
-        const utilShare = activeCount > 0 ? (monthlyUtilities / activeCount) : 0;
-        const wageShare = activeCount > 0 ? (monthlyWage / activeCount) : 0;
-        const miscShare = activeCount > 0 ? (monthlyMisc / activeCount) : 0;
-        const mealUnitPrice = monthlyMealsConsumed > 0 ? (monthlyGroceries / monthlyMealsConsumed) : 0;
+        const activeEmails = activeMembersForMonth.map(m => getEmail(m));
+
+        // Fair distribution for Utilities, Wage, Misc
+        const distributeCents = (totalAmount: number, count: number) => {
+            if (count <= 0) return { base: 0, remainder: 0 };
+            const totalCents = Math.round(totalAmount * 100);
+            return {
+                base: Math.floor(totalCents / count),
+                remainder: totalCents % count
+            };
+        };
+
+        const utilDist = distributeCents(monthlyUtilities, activeCount);
+        const wageDist = distributeCents(monthlyWage, activeCount);
+        const miscDist = distributeCents(monthlyMisc, activeCount);
+
+        // Fair distribution for Meals (weighted by count)
+        const totalGroceryCents = Math.round(monthlyGroceries * 100);
+        const memberMealCents: Record<string, number> = {};
+        if (monthlyMealsConsumed > 0) {
+            let distributedCents = 0;
+            activeEmails.forEach(email => {
+                const count = monthlyMemberMeals[email] || 0;
+                // Weighted floor
+                const share = Math.floor((count * totalGroceryCents) / monthlyMealsConsumed);
+                memberMealCents[email] = share;
+                distributedCents += share;
+            });
+
+            let remainingCents = totalGroceryCents - distributedCents;
+            // Distribute remaining cents to those who ate meals, sorted by count to be "fairer"
+            const sortedByMeals = [...activeEmails].sort((a, b) => (monthlyMemberMeals[b] || 0) - (monthlyMemberMeals[a] || 0));
+            let idx = 0;
+            while (remainingCents > 0) {
+                const email = sortedByMeals[idx % sortedByMeals.length];
+                if ((monthlyMemberMeals[email] || 0) > 0) {
+                    memberMealCents[email]++;
+                    remainingCents--;
+                } else {
+                    // If we run out of people who ate, just give to anyone active (shouldn't happen if monthlyMealsConsumed > 0)
+                    memberMealCents[email]++;
+                    remainingCents--;
+                }
+                idx++;
+            }
+        } else {
+            activeEmails.forEach(email => memberMealCents[email] = 0);
+        }
 
         // Update stats for ALL members (some just carry over balance)
         members.forEach(m => {
             const mEmail = getEmail(m);
             if (stats[mEmail]) {
                 const prevClosing = stats[mEmail].closingBalance || 0;
-                if (isTargetMonth) stats[mEmail].openingBalance = prevClosing;
+                if (isTargetMonth) stats[mEmail].openingBalance = Math.round(prevClosing * 100) / 100;
 
-                const isActive = activeMembersForMonth.some(act => getEmail(act) === mEmail);
+                const activeIdx = activeEmails.indexOf(mEmail);
+                const isActive = activeIdx !== -1;
 
                 if (isActive) {
-                    stats[mEmail].utilities += utilShare;
-                    stats[mEmail].wage += wageShare;
-                    stats[mEmail].misc += miscShare;
+                    const uShare = (utilDist.base + (activeIdx < utilDist.remainder ? 1 : 0)) / 100;
+                    const wShare = (wageDist.base + (activeIdx < wageDist.remainder ? 1 : 0)) / 100;
+                    const miShare = (miscDist.base + (activeIdx < miscDist.remainder ? 1 : 0)) / 100;
+                    const meShare = (memberMealCents[mEmail] || 0) / 100;
+
+                    stats[mEmail].utilities = Math.round((stats[mEmail].utilities + uShare) * 100) / 100;
+                    stats[mEmail].wage = Math.round((stats[mEmail].wage + wShare) * 100) / 100;
+                    stats[mEmail].misc = Math.round((stats[mEmail].misc + miShare) * 100) / 100;
 
                     const mMealCount = monthlyMemberMeals[mEmail] || 0;
                     stats[mEmail].mealCount += mMealCount;
-
-                    const mMealCost = mMealCount * mealUnitPrice;
-                    stats[mEmail].mealCost += mMealCost;
+                    stats[mEmail].mealCost = Math.round((stats[mEmail].mealCost + meShare) * 100) / 100;
 
                     if (isTargetMonth) {
-                        stats[mEmail].periodicUtilities = utilShare;
-                        stats[mEmail].periodicWage = wageShare;
-                        stats[mEmail].periodicMisc = miscShare;
+                        stats[mEmail].periodicUtilities = uShare;
+                        stats[mEmail].periodicWage = wShare;
+                        stats[mEmail].periodicMisc = miShare;
                         stats[mEmail].periodicMealCount = mMealCount;
-                        stats[mEmail].periodicMealCost = mMealCost;
+                        stats[mEmail].periodicMealCost = meShare;
                     }
                 } else if (isTargetMonth) {
                     // Make sure periodic values are 0 if not active in target month
@@ -302,7 +350,9 @@ export function calculateMemberFundAccounting(
                 }
 
                 // Update closing balance for each month to carry over
-                stats[mEmail].closingBalance = stats[mEmail].deposits - (stats[mEmail].rent + stats[mEmail].utilities + stats[mEmail].wage + stats[mEmail].misc + stats[mEmail].mealCost);
+                // Ensure all additions/subtractions are rounded to 2 decimal places to prevent floating point drift
+                const totalDeductions = stats[mEmail].rent + stats[mEmail].utilities + stats[mEmail].wage + stats[mEmail].misc + stats[mEmail].mealCost;
+                stats[mEmail].closingBalance = Math.round((stats[mEmail].deposits - totalDeductions) * 100) / 100;
             }
         });
     }

@@ -447,7 +447,7 @@ export default function ExpensePage() {
                 const months: string[] = [];
                 const now = new Date();
                 const startDate = house.createdAt ? new Date(house.createdAt) : new Date(now.getFullYear(), now.getMonth() - 6, 1); // fallback 6 months
-                
+
                 let current = new Date(startDate.getFullYear(), startDate.getMonth(), 1);
                 const end = new Date(now.getFullYear(), now.getMonth(), 1);
 
@@ -491,7 +491,7 @@ export default function ExpensePage() {
                 ]);
                 const depositsData = await depositsRes.json();
                 const mealsData = await mealsRes.json();
-                
+
                 // Add to existing deposits and meals safely
                 setFundDeposits(prev => {
                     const existingIds = new Set(prev.map(d => d.id));
@@ -506,7 +506,7 @@ export default function ExpensePage() {
             }
 
             setMonthlyExpenses(prev => ({ ...prev, [monthKey]: expensesData }));
-            
+
             // Also add to allExpenses for settlement logic in the PDF, though historically we'd want all-time data
             // Since the PDF requires all expenses to calculate settlements perfectly, we handle it incrementally
             setAllExpenses(prev => {
@@ -1359,11 +1359,11 @@ export default function ExpensePage() {
                                                 disableGutters
                                                 sx={{ py: 0.5 }}
                                                 secondaryAction={
-                                                    <IconButton 
-                                                        edge="end" 
-                                                        size="small" 
-                                                        onClick={() => handleRemoveItem(item.id)} 
-                                                        disabled={loading} 
+                                                    <IconButton
+                                                        edge="end"
+                                                        size="small"
+                                                        onClick={() => handleRemoveItem(item.id)}
+                                                        disabled={loading}
                                                         color="error"
                                                         aria-label="Remove item"
                                                     >
@@ -1417,16 +1417,16 @@ export default function ExpensePage() {
                                     </Box>
                                 </AccordionSummary>
                                 <AccordionDetails>
-                                    <Box sx={{ mb: 2 }}>
-                                        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                                            Select house members who are contributing money for this purchase
+                                    <Box sx={{ mb: 1 }}>
+                                        <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                                            Select house members who are contributing money for this purchase. If you have paid for the entire purchase, select yourself. Just click <strong>I&apos;ll Pay All</strong>, and Complete Purchase.
                                         </Typography>
 
                                         {/* House Members */}
                                         {houseMembers
                                             .filter(member => member.email !== user?.email)
                                             .map((member) => (
-                                                <Box key={member.email} sx={{ mb: 2 }}>
+                                                <Box key={member.email} sx={{ mb: 1 }}>
                                                     <FormControlLabel
                                                         control={
                                                             <Checkbox
@@ -1592,11 +1592,11 @@ export default function ExpensePage() {
                             {availableMonths.map(monthKey => {
                                 const isDownloading = loadingMonth === monthKey;
                                 return (
-                                    <ListItem 
+                                    <ListItem
                                         key={monthKey}
-                                        sx={{ 
-                                            mb: 1, 
-                                            borderRadius: 2, 
+                                        sx={{
+                                            mb: 1,
+                                            borderRadius: 2,
                                             bgcolor: 'background.paper',
                                             boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
                                             display: 'flex',
@@ -1608,7 +1608,7 @@ export default function ExpensePage() {
                                         <Typography fontWeight="bold" variant="body1">
                                             {formatMonthDisplay(monthKey)}
                                         </Typography>
-                                        
+
                                         <Button
                                             variant="contained"
                                             color="primary"
@@ -1627,7 +1627,7 @@ export default function ExpensePage() {
                                     </ListItem>
                                 );
                             })}
-                            
+
                             {availableMonths.length === 0 && (
                                 <Box sx={{ textAlign: 'center', py: 4 }}>
                                     <Typography color="text.secondary">No history available</Typography>
