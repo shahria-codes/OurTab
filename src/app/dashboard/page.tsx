@@ -712,24 +712,24 @@ export default function Dashboard() {
                                     position: 'relative',
                                     overflow: 'hidden',
                                     borderRadius: 4,
-                                    background: 'rgba(76, 175, 80, 0.05)',
-                                    border: '1px solid rgba(76, 175, 80, 0.2)',
+                                    background: 'rgba(255, 101, 132, 0.05)',
+                                    border: '1px solid rgba(255, 101, 132, 0.2)',
                                     cursor: 'pointer',
                                     transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                                     '&:hover': {
                                         transform: 'translateY(-5px)',
-                                        background: 'rgba(76, 175, 80, 0.08)',
-                                        boxShadow: '0 12px 30px rgba(76, 175, 80, 0.15)',
+                                        background: 'rgba(255, 101, 132, 0.08)',
+                                        boxShadow: '0 12px 30px rgba(255, 101, 132, 0.15)',
                                         '& .stat-icon': { transform: 'scale(1.1) rotate(-10deg)', opacity: 0.25 }
                                     }
                                 }} onClick={() => setOpenDepositDetails(true)}>
-                                    <Box className="stat-icon" sx={{ transition: 'all 0.3s ease', position: 'absolute', top: -15, right: -15, opacity: 0.15, color: 'success.main' }}>
+                                    <Box className="stat-icon" sx={{ transition: 'all 0.3s ease', position: 'absolute', top: -15, right: -15, opacity: 0.15, color: 'secondary.main' }}>
                                         <AccountBalanceIcon sx={{ fontSize: 110 }} />
                                     </Box>
 
-                                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
                                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                            <Typography variant="subtitle2" sx={{ fontWeight: 800, color: 'success.main', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+                                            <Typography variant="subtitle2" sx={{ fontWeight: 800, color: 'primary.main', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
                                                 House Fund
                                             </Typography>
                                             {pendingDeposits.length > 0 && (
@@ -747,9 +747,10 @@ export default function Dashboard() {
                                             onClick={(e) => { e.stopPropagation(); setOpenFundHistoryDialog(true); }}
                                             aria-label="Fund History"
                                             sx={{
-                                                color: 'success.main',
-                                                background: 'rgba(76, 175, 80, 0.1)',
-                                                '&:hover': { background: 'rgba(76, 175, 80, 0.2)' },
+                                                marginLeft: 2,
+                                                color: 'primary.main',
+                                                background: 'rgba(255, 101, 132, 0.1)',
+                                                '&:hover': { background: 'rgba(255, 101, 132, 0.2)' },
                                                 p: 0.5
                                             }}
                                         >
@@ -758,17 +759,37 @@ export default function Dashboard() {
                                     </Box>
 
                                     <Box sx={{ flexGrow: 1 }}>
-                                        <Typography variant="h3" sx={{
-                                            fontWeight: 900,
-                                            mb: 2,
-                                            display: 'flex',
-                                            alignItems: 'baseline',
-                                            color: houseFundStats.remaining < 0 ? 'error.main' : 'success.main'
-                                        }}>
-                                            <Box component="span" sx={{ fontSize: '0.6em', opacity: 0.7, mr: 0.5 }}>{displayCurrency}</Box>
-                                            {Math.floor(houseFundStats.remaining)}
-                                            <Box component="span" sx={{ fontSize: '0.4em', opacity: 0.5, ml: 0.5 }}>.{houseFundStats.remaining.toFixed(2).split('.')[1]}</Box>
-                                        </Typography>
+                                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
+                                            <Typography variant="h3" sx={{
+                                                fontWeight: 900,
+                                                display: 'flex',
+                                                alignItems: 'baseline',
+                                                color: houseFundStats.remaining < 0 ? 'error.main' : 'secondary.main'
+                                            }}>
+                                                <Box component="span" sx={{ fontSize: '0.6em', opacity: 0.7, mr: 0.5 }}>{displayCurrency}</Box>
+                                                {Math.floor(houseFundStats.remaining)}
+                                                <Box component="span" sx={{ fontSize: '0.4em', opacity: 0.5, ml: 0.5 }}>.{houseFundStats.remaining.toFixed(2).split('.')[1]}</Box>
+                                            </Typography>
+                                            <Button
+                                                variant="contained"
+                                                size="small"
+                                                startIcon={<AddIcon />}
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    router.push('/expense');
+                                                }}
+                                                sx={{
+                                                    borderRadius: 2,
+                                                    textTransform: 'none',
+                                                    fontWeight: 700,
+                                                    bgcolor: '#6C63FF',
+                                                    '&:hover': { bgcolor: '#5a52e0' },
+                                                    boxShadow: '0 4px 12px rgba(108, 99, 255, 0.2)',
+                                                }}
+                                            >
+                                                Expense
+                                            </Button>
+                                        </Box>
 
                                         <Grid container spacing={1}>
                                             {[
@@ -861,74 +882,71 @@ export default function Dashboard() {
                                     </Typography>
 
                                     <Box sx={{ flexGrow: 1 }}>
-                                        <Typography variant="h3" sx={{ fontWeight: 900, mb: 1, display: 'flex', alignItems: 'baseline' }}>
-                                            <Box component="span" sx={{ fontSize: '0.6em', opacity: 0.7, mr: 0.5 }}>{displayCurrency}</Box>
-                                            {Math.floor(totalFilteredExpenses)}
-                                            <Box component="span" sx={{ fontSize: '0.4em', opacity: 0.5, ml: 0.5 }}>.{totalFilteredExpenses.toFixed(2).split('.')[1]}</Box>
-                                        </Typography>
-                                        <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600 }}>
-                                            {selectedDate.toLocaleString('default', { month: 'long', year: 'numeric' })}
-                                        </Typography>
+                                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>
+                                            <Typography variant="h3" sx={{ fontWeight: 900, display: 'flex', alignItems: 'baseline' }}>
+                                                <Box component="span" sx={{ fontSize: '0.6em', opacity: 0.7, mr: 0.5 }}>{displayCurrency}</Box>
+                                                {Math.floor(totalFilteredExpenses)}
+                                                <Box component="span" sx={{ fontSize: '0.4em', opacity: 0.5, ml: 0.5 }}>.{totalFilteredExpenses.toFixed(2).split('.')[1]}</Box>
+                                            </Typography>
+                                            <Button
+                                                variant="contained"
+                                                size="small"
+                                                startIcon={<AddIcon />}
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    router.push('/expense');
+                                                }}
+                                                sx={{
+                                                    borderRadius: 2,
+                                                    textTransform: 'none',
+                                                    fontWeight: 700,
+                                                    bgcolor: '#6C63FF',
+                                                    '&:hover': { bgcolor: '#5a52e0' },
+                                                    boxShadow: '0 4px 12px rgba(108, 99, 255, 0.2)',
+                                                }}
+                                            >
+                                                Expense
+                                            </Button>
+                                        </Box>
+                                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                            <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600 }}>
+                                                {selectedDate.toLocaleString('default', { month: 'long', year: 'numeric' })}
+                                            </Typography>
+                                            <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 800, letterSpacing: '0.05em' }}>
+                                                Mine: {displayCurrency}{myFilteredExpenses.toFixed(2)}
+                                            </Typography>
+                                        </Box>
                                     </Box>
 
                                     <Box sx={{ mt: 3, pt: 2, borderTop: '1px solid rgba(108, 99, 255, 0.1)' }}>
-                                        <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600 }}>My Personal Share</Typography>
-                                        <Typography variant="h6" sx={{ fontWeight: 800, color: 'text.primary' }}>
-                                            {displayCurrency}{myFilteredExpenses.toFixed(2)}
-                                        </Typography>
-                                    </Box>
-                                </Paper>
-                            </Grid>
-                        )}
-                        {/* My Settlements Widget */}
-                        {house?.typeOfHouse !== 'meals_and_expenses' && (
-                            <Grid size={{ xs: 12, md: 4 }}>
-                                <Paper className="glass" sx={{
-                                    p: 3,
-                                    display: 'flex',
-                                    flexDirection: 'column',
-                                    height: '100%',
-                                    position: 'relative',
-                                    overflow: 'hidden',
-                                    borderRadius: 4,
-                                    cursor: 'pointer',
-                                    background: 'rgba(0, 191, 165, 0.05)',
-                                    border: '1px solid rgba(0, 191, 165, 0.2)',
-                                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                                    '&:hover': {
-                                        transform: 'translateY(-5px)',
-                                        background: 'rgba(0, 191, 165, 0.08)',
-                                        boxShadow: '0 12px 30px rgba(0, 191, 165, 0.15)',
-                                        '& .stat-icon': { transform: 'scale(1.1) rotate(-10deg)', opacity: 0.25 }
-                                    },
-                                }}
-                                    onClick={() => setOpenHistoryDialog(true)}
-                                >
-                                    <Box className="stat-icon" sx={{ transition: 'all 0.3s ease', position: 'absolute', top: -15, right: -15, opacity: 0.15, color: 'secondary.main' }}>
-                                        <AccountBalanceWalletIcon sx={{ fontSize: 110 }} />
-                                    </Box>
-
-                                    <Typography variant="subtitle2" sx={{ fontWeight: 800, color: 'secondary.main', textTransform: 'uppercase', letterSpacing: '0.1em', mb: 2 }}>
-                                        My Settlements
-                                    </Typography>
-
-                                    <Box sx={{ display: 'flex', gap: 3, alignItems: 'center', mt: 1 }}>
-                                        <Box>
-                                            <Typography variant="caption" sx={{ display: 'flex', alignItems: 'center', color: 'text.secondary', fontWeight: 600, mb: 0.5 }}>
-                                                <ArrowUpwardIcon color="error" sx={{ fontSize: 14, mr: 0.5 }} /> To Pay
-                                            </Typography>
-                                            <Typography variant="h5" sx={{ fontWeight: 900, color: 'error.main' }}>
-                                                {displayCurrency}{myDebt.toFixed(2)}
-                                            </Typography>
+                                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+                                            <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600 }}>Settlements</Typography>
+                                            <IconButton
+                                                size="small"
+                                                onClick={(e) => { e.stopPropagation(); setOpenHistoryDialog(true); }}
+                                                sx={{ p: 0.5, color: 'primary.main' }}
+                                            >
+                                                <HistoryIcon fontSize="small" />
+                                            </IconButton>
                                         </Box>
-                                        <Divider orientation="vertical" flexItem sx={{ opacity: 0.1 }} />
-                                        <Box>
-                                            <Typography variant="caption" sx={{ display: 'flex', alignItems: 'center', color: 'text.secondary', fontWeight: 600, mb: 0.5 }}>
-                                                <ArrowDownwardIcon color="success" sx={{ fontSize: 14, mr: 0.5 }} /> To Receive
-                                            </Typography>
-                                            <Typography variant="h5" sx={{ fontWeight: 900, color: 'success.main' }}>
-                                                {displayCurrency}{myCredit.toFixed(2)}
-                                            </Typography>
+                                        <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+                                            <Box>
+                                                <Typography variant="caption" sx={{ display: 'flex', alignItems: 'center', color: 'text.secondary', fontWeight: 600, fontSize: '0.7rem' }}>
+                                                    <ArrowUpwardIcon color="error" sx={{ fontSize: 12, mr: 0.2 }} /> Pay
+                                                </Typography>
+                                                <Typography variant="subtitle1" sx={{ fontWeight: 800, color: 'error.main', lineHeight: 1 }}>
+                                                    {displayCurrency}{myDebt.toFixed(2)}
+                                                </Typography>
+                                            </Box>
+                                            <Divider orientation="vertical" flexItem sx={{ opacity: 0.1, height: 20, my: 'auto' }} />
+                                            <Box>
+                                                <Typography variant="caption" sx={{ display: 'flex', alignItems: 'center', color: 'text.secondary', fontWeight: 600, fontSize: '0.7rem' }}>
+                                                    <ArrowDownwardIcon color="success" sx={{ fontSize: 12, mr: 0.2 }} /> Get
+                                                </Typography>
+                                                <Typography variant="subtitle1" sx={{ fontWeight: 800, color: 'success.main', lineHeight: 1 }}>
+                                                    {displayCurrency}{myCredit.toFixed(2)}
+                                                </Typography>
+                                            </Box>
                                         </Box>
                                     </Box>
                                 </Paper>
@@ -1093,24 +1111,6 @@ export default function Dashboard() {
                                     <Typography variant="subtitle2" sx={{ fontWeight: 800, color: 'warning.main', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
                                         Buy List ({pendingTodos.length})
                                     </Typography>
-                                    <Button
-                                        variant="contained"
-                                        size="small"
-                                        startIcon={<AddIcon />}
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            router.push('/expense');
-                                        }}
-                                        sx={{
-                                            borderRadius: 2,
-                                            textTransform: 'none',
-                                            fontWeight: 700,
-                                            bgcolor: '#6C63FF',
-                                            '&:hover': { bgcolor: '#5a52e0' }
-                                        }}
-                                    >
-                                        Expense
-                                    </Button>
                                 </Box>
 
                                 <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 1.5, position: 'relative', zIndex: 1 }}>
@@ -2027,12 +2027,12 @@ export default function Dashboard() {
                     displayCurrency={displayCurrency}
                 />
             </main>
-                <ShareHouseDialog
-                    open={openShareDialog}
-                    onClose={() => setOpenShareDialog(false)}
-                    house={house}
-                    handleCopy={handleCopy}
-                />
+            <ShareHouseDialog
+                open={openShareDialog}
+                onClose={() => setOpenShareDialog(false)}
+                house={house}
+                handleCopy={handleCopy}
+            />
             {house?.typeOfHouse === 'meals_and_expenses' && (
                 <JoinDayMealDialog
                     house={house ?? undefined}

@@ -25,7 +25,10 @@ export const createAppTheme = (mode: PaletteMode) => {
                 main: mode === 'light' ? '#6C63FF' : '#8B7FFF',
             },
             secondary: {
-                main: mode === 'light' ? '#00BFA5' : '#1DE9B6',
+                main: mode === 'light' ? '#FF6584' : '#FF7A9A',
+            },
+            success: {
+                main: mode === 'light' ? '#10B981' : '#34D399',
             },
             background: {
                 default: mode === 'light' ? '#F4F6F8' : '#0a0a0a',

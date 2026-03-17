@@ -801,7 +801,7 @@ export default function ExpensePage() {
             // --- HEADER ---
             // House Name (Centered with stylish font)
             doc.setFontSize(20);
-            doc.setFont('abril', 'bold');
+            doc.setFont('helvetica', 'bold');
             doc.text(currentHouseData?.name || 'My House', pageWidth / 2, 20, { align: 'center' });
 
             // Left: House Members
@@ -853,7 +853,7 @@ export default function ExpensePage() {
             // Report Month Title (Optional, fits context)
             const titleY = Math.max(leftY, 45) + 5;
             doc.setFontSize(14);
-            doc.setFont('abril', 'bold');
+            doc.setFont('helvetica', 'bold');
             doc.text(`Expense Report: ${monthDisplayLabel}`, pageWidth / 2, titleY, { align: 'center' });
 
             // --- TABLE ---
@@ -938,7 +938,7 @@ export default function ExpensePage() {
 
                 doc.addPage();
                 doc.setFontSize(16);
-                doc.setFont('abril', 'bold');
+                doc.setFont('helvetica', 'bold');
                 doc.text("House Fund — Member Breakdown", pageWidth / 2, 20, { align: 'center' });
                 doc.setFontSize(10);
                 doc.setFont('helvetica', 'normal');
@@ -1030,7 +1030,7 @@ export default function ExpensePage() {
 
                 // House Totals Summary Section in PDF
                 doc.setFontSize(14);
-                doc.setFont('abril', 'bold');
+                doc.setFont('helvetica', 'bold');
                 doc.text("House Totals Summary", 14, tableFinalY);
 
                 doc.setFontSize(10);
@@ -1072,7 +1072,7 @@ export default function ExpensePage() {
                 summaryY += 10;
 
                 doc.setFontSize(12);
-                doc.setFont('abril', 'bold');
+                doc.setFont('helvetica', 'bold');
                 const fundColor = summary.remainingFund >= 0 ? [0, 100, 0] : [150, 0, 0];
                 doc.setTextColor(fundColor[0], fundColor[1], fundColor[2]);
                 doc.text("Remaining House Fund", 14, summaryY);
@@ -1554,7 +1554,7 @@ export default function ExpensePage() {
                                 <Button
                                     type="submit"
                                     variant="contained"
-                                    color="success"
+                                    color="primary"
                                     fullWidth
                                     sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 'bold' }}
                                     disabled={loading}

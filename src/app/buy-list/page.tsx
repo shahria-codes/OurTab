@@ -341,7 +341,7 @@ export default function Todos() {
                                                         <Typography variant="body2" sx={{ textDecoration: 'line-through', fontWeight: 600, color: 'text.secondary' }}>
                                                             {todo.itemName}
                                                         </Typography>
-                                                        <Typography variant="caption" sx={{ color: 'success.dark', fontWeight: 700, fontSize: '0.65rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                                                        <Typography variant="caption" sx={{ color: 'success.main', fontWeight: 700, fontSize: '0.65rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                                                             {todo.completedBy === 'auto' ? '⚡ Auto-verified' : `By ${completedByName}`}
                                                             {canUnmark(todo) && ' • Click to unmark'}
                                                         </Typography>
