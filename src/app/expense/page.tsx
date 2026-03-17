@@ -404,7 +404,10 @@ export default function ExpensePage() {
 
     const [openHistory, setOpenHistory] = useState(false);
     const [monthlyExpenses, setMonthlyExpenses] = useState<{ [key: string]: Expense[] }>({});
-    const [allExpenses, setAllExpenses] = useState<Expense[]>([]);
+    const [allExpenses, setAllExpenses] = useState<Expense[]>([]); // Optional: only needed if calculating settlements all-time
+    const [availableMonths, setAvailableMonths] = useState<string[]>([]);
+    const [expandedMonth, setExpandedMonth] = useState<string | false>(false);
+    const [loadingMonth, setLoadingMonth] = useState<string | null>(null);
 
     // Removed local groupData state, use 'group' from useAuth
 
@@ -434,49 +437,97 @@ export default function ExpensePage() {
     };
 
 
-    // Fetch expenses and house details for history
+    // Fetch available months list and load current month
     const handleOpenHistory = async () => {
         if (!user || !house) return;
         setLoading(true);
         try {
             if (house.id) {
-                const expensesRes = await fetch(`/api/expenses?houseId=${house.id}`);
-                const expensesData = await expensesRes.json();
+                // 1. Generate available months from house.createdAt to now
+                const months: string[] = [];
+                const now = new Date();
+                const startDate = house.createdAt ? new Date(house.createdAt) : new Date(now.getFullYear(), now.getMonth() - 6, 1); // fallback 6 months
+                
+                let current = new Date(startDate.getFullYear(), startDate.getMonth(), 1);
+                const end = new Date(now.getFullYear(), now.getMonth(), 1);
 
-                if (house.typeOfHouse === 'meals_and_expenses') {
-                    const [depositsRes, mealsRes] = await Promise.all([
-                        fetch(`/api/fund-deposits?houseId=${house.id}`),
-                        fetch(`/api/meals?houseId=${house.id}`)
-                    ]);
-                    const [depositsData, mealsData] = await Promise.all([
-                        depositsRes.json(),
-                        mealsRes.json()
-                    ]);
-                    setFundDeposits(depositsData || []);
-                    setMeals(mealsData || []);
+                while (current <= end) {
+                    const yr = current.getFullYear();
+                    const mo = String(current.getMonth() + 1).padStart(2, '0');
+                    months.unshift(`${yr}-${mo}`); // Newest first
+                    current.setMonth(current.getMonth() + 1);
                 }
+                setAvailableMonths(months);
 
-                const grouped: { [key: string]: Expense[] } = {};
-                // Use YYYY-MM as key (locale-independent, safe on iOS Safari)
-                expensesData.forEach((exp: Expense) => {
-                    const date = new Date(exp.date);
-                    const yr = date.getFullYear();
-                    const mo = String(date.getMonth() + 1).padStart(2, '0');
-                    const monthKey = `${yr}-${mo}`;
-                    if (!grouped[monthKey]) grouped[monthKey] = [];
-                    grouped[monthKey].push(exp);
-                });
-                setMonthlyExpenses(grouped);
-                setAllExpenses(expensesData);
+                // 2. Pre-fetch the current month immediately
+                const currentMonthKey = months[0];
+                await fetchMonthData(house.id, currentMonthKey, house.typeOfHouse);
+                setExpandedMonth(currentMonthKey);
                 setOpenHistory(true);
             } else {
                 showToast('House not found', 'error');
             }
         } catch (error) {
-            console.error("Failed to fetch history", error);
+            console.error("Failed to open history", error);
             showToast('Failed to load history', 'error');
         } finally {
             setLoading(false);
+        }
+    };
+
+    // Fetch data for a specific month (lazy load)
+    const fetchMonthData = async (houseId: string, monthKey: string, typeOfHouse?: string) => {
+        try {
+            setLoadingMonth(monthKey);
+            const expensesRes = await fetch(`/api/expenses?houseId=${houseId}&month=${monthKey}`);
+            const expensesData = await expensesRes.json();
+
+            if (typeOfHouse === 'meals_and_expenses') {
+                // Fetch just this month's meals and deposits if needed, though they don't have month filtering yet.
+                // For now, this optimization primarily tackles expenses (the largest collection)
+                const [depositsRes, mealsRes] = await Promise.all([
+                    fetch(`/api/fund-deposits?houseId=${houseId}`),
+                    fetch(`/api/meals?houseId=${houseId}`)
+                ]);
+                const depositsData = await depositsRes.json();
+                const mealsData = await mealsRes.json();
+                
+                // Add to existing deposits and meals safely
+                setFundDeposits(prev => {
+                    const existingIds = new Set(prev.map(d => d.id));
+                    const newDeposits = depositsData.filter((d: any) => !existingIds.has(d.id));
+                    return [...prev, ...newDeposits];
+                });
+                setMeals(prev => {
+                    const existingIds = new Set(prev.map(m => m.id));
+                    const newMeals = mealsData.filter((m: any) => !existingIds.has(m.id));
+                    return [...prev, ...newMeals];
+                });
+            }
+
+            setMonthlyExpenses(prev => ({ ...prev, [monthKey]: expensesData }));
+            
+            // Also add to allExpenses for settlement logic in the PDF, though historically we'd want all-time data
+            // Since the PDF requires all expenses to calculate settlements perfectly, we handle it incrementally
+            setAllExpenses(prev => {
+                const existingIds = new Set(prev.map(e => e.id));
+                const newExpenses = expensesData.filter((e: Expense) => !existingIds.has(e.id));
+                return [...prev, ...newExpenses];
+            });
+
+        } catch (error) {
+            console.error(`Failed to fetch data for ${monthKey}`, error);
+            showToast(`Failed to load expenses for ${formatMonthDisplay(monthKey)}`, 'error');
+        } finally {
+            setLoadingMonth(null);
+        }
+    };
+
+    const handleExpandMonth = (monthKey: string) => (event: React.SyntheticEvent, isExpanded: boolean) => {
+        setExpandedMonth(isExpanded ? monthKey : false);
+        // If expanding and data not loaded, fetch it
+        if (isExpanded && house?.id && !monthlyExpenses[monthKey]) {
+            fetchMonthData(house.id, monthKey, house.typeOfHouse);
         }
     };
 
@@ -1089,10 +1140,11 @@ export default function ExpensePage() {
 
             console.log('Saving PDF...');
 
-            const monthName = month.split(' ')[0];
-            const year = month.split(' ')[1];
+            const [yr, mo] = month.split('-');
+            const shortYear = yr.slice(2);
+            const safeHouseName = (currentHouseData?.name || 'House').replace(/[^a-zA-Z0-9]/g, '');
             const day = String(today.getDate()).padStart(2, '0');
-            const fileName = `${monthName}_${year}_${day}_Expenses.pdf`;
+            const fileName = `${mo}-${shortYear}_${safeHouseName}_${day}_expenses.pdf`;
 
             doc.save(fileName);
 
@@ -1533,28 +1585,53 @@ export default function ExpensePage() {
                     <BottomNav />
                 </Box>
 
-                <Dialog open={openHistory} onClose={() => setOpenHistory(false)} fullWidth>
+                <Dialog open={openHistory} onClose={() => setOpenHistory(false)} fullWidth maxWidth="sm">
                     <DialogTitle>Monthly History</DialogTitle>
-                    <DialogContent>
-                        <List>
-                            {Object.keys(monthlyExpenses).map(month => (
-                                <ListItem key={month} secondaryAction={
-                                    <IconButton 
-                                        edge="end" 
-                                        onClick={() => downloadPDF(month)}
-                                        aria-label="Download PDF"
+                    <DialogContent sx={{ p: 0 }}>
+                        <List sx={{ p: 2 }}>
+                            {availableMonths.map(monthKey => {
+                                const isDownloading = loadingMonth === monthKey;
+                                return (
+                                    <ListItem 
+                                        key={monthKey}
+                                        sx={{ 
+                                            mb: 1, 
+                                            borderRadius: 2, 
+                                            bgcolor: 'background.paper',
+                                            boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
+                                            display: 'flex',
+                                            justifyContent: 'space-between',
+                                            px: 3,
+                                            py: 2
+                                        }}
                                     >
-                                        <DownloadIcon />
-                                    </IconButton>
-                                }>
-                                    <ListItemText
-                                        primary={formatMonthDisplay(month)}
-                                        secondary={`Total: ${getCurrencySymbol()}${monthlyExpenses[month].filter((e: Expense) => !e.isSettlementPayment).reduce((sum, e: Expense) => sum + e.amount, 0).toFixed(2)}`}
-                                    />
-                                </ListItem>
-                            ))}
-                            {Object.keys(monthlyExpenses).length === 0 && (
-                                <Typography sx={{ p: 2, textAlign: 'center' }}>No history available</Typography>
+                                        <Typography fontWeight="bold" variant="body1">
+                                            {formatMonthDisplay(monthKey)}
+                                        </Typography>
+                                        
+                                        <Button
+                                            variant="contained"
+                                            color="primary"
+                                            size="small"
+                                            startIcon={isDownloading ? <CircularProgress size={16} color="inherit" /> : <DownloadIcon />}
+                                            onClick={() => {
+                                                if (!isDownloading) {
+                                                    downloadPDF(monthKey);
+                                                }
+                                            }}
+                                            disabled={isDownloading}
+                                            sx={{ borderRadius: 2, textTransform: 'none' }}
+                                        >
+                                            {isDownloading ? 'Downloading...' : 'Download PDF'}
+                                        </Button>
+                                    </ListItem>
+                                );
+                            })}
+                            
+                            {availableMonths.length === 0 && (
+                                <Box sx={{ textAlign: 'center', py: 4 }}>
+                                    <Typography color="text.secondary">No history available</Typography>
+                                </Box>
                             )}
                         </List>
                     </DialogContent>

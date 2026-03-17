@@ -175,12 +175,20 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const houseId = searchParams.get('houseId');
     const userId = searchParams.get('userId');
+    // Optional YYYY-MM param to fetch only a specific month
+    const month = searchParams.get('month');
 
     try {
         let query = adminDb.collection('expenses') as FirebaseFirestore.Query;
 
         if (houseId) {
             query = query.where('houseId', '==', houseId);
+            if (month && /^\d{4}-\d{2}$/.test(month)) {
+                const [yr, mo] = month.split('-').map(Number);
+                const start = new Date(yr, mo - 1, 1).toISOString();
+                const end   = new Date(yr, mo, 1).toISOString();
+                query = query.where('date', '>=', start).where('date', '<', end);
+            }
         } else if (userId) {
             query = query.where('userId', '==', userId);
         }
