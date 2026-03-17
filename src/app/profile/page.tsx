@@ -644,7 +644,7 @@ function ProfileContent() {
                                                     placeholder="e.g. Student @ University"
                                                     value={professionValue}
                                                     onChange={(e) => setProfessionValue(e.target.value)}
-                                                    sx={{ flex: 1, '& .MuiInputBase-root': { borderRadius: '20px', background: 'rgba(255,255,255,0.05)' } }}
+                                                    sx={{ flex: 1, '& .MuiInputBase-root': { borderRadius: '20px', background: 'rgba(255,255,255,0.05)', fontSize: '16px' } }}
                                                     autoFocus
                                                 />
                                                 <IconButton
@@ -707,7 +707,7 @@ function ProfileContent() {
                                                             const day = birthdayValue?.split('-')[1] || '01';
                                                             setBirthdayValue(`${month}-${day}`);
                                                         }}
-                                                        sx={{ flex: 1, '& .MuiInputBase-root': { borderRadius: '20px 0 0 20px', background: 'rgba(255,255,255,0.05)' } }}
+                                                        sx={{ flex: 1, '& .MuiInputBase-root': { borderRadius: '20px 0 0 20px', background: 'rgba(255,255,255,0.05)', fontSize: '16px' } }}
                                                         SelectProps={{ native: true }}
                                                     >
                                                         {Array.from({ length: 12 }).map((_, i) => (
@@ -725,7 +725,7 @@ function ProfileContent() {
                                                             const month = birthdayValue?.split('-')[0] || '01';
                                                             setBirthdayValue(`${month}-${day}`);
                                                         }}
-                                                        sx={{ flex: 1, '& .MuiInputBase-root': { borderRadius: '0 20px 20px 0', background: 'rgba(255,255,255,0.05)' } }}
+                                                        sx={{ flex: 1, '& .MuiInputBase-root': { borderRadius: '0 20px 20px 0', background: 'rgba(255,255,255,0.05)', fontSize: '16px' } }}
                                                         SelectProps={{ native: true }}
                                                     >
                                                         {Array.from({ length: 31 }).map((_, i) => (
@@ -813,7 +813,7 @@ function ProfileContent() {
                                                             size="small"
                                                             value={tempHouseName}
                                                             onChange={(e) => setTempHouseName(e.target.value)}
-                                                            sx={{ '& .MuiInputBase-root': { borderRadius: '12px', background: 'rgba(255,255,255,0.05)', fontSize: '0.8rem' } }}
+                                                            sx={{ '& .MuiInputBase-root': { borderRadius: '12px', background: 'rgba(255,255,255,0.05)', fontSize: '16px' } }}
                                                             autoFocus
                                                         />
                                                         <IconButton
@@ -908,8 +908,8 @@ function ProfileContent() {
 
                                 {editingSocial ? (
                                     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-                                        <TextField label="WhatsApp" size="small" value={whatsappValue} onChange={(e) => setWhatsappValue(e.target.value)} fullWidth />
-                                        <TextField label="Messenger" size="small" value={messengerValue} onChange={(e) => setMessengerValue(e.target.value)} fullWidth />
+                                        <TextField label="WhatsApp" size="small" value={whatsappValue} onChange={(e) => setWhatsappValue(e.target.value)} fullWidth sx={{ '& .MuiInputBase-input': { fontSize: '16px' } }} />
+                                        <TextField label="Messenger" size="small" value={messengerValue} onChange={(e) => setMessengerValue(e.target.value)} fullWidth sx={{ '& .MuiInputBase-input': { fontSize: '16px' } }} />
                                         <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
                                             <Button size="small" onClick={() => setEditingSocial(false)}>Cancel</Button>
                                             <Button size="small" variant="contained" onClick={async () => {
@@ -970,7 +970,7 @@ function ProfileContent() {
 
                                     {editingIban ? (
                                         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-                                            <TextField label="IBAN" size="small" value={ibanValue} onChange={(e) => setIbanValue(e.target.value)} fullWidth />
+                                            <TextField label="IBAN" size="small" value={ibanValue} onChange={(e) => setIbanValue(e.target.value)} fullWidth sx={{ '& .MuiInputBase-input': { fontSize: '16px' } }} />
                                             <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
                                                 <Button size="small" onClick={() => setEditingIban(false)}>Cancel</Button>
                                                 <Button size="small" variant="contained" onClick={async () => {
@@ -1293,6 +1293,7 @@ function ProfileContent() {
                                                             select label="Role" size="small"
                                                             value={editRole} onChange={(e) => setEditRole(e.target.value as 'manager' | 'member')}
                                                             disabled={member.email === houseDetails.createdBy} // Creator is always manager
+                                                            sx={{ '& .MuiInputBase-input': { fontSize: '16px' } }}
                                                         >
                                                             <MenuItem value="manager">Manager</MenuItem>
                                                             <MenuItem value="member">Member</MenuItem>
@@ -1300,6 +1301,7 @@ function ProfileContent() {
                                                         <TextField
                                                             type="number" label="Monthly Rent" size="small"
                                                             value={editRent} onChange={(e) => setEditRent(e.target.value === '' ? '' : Number(e.target.value))}
+                                                            sx={{ '& .MuiInputBase-input': { fontSize: '16px' } }}
                                                         />
                                                         <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
                                                             <Button size="small" onClick={() => setEditingMember(null)}>Cancel</Button>
@@ -1332,7 +1334,7 @@ function ProfileContent() {
                                                 value={mealWindowStart}
                                                 onChange={(e) => setMealWindowStart(e.target.value)}
                                                 InputLabelProps={{ shrink: true }}
-                                                sx={{ width: 180 }}
+                                                sx={{ width: 180, '& .MuiInputBase-input': { fontSize: '16px' } }}
                                             />
                                             <TextField
                                                 label="Window Closes (Next Morning)"
@@ -1341,7 +1343,7 @@ function ProfileContent() {
                                                 value={mealWindowEnd}
                                                 onChange={(e) => setMealWindowEnd(e.target.value)}
                                                 InputLabelProps={{ shrink: true }}
-                                                sx={{ width: 180 }}
+                                                sx={{ width: 180, '& .MuiInputBase-input': { fontSize: '16px' } }}
                                             />
                                             <Button
                                                 variant="contained"
@@ -1567,20 +1569,20 @@ function ProfileContent() {
                                         </Typography>
                                         <form id="create-house-form" onSubmit={handleCreateHouse}>
                                             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                                                <TextField label="House Name" fullWidth size="small" value={houseName} onChange={(e) => setHouseName(e.target.value)} required />
+                                                <TextField label="House Name" fullWidth size="small" value={houseName} onChange={(e) => setHouseName(e.target.value)} required sx={{ '& .MuiInputBase-input': { fontSize: '16px' } }} />
                                                 <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1 }}>
-                                                    <TextField select label="House Type" value={typeOfHouse} onChange={(e) => setTypeOfHouse(e.target.value as 'expenses' | 'meals_and_expenses')} fullWidth size="small">
+                                                    <TextField select label="House Type" value={typeOfHouse} onChange={(e) => setTypeOfHouse(e.target.value as 'expenses' | 'meals_and_expenses')} fullWidth size="small" sx={{ '& .MuiInputBase-input': { fontSize: '16px' } }}>
                                                         <MenuItem value="meals_and_expenses">Meals and Expenses</MenuItem>
                                                         <MenuItem value="expenses">Expenses only</MenuItem>
                                                     </TextField>
                                                     {typeOfHouse === 'meals_and_expenses' && (
-                                                        <TextField select label="Meals" value={mealsPerDay} onChange={(e) => setMealsPerDay(e.target.value as any)} fullWidth size="small">
+                                                        <TextField select label="Meals" value={mealsPerDay} onChange={(e) => setMealsPerDay(e.target.value as any)} fullWidth size="small" sx={{ '& .MuiInputBase-input': { fontSize: '16px' } }}>
                                                             <MenuItem value={2}>Two Meals</MenuItem>
                                                             <MenuItem value={3}>Three Meals</MenuItem>
                                                         </TextField>
                                                     )}
                                                 </Box>
-                                                <TextField select label="Default Currency" value={newHouseCurrency} onChange={(e) => setNewHouseCurrency(e.target.value)} fullWidth size="small">
+                                                <TextField select label="Default Currency" value={newHouseCurrency} onChange={(e) => setNewHouseCurrency(e.target.value)} fullWidth size="small" sx={{ '& .MuiInputBase-input': { fontSize: '16px' } }}>
                                                     {typeOfHouse === 'meals_and_expenses' ? [
                                                         <MenuItem key="BDT" value="BDT">Bangladeshi Taka (৳)</MenuItem>,
                                                         <MenuItem key="EUR" value="EUR">Euro (€)</MenuItem>,
@@ -1720,8 +1722,8 @@ function ProfileContent() {
                             Have an idea or found a bug? We read every email.
                         </Typography>
                         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                            <TextField label="Subject" size="small" fullWidth value={feedbackSubject} onChange={(e) => setFeedbackSubject(e.target.value)} placeholder="e.g. Feature request: dark mode" />
-                            <TextField label="Message" size="small" fullWidth multiline rows={4} value={feedbackMessage} onChange={(e) => setFeedbackMessage(e.target.value)} placeholder="Tell us what you think..." />
+                            <TextField label="Subject" size="small" fullWidth value={feedbackSubject} onChange={(e) => setFeedbackSubject(e.target.value)} placeholder="e.g. Feature request: dark mode" sx={{ '& .MuiInputBase-input': { fontSize: '16px' } }} />
+                            <TextField label="Message" size="small" fullWidth multiline rows={4} value={feedbackMessage} onChange={(e) => setFeedbackMessage(e.target.value)} placeholder="Tell us what you think..." sx={{ '& .MuiInputBase-input': { fontSize: '16px' } }} />
                         </Box>
                     </DialogContent>
                     <DialogActions>
