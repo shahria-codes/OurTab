@@ -101,6 +101,7 @@ export default function ExpensePage() {
     const [contributors, setContributors] = useState<{ [email: string]: string }>({});
     const [selectedContributors, setSelectedContributors] = useState<Set<string>>(new Set());
     const [myContribution, setMyContribution] = useState<string>('');
+    const [showOtherPersons, setShowOtherPersons] = useState(false);
     const [scanning, setScanning] = useState(false);
     const [uploadAnchorEl, setUploadAnchorEl] = useState<null | HTMLElement>(null);
     const [showAIWarning, setShowAIWarning] = useState(false);
@@ -1416,15 +1417,29 @@ export default function ExpensePage() {
                                         <Typography variant="h6">Who&apos;s Contributing?</Typography>
                                     </Box>
                                 </AccordionSummary>
-                                <AccordionDetails>
+                                <AccordionDetails sx={{ px: 2, pb: 1.5, pt: 0 }}>
                                     <Box sx={{ mb: 1 }}>
-                                        <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                                            Select house members who are contributing money for this purchase. If you have paid for the entire purchase, select yourself. Just click <strong>I&apos;ll Pay All</strong>, and Complete Purchase.
+                                        <Typography 
+                                            variant="caption" 
+                                            color="text.secondary" 
+                                            sx={{ 
+                                                mb: 1, 
+                                                display: 'block',
+                                                animation: 'pulseAnimation 3s ease-in-out infinite',
+                                                '@keyframes pulseAnimation': {
+                                                    '0%': { opacity: 0.7, transform: 'translateY(0)' },
+                                                    '50%': { opacity: 1, transform: 'translateY(-2px)' },
+                                                    '100%': { opacity: 0.7, transform: 'translateY(0)' }
+                                                }
+                                            }}
+                                        >
+                                            Select members who are contributing, or click <strong>I&apos;ll Pay All</strong> & <strong>Complete Purchase</strong>.
                                         </Typography>
 
                                         {/* House Members */}
                                         {houseMembers
                                             .filter(member => member.email !== user?.email)
+                                            .filter(member => showOtherPersons || selectedContributors.has(member.email))
                                             .map((member) => (
                                                 <Box key={member.email} sx={{ mb: 1 }}>
                                                     <FormControlLabel
@@ -1435,7 +1450,7 @@ export default function ExpensePage() {
                                                                 disabled={loading}
                                                             />
                                                         }
-                                                        label={member.name || member.email.split('@')[0]}
+                                                        label={<Typography variant="body2">{member.name || member.email.split('@')[0]}</Typography>}
                                                     />
                                                     {selectedContributors.has(member.email) && (
                                                         <Box sx={{ pl: 4, pr: 0, mt: 1 }}>
@@ -1453,6 +1468,17 @@ export default function ExpensePage() {
                                                     )}
                                                 </Box>
                                             ))}
+
+                                        {!showOtherPersons && houseMembers.length > 1 && (
+                                            <Button
+                                                size="small"
+                                                onClick={() => setShowOtherPersons(true)}
+                                                startIcon={<PeopleIcon fontSize="small" />}
+                                                sx={{ mb: 1, textTransform: 'none' }}
+                                            >
+                                                Add other person&apos;s contribution
+                                            </Button>
+                                        )}
 
                                         {/* My Contribution */}
                                         <Divider sx={{ my: 2 }} />
@@ -1493,33 +1519,34 @@ export default function ExpensePage() {
                                         </Box>
 
                                         {/* Summary */}
-                                        <Box sx={{ p: 2, bgcolor: 'background.paper', borderRadius: 1 }}>
-                                            <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                                                <Typography variant="body2">Total:</Typography>
-                                                <Typography variant="body2" fontWeight="bold">
+                                        <Box sx={{ p: 1.5, bgcolor: 'rgba(0,0,0,0.02)', borderRadius: 2 }}>
+                                            <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
+                                                <Typography variant="caption">Total:</Typography>
+                                                <Typography variant="caption" fontWeight="bold">
                                                     {getCurrencySymbol()}{Number(total).toFixed(2)}
                                                 </Typography>
                                             </Box>
-                                            <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                                                <Typography variant="body2">Others&apos; contributions:</Typography>
-                                                <Typography variant="body2">
+                                            <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
+                                                <Typography variant="caption">Others&apos; contributions:</Typography>
+                                                <Typography variant="caption">
                                                     {getCurrencySymbol()}{Number(totalContributions).toFixed(2)}
                                                 </Typography>
                                             </Box>
-                                            <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                                                <Typography variant="body2">Your contribution:</Typography>
-                                                <Typography variant="body2">
+                                            <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
+                                                <Typography variant="caption">Your contribution:</Typography>
+                                                <Typography variant="caption">
                                                     {getCurrencySymbol()}{Number(myContributionNum).toFixed(2)}
                                                 </Typography>
                                             </Box>
-                                            <Divider sx={{ my: 1 }} />
+                                            <Divider sx={{ my: 0.5 }} />
                                             <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                                                <Typography variant="body2" fontWeight="bold">
+                                                <Typography variant="body2" fontWeight="bold" sx={{ fontSize: '0.8rem' }}>
                                                     {remaining >= 0 ? 'Remaining:' : 'Over by:'}
                                                 </Typography>
                                                 <Typography
                                                     variant="body2"
                                                     fontWeight="bold"
+                                                    sx={{ fontSize: '0.8rem' }}
                                                     color={remaining < -0.01 ? 'error' : remaining > 0.01 ? 'warning.main' : 'success.main'}
                                                 >
                                                     {getCurrencySymbol()}{Number(Math.abs(remaining)).toFixed(2)}
