@@ -796,63 +796,7 @@ function ProfileContent() {
                                             </Box>
                                         )}
 
-                                        {/* House Info */}
-                                        {hasHouse && houseDetails && (
-                                            <Box sx={{
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                gap: 1,
-                                                mt: 0.5,
-                                                opacity: 0.8,
-                                                width: '100%'
-                                            }}>
-                                                <HomeIcon sx={{ fontSize: 16, color: 'primary.main' }} />
-                                                {editingHouseName ? (
-                                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                                        <TextField
-                                                            size="small"
-                                                            value={tempHouseName}
-                                                            onChange={(e) => setTempHouseName(e.target.value)}
-                                                            sx={{ '& .MuiInputBase-root': { borderRadius: '12px', background: 'rgba(255,255,255,0.05)', fontSize: '16px' } }}
-                                                            autoFocus
-                                                        />
-                                                        <IconButton
-                                                            size="small"
-                                                            color="success"
-                                                            disabled={savingHouseName}
-                                                            onClick={handleUpdateHouseName}
-                                                            aria-label="Save house name"
-                                                        >
-                                                            <CheckIcon fontSize="small" />
-                                                        </IconButton>
-                                                        <IconButton
-                                                            size="small"
-                                                            onClick={() => setEditingHouseName(false)}
-                                                            aria-label="Cancel editing house name"
-                                                        >
-                                                            <CloseIcon fontSize="small" />
-                                                        </IconButton>
-                                                    </Box>
-                                                ) : (
-                                                    <Typography variant="body2" sx={{ fontWeight: 600, display: 'flex', alignItems: 'center', gap: 1 }}>
-                                                        <Box component="span" sx={{ color: 'primary.main', fontFamily: 'var(--font-outfit)', letterSpacing: '0.05em' }}>
-                                                            {houseDetails.name}
-                                                        </Box>
-                                                        {' '}<Box component="span" sx={{ opacity: 0.5 }}>[{houseDetails.currency === 'EUR' ? '€' : houseDetails.currency === 'BDT' ? '৳' : '$'}]</Box>
-                                                        {isManager && (
-                                                            <IconButton
-                                                                size="small"
-                                                                onClick={() => { setTempHouseName(houseDetails.name || ''); setEditingHouseName(true); }}
-                                                                sx={{ ml: 0.5, p: 0.5 }}
-                                                                aria-label="Edit house name"
-                                                            >
-                                                                <EditIcon sx={{ fontSize: 14, opacity: 0.6 }} />
-                                                            </IconButton>
-                                                        )}
-                                                    </Typography>
-                                                )}
-                                            </Box>
-                                        )}
+
                                     </Box>
                                 </Box>
                             </Box>
@@ -1192,10 +1136,68 @@ function ProfileContent() {
 
                     {/* ── Card 4: House Management ── */}
                     <Paper className="glass animate-stagger" sx={{ p: 2, background: 'transparent', transitionDelay: '0.4s', mt: 1.5 }}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-                            <HomeIcon sx={{ color: 'primary.main', fontSize: 18 }} />
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+
                             <Typography variant="subtitle1" fontWeight={900} sx={{ fontSize: '0.9rem' }}>House Management</Typography>
                         </Box>
+
+                        {/* House Info */}
+                        {hasHouse && houseDetails && (
+                            <Box sx={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 1,
+                                mt: 0.5,
+                                opacity: 0.8,
+                                width: '100%'
+                            }}>
+                                <HomeIcon sx={{ fontSize: 16, color: 'primary.main' }} />
+                                {editingHouseName ? (
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                        <TextField
+                                            size="small"
+                                            value={tempHouseName}
+                                            onChange={(e) => setTempHouseName(e.target.value)}
+                                            sx={{ '& .MuiInputBase-root': { borderRadius: '12px', background: 'rgba(255,255,255,0.05)', fontSize: '16px' } }}
+                                            autoFocus
+                                        />
+                                        <IconButton
+                                            size="small"
+                                            color="success"
+                                            disabled={savingHouseName}
+                                            onClick={handleUpdateHouseName}
+                                            aria-label="Save house name"
+                                        >
+                                            <CheckIcon fontSize="small" />
+                                        </IconButton>
+                                        <IconButton
+                                            size="small"
+                                            onClick={() => setEditingHouseName(false)}
+                                            aria-label="Cancel editing house name"
+                                        >
+                                            <CloseIcon fontSize="small" />
+                                        </IconButton>
+                                    </Box>
+                                ) : (
+                                    <Typography variant="body2" sx={{ fontWeight: 600, display: 'flex', alignItems: 'center', gap: 1 }}>
+                                        <Box component="span" sx={{ color: 'primary.main', fontFamily: 'var(--font-outfit)', letterSpacing: '0.05em' }}>
+                                            {houseDetails.name}
+                                        </Box>
+                                        {' '}<Box component="span" sx={{ opacity: 0.5 }}>[{houseDetails.currency === 'EUR' ? '€' : houseDetails.currency === 'BDT' ? '৳' : '$'}]</Box>
+                                        {isManager && (
+                                            <IconButton
+                                                size="small"
+                                                onClick={() => { setTempHouseName(houseDetails.name || ''); setEditingHouseName(true); }}
+                                                sx={{ ml: 0.5, p: 0.5 }}
+                                                aria-label="Edit house name"
+                                            >
+                                                <EditIcon sx={{ fontSize: 14, opacity: 0.6 }} />
+                                            </IconButton>
+                                        )}
+                                    </Typography>
+                                )}
+                            </Box>
+                        )}
 
                         {hasHouse && houseDetails ? (
                             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
