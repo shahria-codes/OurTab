@@ -63,54 +63,68 @@ export default function SettlementHistoryDialog({
 
                             return (
                                 <Paper key={exp.id} sx={{
-                                    p: 2,
+                                    p: 1.5,
                                     position: 'relative',
                                     overflow: 'hidden',
-                                    border: '1px solid rgba(0,0,0,0.08)',
-                                    bgcolor: 'rgba(0,0,0,0.02)'
+                                    border: '1px solid rgba(0,0,0,0.06)',
+                                    bgcolor: 'rgba(0,0,0,0.01)',
+                                    borderRadius: 2
                                 }}>
                                     {/* Watermark Tag */}
                                     <Box sx={{
                                         position: 'absolute',
-                                        right: -10,
-                                        top: 10,
-                                        opacity: 0.05,
+                                        right: -5,
+                                        top: 5,
+                                        opacity: 0.04,
                                         transform: 'rotate(-15deg)'
                                     }}>
                                         {exp.method === 'cash' ? (
-                                            <PaymentsIcon sx={{ fontSize: 80, color: 'text.primary' }} />
+                                            <PaymentsIcon sx={{ fontSize: 60, color: 'text.primary' }} />
                                         ) : (
-                                            <AccountBalanceIcon sx={{ fontSize: 80, color: 'text.primary' }} />
+                                            <AccountBalanceIcon sx={{ fontSize: 60, color: 'text.primary' }} />
                                         )}
                                     </Box>
 
-                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2, position: 'relative', zIndex: 1 }}>
-                                        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                                            <Avatar src={fromMember?.photoUrl} alt={fromMember?.name} sx={{ width: 40, height: 40 }} />
-                                            <Typography variant="caption" noWrap sx={{ maxWidth: 60 }}>
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, position: 'relative', zIndex: 1 }}>
+                                        {/* Simplified Flow: From -> To */}
+                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                            <Avatar src={fromMember?.photoUrl} alt={fromMember?.name} sx={{ width: 32, height: 32 }} />
+                                            <Typography variant="body2" fontWeight="500">
                                                 {fromEmail === user?.email ? 'You' : (fromMember?.name?.split(' ')[0] || fromEmail.split('@')[0])}
                                             </Typography>
                                         </Box>
-                                        <ArrowForwardIosIcon color="action" sx={{ fontSize: 16 }} />
-                                        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                                            <Avatar src={toMember?.photoUrl} alt={toMember?.name} sx={{ width: 40, height: 40 }} />
-                                            <Typography variant="caption" noWrap sx={{ maxWidth: 60 }}>
+                                        
+                                        <ArrowForwardIosIcon color="disabled" sx={{ fontSize: 12 }} />
+                                        
+                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                            <Avatar src={toMember?.photoUrl} alt={toMember?.name} sx={{ width: 32, height: 32 }} />
+                                            <Typography variant="body2" fontWeight="500">
                                                 {toEmail === user?.email ? 'You' : (toMember?.name?.split(' ')[0] || toEmail.split('@')[0])}
                                             </Typography>
                                         </Box>
+
                                         <Box sx={{ flex: 1, textAlign: 'right' }}>
-                                            <Typography variant="h6" color="success.main" fontWeight="bold">
+                                            <Typography variant="subtitle1" color="success.main" fontWeight="700">
                                                 {displayCurrency}{exp.amount.toFixed(2)}
                                             </Typography>
                                         </Box>
                                     </Box>
 
-                                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px dashed rgba(0,0,0,0.1)', pt: 1, position: 'relative', zIndex: 1 }}>
-                                        <Typography variant="caption" color="text.secondary" sx={{ display: 'flex', alignItems: 'center', gap: 0.5, fontSize: '0.65rem' }}>
-                                            <ArrowForwardIcon sx={{ fontSize: 13 }} /> {formattedCreatedDate}
+                                    <Box sx={{ 
+                                        display: 'flex', 
+                                        justifyContent: 'space-between', 
+                                        alignItems: 'center', 
+                                        mt: 1, 
+                                        pt: 0.75,
+                                        borderTop: '1px dashed rgba(0,0,0,0.06)',
+                                        position: 'relative', 
+                                        zIndex: 1 
+                                    }}>
+                                        <Typography variant="caption" color="text.secondary" sx={{ display: 'flex', alignItems: 'center', gap: 0.5, fontSize: '0.65rem', opacity: 0.8 }}>
+                                            <ArrowForwardIcon sx={{ fontSize: 11 }} /> {formattedCreatedDate}
                                         </Typography>
-                                        <Typography variant="caption" color="success.main" sx={{ display: 'flex', alignItems: 'center', gap: 0.5, fontSize: '0.65rem' }}>
-                                            <DoneAllIcon sx={{ fontSize: 13 }} /> {formattedApprovedDate}
+                                        <Typography variant="caption" color="success.main" sx={{ display: 'flex', alignItems: 'center', gap: 0.5, fontSize: '0.65rem', fontWeight: 500 }}>
+                                            <DoneAllIcon sx={{ fontSize: 11 }} /> {formattedApprovedDate}
                                         </Typography>
                                     </Box>
                                 </Paper>
