@@ -318,7 +318,7 @@ export default function NotificationsPage() {
                             minHeight: 0,
                             textTransform: 'none',
                             bgcolor: 'rgba(76, 175, 80, 0.15)',
-                            color: '#4caf50',
+                            color: 'success.main',
                             border: '1px solid rgba(76,175,80,0.3)',
                             boxShadow: 'none',
                             '&:hover': {
@@ -347,7 +347,7 @@ export default function NotificationsPage() {
                                 minHeight: 0,
                                 textTransform: 'none',
                                 bgcolor: 'rgba(244, 67, 54, 0.1)',
-                                color: '#f44336',
+                                color: 'error.main',
                                 border: '1px solid rgba(244,67,54,0.25)',
                                 boxShadow: 'none',
                                 '&:hover': {
@@ -403,7 +403,7 @@ export default function NotificationsPage() {
                                 alignItems: 'center',
                                 gap: 1
                             }}>
-                                <NotificationsIcon sx={{ fontSize: 32, color: '#6C63FF' }} />
+                                <NotificationsIcon sx={{ fontSize: 32, color: 'primary.main' }} />
                                 Alerts
                             </Typography>
 
@@ -447,7 +447,7 @@ export default function NotificationsPage() {
                             animation: 'fadeIn 1s'
                         }}>
                             <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
-                                <Avatar sx={{ bgcolor: 'rgba(108, 99, 255, 0.1)', color: '#6C63FF' }}>
+                                <Avatar sx={{ bgcolor: 'rgba(108, 99, 255, 0.1)', color: 'primary.main' }}>
                                     <NotificationsIcon />
                                 </Avatar>
                                 <Box>
@@ -467,8 +467,8 @@ export default function NotificationsPage() {
                                     textTransform: 'none',
                                     fontWeight: 700,
                                     boxShadow: '0 4px 12px rgba(108, 99, 255, 0.2)',
-                                    bgcolor: '#6C63FF',
-                                    '&:hover': { bgcolor: '#5b54e6' }
+                                    bgcolor: 'primary.main',
+                                    '&:hover': { bgcolor: 'primary.dark' }
                                 }}
                             >
                                 {permissionLoading ? 'Allowing...' : 'Enable Now'}
@@ -588,7 +588,7 @@ export default function NotificationsPage() {
                                                         width: 12,
                                                         height: 12,
                                                         borderRadius: '50%',
-                                                        bgcolor: '#6C63FF',
+                                                        bgcolor: 'primary.main',
                                                         border: '2px solid white',
                                                         boxShadow: '0 0 10px rgba(108, 99, 255, 0.5)',
                                                         animation: 'pulse 2s infinite'

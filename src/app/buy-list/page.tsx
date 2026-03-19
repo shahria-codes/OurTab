@@ -199,7 +199,7 @@ export default function Todos() {
                                 border: '1px solid rgba(108, 99, 255, 0.2)',
                                 display: 'flex'
                             }}>
-                                <ShoppingCartIcon sx={{ fontSize: 28, color: '#6C63FF' }} />
+                                <ShoppingCartIcon sx={{ fontSize: 28, color: 'primary.main' }} />
                             </Box>
                             Buy List
                         </Typography>
@@ -218,7 +218,7 @@ export default function Todos() {
                             {/* Active Items */}
                             {activeTodos.length > 0 && (
                                 <Box>
-                                    <Typography variant="overline" sx={{ px: 2, mb: 2, display: 'block', fontWeight: 900, letterSpacing: 2, fontSize: '0.7rem', color: '#6C63FF' }}>
+                                    <Typography variant="overline" sx={{ px: 2, mb: 2, display: 'block', fontWeight: 900, letterSpacing: 2, fontSize: '0.7rem', color: 'primary.main' }}>
                                         Required Items
                                     </Typography>
                                     <List sx={{ display: 'flex', flexDirection: 'column', gap: 2, p: 0 }}>
@@ -262,7 +262,7 @@ export default function Todos() {
                                                                 '&:hover': { background: 'rgba(108, 99, 255, 0.1)', border: '1px solid rgba(108, 99, 255, 0.2)' }
                                                             }}
                                                         >
-                                                            <RadioButtonUncheckedIcon sx={{ fontSize: 24, color: '#6C63FF' }} />
+                                                            <RadioButtonUncheckedIcon sx={{ fontSize: 24, color: 'primary.main' }} />
                                                         </Box>
 
                                                         <Box sx={{ flex: 1, py: 1 }}>
@@ -420,16 +420,16 @@ export default function Todos() {
                             sx={{
                                 p: 2,
                                 borderRadius: '24px',
-                                background: 'rgba(255, 255, 255, 0.9)',
-                                border: '1px solid rgba(108, 99, 255, 0.1)',
+                                bgcolor: 'background.paper',
+                                border: '1px solid rgba(108, 99, 255, 0.15)',
                                 backdropFilter: 'blur(20px)',
-                                boxShadow: '0 20px 40px rgba(0,0,0,0.1)',
+                                boxShadow: '0 20px 40px rgba(0,0,0,0.15)',
                                 maxHeight: '40vh',
                                 overflowY: 'auto'
                             }}
                         >
                             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1.5, px: 1 }}>
-                                <Typography variant="overline" sx={{ fontWeight: 900, letterSpacing: 1, fontSize: '0.7rem', color: '#6C63FF' }}>
+                                <Typography variant="overline" sx={{ fontWeight: 900, letterSpacing: 1, fontSize: '0.7rem', color: 'primary.main' }}>
                                     Staging Area ({pendingItems.length})
                                 </Typography>
                                 <Button
@@ -493,7 +493,7 @@ export default function Todos() {
                         elevation={0}
                         sx={{
                             p: 1.5,
-                            background: 'rgba(255, 255, 255, 0.95)',
+                            bgcolor: 'background.paper',
                             backdropFilter: 'blur(20px)',
                             borderRadius: '24px',
                             border: '1px solid rgba(108, 99, 255, 0.2)',

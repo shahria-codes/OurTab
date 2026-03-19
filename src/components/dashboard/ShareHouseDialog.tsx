@@ -6,19 +6,22 @@ import {
     DialogContent,
     Typography,
     Box,
-    Avatar,
     IconButton,
     Grid,
     Stack,
-    Button
+    Button,
+    Snackbar,
+    Tooltip
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
-import GroupIcon from '@mui/icons-material/Group';
 import WhatsAppIcon from '@mui/icons-material/WhatsApp';
 import TelegramIcon from '@mui/icons-material/Telegram';
 import IosShareIcon from '@mui/icons-material/IosShare';
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import CheckIcon from '@mui/icons-material/Check';
 import { MessengerIcon } from '@/components/Icons';
 import { House } from '@/hooks/useHouseData';
+import GroupAddIcon from '@mui/icons-material/GroupAdd';
 
 interface ShareHouseDialogProps {
     open: boolean;
@@ -33,7 +36,8 @@ export default function ShareHouseDialog({
     house,
     handleCopy
 }: ShareHouseDialogProps) {
-    
+    const [copied, setCopied] = React.useState(false);
+
     const getShareLinks = () => {
         if (typeof window === 'undefined' || !house) return { url: '', text: '' };
         const url = `${window.location.origin}/join?houseId=${house.id}`;
@@ -43,6 +47,42 @@ export default function ShareHouseDialog({
 
     const { url, text } = getShareLinks();
 
+    const handleCopyLink = () => {
+        handleCopy(url);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2500);
+    };
+
+    const shareOptions = [
+        {
+            label: 'WhatsApp',
+            color: '#25D366',
+            shadow: 'rgba(37, 211, 102, 0.35)',
+            hover: '#128C7E',
+            icon: <WhatsAppIcon />,
+            onClick: () => window.open(`https://wa.me/?text=${encodeURIComponent(text + ' ' + url)}`, '_blank'),
+            ariaLabel: 'Share via WhatsApp',
+        },
+        {
+            label: 'Messenger',
+            color: '#1877F2',
+            shadow: 'rgba(24, 119, 242, 0.35)',
+            hover: '#0d65d9',
+            icon: <MessengerIcon />,
+            onClick: () => window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`, '_blank'),
+            ariaLabel: 'Share via Messenger',
+        },
+        {
+            label: 'Telegram',
+            color: '#0088cc',
+            shadow: 'rgba(0, 136, 204, 0.35)',
+            hover: '#0077b3',
+            icon: <TelegramIcon />,
+            onClick: () => window.open(`https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text)}`, '_blank'),
+            ariaLabel: 'Share via Telegram',
+        },
+    ];
+
     return (
         <Dialog
             open={open}
@@ -51,189 +91,167 @@ export default function ShareHouseDialog({
             maxWidth="xs"
             PaperProps={{
                 sx: {
-                    borderRadius: 2,
+                    borderRadius: 4,
                     overflow: 'hidden',
-                    background: 'rgba(255, 255, 255, 0.85)',
-                    backdropFilter: 'blur(25px) saturate(180%)',
-                    border: '1px solid rgba(255, 255, 255, 0.4)',
-                    boxShadow: '0 30px 60px rgba(0,0,0,0.12)',
+                    bgcolor: 'background.paper',
+                    backgroundImage: 'none',
                 }
             }}
         >
+            {/* Gradient header */}
             <Box sx={{
-                height: 60,
                 background: 'linear-gradient(135deg, #6C63FF 0%, #FF6584 100%)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                position: 'relative'
+                pt: 4,
+                pb: 3,
+                px: 3,
+                textAlign: 'center',
+                position: 'relative',
             }}>
-                <Typography variant="h6" sx={{ color: 'white', fontWeight: 900, letterSpacing: '0.05em' }}>
-                    SHARE INVITE
-                </Typography>
                 <IconButton
                     onClick={onClose}
-                    sx={{ position: 'absolute', top: 10, right: 10, color: 'white', opacity: 0.8 }}
+                    size="small"
+                    sx={{ position: 'absolute', top: 12, right: 12, color: 'rgba(255,255,255,0.8)', '&:hover': { color: 'white', bgcolor: 'rgba(255,255,255,0.1)' } }}
                     aria-label="Close share dialog"
                 >
-                    <CloseIcon />
+                    <CloseIcon fontSize="small" />
                 </IconButton>
-            </Box>
 
-            <DialogContent sx={{ p: 3 }}>
-                <Box sx={{ textAlign: 'center', mb: 2.5 }}>
-                    <Avatar alt="Group Invite Icon" sx={{
-                        width: 52,
-                        height: 52,
-                        bgcolor: 'rgba(108, 99, 255, 0.1)',
-                        color: '#6C63FF',
-                        mx: 'auto',
-                        mb: 1.5,
-                        boxShadow: '0 10px 20px rgba(108, 99, 255, 0.1)'
-                    }}>
-                        <GroupIcon sx={{ fontSize: 26 }} />
-                    </Avatar>
-                    <Typography variant="h6" sx={{ fontWeight: 900, color: '#1a202c', mb: 0.5 }}>
-                        Invite to {house?.name}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 600, opacity: 0.7 }}>
-                        Grow your household and manage expenses together
-                    </Typography>
-                </Box>
-
+                {/* Icon ring */}
                 <Box sx={{
-                    p: 1.5,
-                    bgcolor: 'rgba(0,0,0,0.03)',
-                    borderRadius: 3,
-                    mb: 3,
+                    width: 68,
+                    height: 68,
+                    borderRadius: '50%',
+                    bgcolor: 'rgba(255,255,255,0.2)',
+                    border: '2px solid rgba(255,255,255,0.35)',
                     display: 'flex',
                     alignItems: 'center',
-                    border: '1px dashed rgba(0,0,0,0.1)'
+                    justifyContent: 'center',
+                    mx: 'auto',
+                    mb: 1.5,
+                    backdropFilter: 'blur(8px)',
                 }}>
-                    <Typography variant="caption" sx={{
-                        flex: 1,
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        whiteSpace: 'nowrap',
-                        fontWeight: 700,
-                        color: 'primary.main',
-                        px: 1
-                    }}>
-                        {url}
-                    </Typography>
-                    <Button
-                        size="small"
-                        onClick={() => handleCopy(url)}
-                        sx={{ minWidth: 'auto', fontWeight: 800, textTransform: 'none' }}
-                    >
-                        Copy
-                    </Button>
+                    <GroupAddIcon sx={{ fontSize: 32, color: 'white' }} />
                 </Box>
 
-                <Grid container spacing={2}>
-                    <Grid size={4}>
-                        <Stack alignItems="center" spacing={1}>
-                            <IconButton
-                                onClick={() => {
-                                    window.open(`https://wa.me/?text=${encodeURIComponent(text + ' ' + url)}`, '_blank');
-                                }}
-                                sx={{
-                                    width: 56,
-                                    height: 56,
-                                    bgcolor: '#25D366',
-                                    color: 'white',
-                                    boxShadow: '0 8px 15px rgba(37, 211, 102, 0.3)',
-                                    '&:hover': { bgcolor: '#128C7E', transform: 'translateY(-3px)' },
-                                    transition: 'all 0.3s ease'
-                                }}
-                                aria-label="Share via WhatsApp"
-                            >
-                                <WhatsAppIcon />
-                            </IconButton>
-                            <Typography variant="caption" sx={{ fontWeight: 700 }}>WhatsApp</Typography>
-                        </Stack>
-                    </Grid>
+                <Typography variant="h6" sx={{ color: 'white', fontWeight: 900, letterSpacing: '-0.01em', mb: 0.5 }}>
+                    Invite to {house?.name}
+                </Typography>
+                <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.75)', fontWeight: 600 }}>
+                    Share the link and grow your household
+                </Typography>
+            </Box>
 
-                    <Grid size={4}>
-                        <Stack alignItems="center" spacing={1}>
-                            <IconButton
-                                onClick={() => {
-                                    window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`, '_blank');
-                                }}
-                                sx={{
-                                    width: 56,
-                                    height: 56,
-                                    bgcolor: '#1877F2',
-                                    color: 'white',
-                                    boxShadow: '0 8px 15px rgba(24, 119, 242, 0.3)',
-                                    '&:hover': { bgcolor: '#0d65d9', transform: 'translateY(-3px)' },
-                                    transition: 'all 0.3s ease'
-                                }}
-                                aria-label="Share via Messenger"
-                            >
-                                <MessengerIcon />
-                            </IconButton>
-                            <Typography variant="caption" sx={{ fontWeight: 700 }}>Messenger</Typography>
-                        </Stack>
-                    </Grid>
+            <DialogContent sx={{ p: 3, pt: 2.5 }}>
 
-                    <Grid size={4}>
-                        <Stack alignItems="center" spacing={1}>
-                            <IconButton
-                                onClick={() => {
-                                    window.open(`https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text)}`, '_blank');
-                                }}
-                                sx={{
-                                    width: 56,
-                                    height: 56,
-                                    bgcolor: '#0088cc',
-                                    color: 'white',
-                                    boxShadow: '0 8px 15px rgba(0, 136, 204, 0.3)',
-                                    '&:hover': { bgcolor: '#0077b3', transform: 'translateY(-3px)' },
-                                    transition: 'all 0.3s ease'
-                                }}
-                                aria-label="Share via Telegram"
-                            >
-                                <TelegramIcon />
-                            </IconButton>
-                            <Typography variant="caption" sx={{ fontWeight: 700 }}>Telegram</Typography>
-                        </Stack>
-                    </Grid>
+                {/* Link copy row */}
+                <Box sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 1,
+                    p: 1.2,
+                    pl: 2,
+                    borderRadius: 3,
+                    bgcolor: 'action.hover',
+                    border: '1px solid',
+                    borderColor: 'divider',
+                    mb: 3,
+                }}>
+                    <Typography
+                        variant="caption"
+                        sx={{
+                            flex: 1,
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap',
+                            fontWeight: 700,
+                            color: 'primary.main',
+                            fontFamily: 'monospace',
+                            fontSize: '0.7rem',
+                        }}
+                    >
+                        {url}
+                    </Typography>
+                    <Tooltip title={copied ? 'Copied!' : 'Copy link'}>
+                        <IconButton
+                            size="small"
+                            onClick={handleCopyLink}
+                            sx={{
+                                color: copied ? 'success.main' : 'primary.main',
+                                bgcolor: copied ? 'rgba(16,185,129,0.1)' : 'rgba(108,99,255,0.08)',
+                                borderRadius: 2,
+                                p: 0.8,
+                                transition: 'all 0.2s',
+                                '&:hover': { bgcolor: copied ? 'rgba(16,185,129,0.15)' : 'rgba(108,99,255,0.15)' }
+                            }}
+                            aria-label="Copy invite link"
+                        >
+                            {copied ? <CheckIcon sx={{ fontSize: 18 }} /> : <ContentCopyIcon sx={{ fontSize: 18 }} />}
+                        </IconButton>
+                    </Tooltip>
+                </Box>
+
+                {/* Divider label */}
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 2.5 }}>
+                    <Box sx={{ flex: 1, height: '1px', bgcolor: 'divider' }} />
+                    <Typography variant="caption" sx={{ color: 'text.disabled', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
+                        Share via
+                    </Typography>
+                    <Box sx={{ flex: 1, height: '1px', bgcolor: 'divider' }} />
+                </Box>
+
+                {/* Social share buttons */}
+                <Grid container spacing={2} sx={{ mb: typeof navigator !== 'undefined' && navigator.share ? 2 : 0 }}>
+                    {shareOptions.map((opt) => (
+                        <Grid size={4} key={opt.label}>
+                            <Stack alignItems="center" spacing={0.75}>
+                                <IconButton
+                                    onClick={opt.onClick}
+                                    aria-label={opt.ariaLabel}
+                                    sx={{
+                                        width: 56,
+                                        height: 56,
+                                        bgcolor: opt.color,
+                                        color: 'white',
+                                        boxShadow: `0 8px 20px ${opt.shadow}`,
+                                        '&:hover': { bgcolor: opt.hover, transform: 'translateY(-3px)', boxShadow: `0 14px 28px ${opt.shadow}` },
+                                        transition: 'all 0.25s ease',
+                                    }}
+                                >
+                                    {opt.icon}
+                                </IconButton>
+                                <Typography variant="caption" sx={{ fontWeight: 700, fontSize: '0.68rem', color: 'text.secondary' }}>
+                                    {opt.label}
+                                </Typography>
+                            </Stack>
+                        </Grid>
+                    ))}
                 </Grid>
 
+                {/* System share button */}
                 {typeof navigator !== 'undefined' && navigator.share && (
                     <Button
                         fullWidth
-                        variant="contained"
+                        variant="outlined"
                         startIcon={<IosShareIcon />}
                         onClick={async () => {
                             try {
-                                await navigator.share({
-                                    title: 'Join my House on OurTab',
-                                    text: text,
-                                    url: url,
-                                });
+                                await navigator.share({ title: 'Join my House on OurTab', text, url });
                             } catch (err) {
                                 if ((err as Error).name !== 'AbortError') handleCopy(url);
                             }
                         }}
                         sx={{
-                            mt: 3,
+                            mt: 1,
                             borderRadius: 3,
-                            py: 1.2,
+                            py: 1.1,
                             textTransform: 'none',
-                            fontWeight: 800,
-                            background: 'linear-gradient(135deg, #6C63FF 0%, #FF6584 100%)',
-                            color: 'white',
-                            boxShadow: '0 8px 20px rgba(108, 99, 255, 0.2)',
-                            border: 'none',
-                            '&:hover': {
-                                boxShadow: '0 12px 25px rgba(108, 99, 255, 0.3)',
-                                filter: 'brightness(1.05)'
-                            }
+                            fontWeight: 700,
+                            borderColor: 'divider',
+                            color: 'text.secondary',
+                            '&:hover': { borderColor: 'primary.main', color: 'primary.main', bgcolor: 'rgba(108,99,255,0.04)' }
                         }}
                     >
-                        Open System Share
+                        More options…
                     </Button>
                 )}
             </DialogContent>

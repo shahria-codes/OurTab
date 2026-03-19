@@ -249,7 +249,7 @@ function JoinContent() {
                             </>
                         ) : (
                             <>
-                                <Typography variant="h4" gutterBottom sx={{ fontWeight: 900, color: '#1a202c' }}>
+                                <Typography variant="h4" gutterBottom sx={{ fontWeight: 900, color: 'text.primary' }}>
                                     House Invitation
                                 </Typography>
                                 <Typography variant="body1" color="text.secondary" sx={{ mb: 4, fontWeight: 500 }}>

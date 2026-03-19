@@ -651,9 +651,9 @@ export default function Dashboard() {
                         }}>
                             <Paper className="glass" sx={{ p: { xs: 4, md: 8 }, borderRadius: 6, maxWidth: 600, width: '100%', position: 'relative', overflow: 'hidden' }}>
                                 <Box sx={{ position: 'absolute', top: -50, right: -50, opacity: 0.05, transform: 'rotate(15deg)' }}>
-                                    <OtherHousesIcon sx={{ fontSize: 250, color: '#6C63FF' }} />
+                                    <OtherHousesIcon sx={{ fontSize: 250, color: 'primary.main' }} />
                                 </Box>
-                                <OtherHousesIcon sx={{ fontSize: 80, color: '#6C63FF', mb: 3 }} />
+                                <OtherHousesIcon sx={{ fontSize: 80, color: 'primary.main', mb: 3 }} />
                                 <Typography variant="h4" gutterBottom sx={{ fontWeight: 800, color: 'text.primary' }}>
                                     Welcome to OurTab
                                 </Typography>
@@ -676,7 +676,7 @@ export default function Dashboard() {
                                         variant="outlined" size="large" onClick={() => router.push('/join')}
                                         sx={{
                                             borderRadius: 4, px: 4, py: 1.5, fontSize: '1.05rem', fontWeight: 700, borderWidth: 2,
-                                            borderColor: 'rgba(108, 99, 255, 0.5)', color: '#6C63FF',
+                                            borderColor: 'rgba(108, 99, 255, 0.5)', color: 'primary.main',
                                             '&:hover': { borderWidth: 2, borderColor: '#6C63FF', transform: 'translateY(-3px)', background: 'rgba(108, 99, 255, 0.05)' },
                                             transition: 'all 0.3s'
                                         }}
@@ -729,7 +729,9 @@ export default function Dashboard() {
                         }}>
                             Dashboard
                         </Typography>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                         <NotificationBell aria-label="Notifications" />
+                        </Box>
                     </Box>
                     <Typography variant="body1" color="text.secondary" sx={{ opacity: 0.8, fontWeight: 500, mb: 1 }}>
                         Overview of your household finances and expenses
@@ -745,9 +747,6 @@ export default function Dashboard() {
                         borderRadius: 4,
                         maxWidth: 400,
                         mx: 'auto',
-                        background: 'rgba(255, 255, 255, 0.1)',
-                        border: '1px solid rgba(255, 255, 255, 0.2)',
-                        boxShadow: '0 10px 30px rgba(0,0,0,0.05)'
                     }}>
                         <IconButton
                             onClick={handlePreviousMonth}
@@ -869,8 +868,8 @@ export default function Dashboard() {
                                                     borderRadius: 2,
                                                     textTransform: 'none',
                                                     fontWeight: 700,
-                                                    bgcolor: '#6C63FF',
-                                                    '&:hover': { bgcolor: '#5a52e0' },
+                                                    bgcolor: 'primary.main',
+                                                    '&:hover': { bgcolor: 'primary.dark' },
                                                     boxShadow: '0 4px 12px rgba(108, 99, 255, 0.2)',
                                                 }}
                                             >
@@ -987,8 +986,8 @@ export default function Dashboard() {
                                                     borderRadius: 2,
                                                     textTransform: 'none',
                                                     fontWeight: 700,
-                                                    bgcolor: '#6C63FF',
-                                                    '&:hover': { bgcolor: '#5a52e0' },
+                                                    bgcolor: 'primary.main',
+                                                    '&:hover': { bgcolor: 'primary.dark' },
                                                     boxShadow: '0 4px 12px rgba(108, 99, 255, 0.2)',
                                                 }}
                                             >
@@ -1338,8 +1337,8 @@ export default function Dashboard() {
                                             p: 2, height: '100%', display: 'flex', alignItems: 'center', gap: 2,
                                             bgcolor: 'rgba(255, 101, 132, 0.05)', border: '1px solid rgba(255, 101, 132, 0.2)'
                                         }}>
-                                            <RestaurantIcon sx={{ color: '#FF6584' }} />
-                                            <Typography variant="body2" sx={{ fontWeight: 700, color: '#FF6584' }}>
+                                            <RestaurantIcon sx={{ color: 'secondary.main' }} />
+                                            <Typography variant="body2" sx={{ fontWeight: 700, color: 'secondary.main' }}>
                                                 Your meals are turned OFF starting from {myDetails.offFromDate}.
                                             </Typography>
                                         </Paper>
@@ -1612,7 +1611,7 @@ export default function Dashboard() {
                             <Typography variant="h6" sx={{ fontWeight: 800, mb: 3, display: 'flex', alignItems: 'center', gap: 1 }}>
                                 <AccountBalanceWalletIcon color="primary" /> Monthly Summary — {selectedDate.toLocaleString(undefined, { month: 'long', year: 'numeric' })}
                             </Typography>
-                            <Paper className="glass" sx={{ p: 3, borderRadius: 4, background: 'rgba(255, 255, 255, 0.02)', border: '1px solid rgba(255,255,255,0.1)' }}>
+                            <Paper className="glass" sx={{ p: 3, borderRadius: 4 }}>
                                 <Grid container spacing={4}>
                                     <Grid size={{ xs: 12, md: 4 }}>
                                         <Typography variant="subtitle2" color="text.secondary" sx={{ textTransform: 'uppercase', mb: 2, fontWeight: 700 }}>Financial Status</Typography>
@@ -1886,12 +1885,10 @@ export default function Dashboard() {
                                                         sx={{
                                                             p: 2,
                                                             borderRadius: 3,
-                                                            background: 'rgba(255, 255, 255, 0.03)',
-                                                            border: '1px solid rgba(255, 255, 255, 0.1)',
                                                             transition: 'all 0.2s ease',
                                                             cursor: expense.category === 'groceries' ? 'pointer' : 'default',
+                                                            boxShadow: '0 4px 15px rgba(0,0,0,0.05)',
                                                             '&:hover': {
-                                                                background: 'rgba(255, 255, 255, 0.06)',
                                                                 transform: expense.category === 'groceries' ? 'translateY(-2px)' : 'none',
                                                                 borderColor: expense.category === 'groceries' ? 'secondary.main' : 'primary.main',
                                                                 boxShadow: expense.category === 'groceries' ? '0 8px 25px rgba(108, 99, 255, 0.15)' : 'none'

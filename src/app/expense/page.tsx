@@ -1204,7 +1204,7 @@ export default function ExpensePage() {
 
 
                     {/* Add Item Form */}
-                    <Paper className="glass" sx={{ p: 2, mb: 2, background: 'rgba(255, 255, 255, 0.5)', backdropFilter: 'blur(10px)', borderRadius: 2, boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
+                    <Paper className="glass" sx={{ p: 2, mb: 2, backdropFilter: 'blur(10px)', borderRadius: 2, boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
                         <Box component="form" onSubmit={handleAddItem}>
                             {house?.typeOfHouse === 'meals_and_expenses' && (
                                 <FormControl fullWidth size="small" sx={{ mb: 2 }}>
@@ -1346,7 +1346,7 @@ export default function ExpensePage() {
                                     AI may make mistakes. Please check and edit prices before submitting.
                                 </Alert>
                             )}
-                            <Paper className="glass" sx={{ p: 2, mb: 2, background: 'rgba(255, 255, 255, 0.5)', backdropFilter: 'blur(10px)', borderRadius: 2, boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
+                            <Paper className="glass" sx={{ p: 2, mb: 2, backdropFilter: 'blur(10px)', borderRadius: 2, boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
                                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
                                     <Typography variant="subtitle1" fontWeight="bold">Cart ({items.length})</Typography>
                                     <Typography variant="subtitle1" color="primary" fontWeight="bold">
@@ -1409,7 +1409,7 @@ export default function ExpensePage() {
 
                     {/* Contributor Selection */}
                     {items.length > 0 && houseMembers.length > 1 && house?.typeOfHouse !== 'meals_and_expenses' && (
-                        <Paper className="glass" sx={{ mb: 2, background: 'rgba(255, 255, 255, 0.5)', backdropFilter: 'blur(10px)', borderRadius: 2, boxShadow: '0 4px 12px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
+                        <Paper className="glass" sx={{ mb: 2, backdropFilter: 'blur(10px)', borderRadius: 2, boxShadow: '0 4px 12px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
                             <Accordion defaultExpanded sx={{ background: 'transparent', boxShadow: 'none', '&:before': { display: 'none' } }}>
                                 <AccordionSummary expandIcon={<ExpandMoreIcon />}>
                                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -1567,7 +1567,7 @@ export default function ExpensePage() {
 
                     {/* Submit Form */}
                     {items.length > 0 && (
-                        <Paper className="glass" sx={{ p: 2, background: 'rgba(255, 255, 255, 0.5)', backdropFilter: 'blur(10px)', borderRadius: 2, boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
+                        <Paper className="glass" sx={{ p: 2, backdropFilter: 'blur(10px)', borderRadius: 2, boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
                             <Box component="form" onSubmit={handleSubmit} sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
                                 <TextField
                                     label="Note (Optional)"

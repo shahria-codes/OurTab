@@ -55,6 +55,7 @@ import DialogContent from '@mui/material/DialogContent';
 import DialogContentText from '@mui/material/DialogContentText';
 import DialogActions from '@mui/material/DialogActions';
 import AuthGuard from '@/components/AuthGuard';
+import ThemeToggle from '@/components/ThemeToggle';
 import { formatDetailedDateTime } from '@/utils/date';
 
 function ProfileContent() {
@@ -561,6 +562,7 @@ function ProfileContent() {
                         }}>
                             Profile
                         </Typography>
+                        <ThemeToggle />
                     </Box>
                     <Typography variant="body1" color="text.secondary" sx={{ opacity: 0.8, fontWeight: 500, mb: 1 }}>
                         Manage your personal profile and house settings
@@ -654,8 +656,8 @@ function ProfileContent() {
                                                 }}
                                                 onClick={() => { setProfessionValue(dbUser?.profession || ''); setEditingProfession(true); }}
                                             >
-                                                <WorkIcon sx={{ fontSize: 14, color: '#7c4dff' }} />
-                                                <Typography variant="caption" sx={{ fontWeight: 800, color: '#7c4dff', textTransform: 'uppercase', letterSpacing: '0.03em' }}>
+                                                <WorkIcon sx={{ fontSize: 14, color: 'primary.main' }} />
+                                                <Typography variant="caption" sx={{ fontWeight: 800, color: 'primary.main', textTransform: 'uppercase', letterSpacing: '0.03em' }}>
                                                     {dbUser?.profession || 'Set Profession'}
                                                 </Typography>
                                                 <EditIcon sx={{ fontSize: 10, opacity: 0.5 }} />
@@ -913,7 +915,7 @@ function ProfileContent() {
                             {isNotificationSupported && (
                                 <Box>
                                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5 }}>
-                                        <NotificationsIcon sx={{ fontSize: 16, color: '#6C63FF' }} />
+                                        <NotificationsIcon sx={{ fontSize: 16, color: 'primary.main' }} />
                                         <Typography variant="subtitle2" sx={{ fontWeight: 900, fontSize: '0.65rem', textTransform: 'uppercase', letterSpacing: '0.1em', opacity: 0.5 }}>Notifications</Typography>
                                     </Box>
                                     <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', p: 1.5, borderRadius: '12px', background: 'rgba(108, 99, 255, 0.03)', border: '1px solid rgba(108, 99, 255, 0.05)' }}>
@@ -944,7 +946,7 @@ function ProfileContent() {
                             {hasHouse && houseDetails?.typeOfHouse === 'meals_and_expenses' && (
                                 <Box>
                                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5 }}>
-                                        <RestaurantMenuIcon sx={{ fontSize: 16, color: '#FF6584' }} />
+                                        <RestaurantMenuIcon sx={{ fontSize: 16, color: 'secondary.main' }} />
                                         <Typography variant="subtitle2" sx={{ fontWeight: 900, fontSize: '0.65rem', textTransform: 'uppercase', letterSpacing: '0.1em', opacity: 0.5 }}>Meal Status</Typography>
                                     </Box>
                                     <Box sx={{ p: 1.5, borderRadius: '12px', background: 'rgba(255, 101, 132, 0.03)', border: '1px solid rgba(255, 101, 132, 0.05)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -978,7 +980,7 @@ function ProfileContent() {
                     {hasHouse && houseDetails?.typeOfHouse === 'meals_and_expenses' && (
                         <Paper id="meal-status-section" className="glass animate-stagger" sx={{ p: 2, background: 'transparent', transitionDelay: '0.3s', mt: 1.5 }}>
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-                                <RestaurantMenuIcon sx={{ color: '#FF6584', fontSize: 18 }} />
+                                <RestaurantMenuIcon sx={{ color: 'secondary.main', fontSize: 18 }} />
                                 <Typography variant="subtitle1" fontWeight={900} sx={{ fontSize: '0.9rem' }}>Detailed Meal Status</Typography>
                             </Box>
 
@@ -1176,7 +1178,7 @@ function ProfileContent() {
                                         {/* Pending Meal-Off Requests */}
                                         {isManager && houseDetails.mealOffRequests && Object.keys(houseDetails.mealOffRequests).length > 0 && (
                                             <Box sx={{ mb: 2, p: 1.5, borderRadius: '12px', border: '1px solid rgba(255, 101, 132, 0.2)', bgcolor: 'rgba(255, 101, 132, 0.02)' }}>
-                                                <Typography variant="subtitle2" sx={{ fontWeight: 900, mb: 1, color: '#FF6584', fontSize: '0.7rem' }}>Pending Meal-Off Requests</Typography>
+                                                <Typography variant="subtitle2" sx={{ fontWeight: 900, mb: 1, color: 'secondary.main', fontSize: '0.7rem' }}>Pending Meal-Off Requests</Typography>
                                                 {Object.entries(houseDetails.mealOffRequests || {}).map(([email, req]: [string, any]) => {
                                                     const m = (houseDetails.members as any[])?.find((mem: any) => mem.email === email);
                                                     return (
@@ -1439,15 +1441,15 @@ function ProfileContent() {
                                             <Box sx={{
                                                 p: 1,
                                                 borderRadius: '12px',
-                                                background: dbUser.pendingHouseStatus === 'invited' ? 'rgba(108, 99, 255, 0.1)' : 'rgba(255, 152, 0, 0.1)',
+                                                background: dbUser.pendingHouseStatus === 'invited' ? 'primary.light' : 'warning.light',
                                                 display: 'flex',
                                                 alignItems: 'center',
                                                 justifyContent: 'center'
                                             }}>
                                                 {dbUser.pendingHouseStatus === 'invited' ? (
-                                                    <NotificationsIcon sx={{ color: '#6C63FF', fontSize: 24 }} />
+                                                    <NotificationsIcon sx={{ color: 'primary.main', fontSize: 24 }} />
                                                 ) : (
-                                                    <HourglassEmptyIcon sx={{ color: '#ff9800', fontSize: 24 }} />
+                                                    <HourglassEmptyIcon sx={{ color: 'warning.main', fontSize: 24 }} />
                                                 )}
                                             </Box>
                                             <Box sx={{ flex: 1 }}>
@@ -1482,8 +1484,8 @@ function ProfileContent() {
                                                         borderRadius: '12px',
                                                         textTransform: 'none',
                                                         fontWeight: 800,
-                                                        bgcolor: '#6C63FF',
-                                                        '&:hover': { bgcolor: '#5b54e6' }
+                                                        bgcolor: 'primary.main',
+                                                        '&:hover': { bgcolor: 'primary.dark' }
                                                     }}
                                                 >
                                                     {loading ? 'Processing...' : 'Accept'}
@@ -1599,7 +1601,7 @@ function ProfileContent() {
                                 py: 1.2,
                                 borderRadius: '16px',
                                 background: 'rgba(211, 47, 47, 0.05)',
-                                color: '#d32f2f',
+                                color: 'error.main',
                                 border: '1px solid rgba(211, 47, 47, 0.2)',
                                 boxShadow: 'none',
                                 fontWeight: 800,

@@ -22,7 +22,7 @@ export default function Home() {
   }, [user, loading, router]);
 
   return (
-    <main style={{ position: 'relative', overflow: 'hidden', minHeight: '100vh', display: 'flex', alignItems: 'center', background: '#f8fafc' }}>
+    <main style={{ position: 'relative', overflow: 'hidden', minHeight: '100vh', display: 'flex', alignItems: 'center' }}>
       {/* Animated Background Blobs */}
       <Box sx={{
         position: 'fixed',

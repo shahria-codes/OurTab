@@ -56,7 +56,16 @@ export default function BottomNav() {
     if (!isVisible) return null;
 
     return (
-        <Paper sx={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 1000, pb: 'calc(env(safe-area-inset-bottom) + 8px)' }} elevation={3} className="glass-nav">
+        <Paper sx={{ 
+            position: 'fixed', 
+            bottom: 0, 
+            left: 0, 
+            right: 0, 
+            zIndex: 1000, 
+            pb: 'calc(env(safe-area-inset-bottom) + 8px)',
+            bgcolor: 'background.paper',
+            backgroundImage: 'none'
+        }} elevation={3} className="glass-bottom-nav">
             <BottomNavigation
                 showLabels
                 value={pathname}
@@ -68,10 +77,13 @@ export default function BottomNav() {
                     '& .MuiBottomNavigationAction-root': {
                         minWidth: 'auto',
                         padding: '10px 0',
-
+                        color: 'text.secondary',
                     },
                     '& .Mui-selected': {
                         color: 'primary.main',
+                        '& .MuiBottomNavigationAction-label': {
+                            fontWeight: 700,
+                        }
                     }
                 }}
             >
