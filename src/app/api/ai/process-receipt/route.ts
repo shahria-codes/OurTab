@@ -1,7 +1,7 @@
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { GoogleGenAI } from '@google/genai';
 import { NextRequest, NextResponse } from 'next/server';
 
-const genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY || '');
+const genAI = new GoogleGenAI({ apiKey: process.env.GOOGLE_AI_API_KEY || '' });
 
 export async function POST(req: NextRequest) {
     try {
@@ -17,14 +17,6 @@ export async function POST(req: NextRequest) {
         }
 
         console.log('Using API Key (first 5 chars):', process.env.GOOGLE_AI_API_KEY.substring(0, 5));
-
-        // Initialize the model with JSON configuration
-        const model = genAI.getGenerativeModel({
-            model: 'gemini-3.1-pro-preview',
-            generationConfig: {
-                responseMimeType: "application/json",
-            }
-        });
 
         // Prepare the image for Gemini
         const base64Data = image.split(',')[1] || image;
@@ -42,18 +34,28 @@ export async function POST(req: NextRequest) {
       Return ONLY the JSON array.
     `;
 
-        const result = await model.generateContent([
-            prompt,
-            {
-                inlineData: {
-                    data: base64Data,
-                    mimeType: mimeType,
-                },
+        const result = await genAI.models.generateContent({
+            model: 'gemini-3.1-pro-preview',
+            config: {
+                responseMimeType: 'application/json',
             },
-        ]);
+            contents: [
+                {
+                    role: 'user',
+                    parts: [
+                        { text: prompt },
+                        {
+                            inlineData: {
+                                data: base64Data,
+                                mimeType: mimeType,
+                            },
+                        },
+                    ],
+                },
+            ],
+        });
 
-        const response = await result.response;
-        const text = response.text();
+        const text = result.text ?? '';
         console.log('Gemini JSON Response:', text);
 
         try {
