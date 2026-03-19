@@ -12,6 +12,14 @@ export const metadata: Metadata = {
   description: 'Split grocery bills and track shared expenses with ease. The perfect companion for flatmates and families to manage common costs.',
   keywords: ['grocery tracker', 'expense manager', 'bill splitter', 'shared expenses', 'meal tracker', 'flatmate expenses'],
   manifest: '/manifest.json',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'OurTab',
+  },
+  formatDetection: {
+    telephone: false,
+  },
   openGraph: {
     title: 'OurTab - Shared Grocery Tracker & Expense Manager',
     description: 'Split grocery bills and track shared expenses with ease.',
