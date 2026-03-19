@@ -14,6 +14,8 @@ import HomeIcon from '@mui/icons-material/Home';
 import GroupAddIcon from '@mui/icons-material/GroupAdd';
 import CircularProgress from '@mui/material/CircularProgress';
 import CloseIcon from '@mui/icons-material/Close';
+import TextField from '@mui/material/TextField';
+import KeyboardArrowRightIcon from '@mui/icons-material/KeyboardArrowRight';
 import { useToast } from '@/components/ToastContext';
 import GoogleSignInButton from '@/components/GoogleSignInButton';
 import Loader from '@/components/Loader';
@@ -30,10 +32,26 @@ function JoinContent() {
     const [joining, setJoining] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [requestPending, setRequestPending] = useState(false);
+    const [manualHouseId, setManualHouseId] = useState('');
+
+    const handleManualSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!manualHouseId.trim()) return;
+        
+        let extractedId = manualHouseId.trim();
+        try {
+            const url = new URL(extractedId);
+            const param = url.searchParams.get('houseId');
+            if (param) extractedId = param;
+        } catch {
+            // Not a URL, assume it's raw ID
+        }
+        
+        router.push(`/join?houseId=${extractedId}`);
+    };
 
     useEffect(() => {
         if (!houseId) {
-            setError('Invalid or missing invitation link.');
             setLoading(false);
             return;
         }
@@ -44,6 +62,7 @@ function JoinContent() {
                 const data = await res.json();
                 if (res.ok) {
                     setHouseName(data.name);
+                    setError(null);
                 } else {
                     setError(data.error || 'House not found.');
                 }
@@ -160,7 +179,50 @@ function JoinContent() {
                             <HomeIcon sx={{ fontSize: 40 }} />
                         </Avatar>
 
-                        {error ? (
+                        {!houseId ? (
+                            <Box component="form" onSubmit={handleManualSubmit} sx={{ textAlign: 'center' }}>
+                                <Typography variant="h5" gutterBottom sx={{ fontWeight: 900, color: 'text.primary' }}>
+                                    Join an Existing House
+                                </Typography>
+                                <Typography color="text.secondary" sx={{ mb: 4, fontWeight: 500, fontSize: '0.95rem' }}>
+                                    Paste the invitation link or enter the House ID to request access.
+                                </Typography>
+
+                                <TextField
+                                    fullWidth
+                                    variant="outlined"
+                                    placeholder="e.g. https://app.ourtab.online/join?houseId=..."
+                                    value={manualHouseId}
+                                    onChange={(e) => setManualHouseId(e.target.value)}
+                                    sx={{ mb: 4, '& .MuiOutlinedInput-root': { borderRadius: 3, fontWeight: 500 } }}
+                                />
+
+                                <Button
+                                    type="submit"
+                                    variant="contained"
+                                    size="large"
+                                    fullWidth
+                                    disabled={!manualHouseId.trim()}
+                                    endIcon={<KeyboardArrowRightIcon />}
+                                    sx={{
+                                        borderRadius: 3, py: 1.5, textTransform: 'none', fontWeight: 800, fontSize: '1rem',
+                                        background: 'linear-gradient(135deg, #6C63FF 0%, #FF6584 100%)',
+                                        boxShadow: '0 8px 25px rgba(108, 99, 255, 0.4)', transition: 'all 0.3s',
+                                        '&:hover': { transform: 'translateY(-2px)', boxShadow: '0 12px 30px rgba(108, 99, 255, 0.6)' }
+                                    }}
+                                >
+                                    Continue
+                                </Button>
+                                <Button
+                                    variant="text"
+                                    color="inherit"
+                                    onClick={() => router.push('/')}
+                                    sx={{ mt: 3, textTransform: 'none', fontWeight: 600, opacity: 0.6, fontSize: '0.85rem' }}
+                                >
+                                    Cancel and Go Back
+                                </Button>
+                            </Box>
+                        ) : error ? (
                             <>
                                 <Typography variant="h5" color="error" gutterBottom sx={{ fontWeight: 800 }}>
                                     Oops!
@@ -170,11 +232,20 @@ function JoinContent() {
                                 </Typography>
                                 <Button
                                     variant="outlined"
-                                    onClick={() => router.push('/')}
+                                    onClick={() => router.push('/join')}
                                     sx={{ borderRadius: 3, textTransform: 'none', fontWeight: 700 }}
                                 >
-                                    Go Back Home
+                                    Try Another Link
                                 </Button>
+                                <Box sx={{ mt: 2 }}>
+                                    <Button
+                                        variant="text"
+                                        onClick={() => router.push('/')}
+                                        sx={{ borderRadius: 3, textTransform: 'none', fontWeight: 600, color: 'text.secondary' }}
+                                    >
+                                        Go Back Home
+                                    </Button>
+                                </Box>
                             </>
                         ) : (
                             <>

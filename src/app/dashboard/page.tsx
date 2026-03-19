@@ -39,6 +39,7 @@ import HistoryIcon from '@mui/icons-material/History';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import Tooltip from '@mui/material/Tooltip';
 import InfoIcon from '@mui/icons-material/Info';
+import OtherHousesIcon from '@mui/icons-material/OtherHouses';
 import Stack from '@mui/material/Stack';
 import { useAuth } from '@/components/AuthContext';
 import { useRouter } from 'next/navigation';
@@ -624,6 +625,80 @@ export default function Dashboard() {
         return <Loader />;
     }
 
+    if (!house) {
+        return (
+            <AuthGuard>
+                <main>
+                    <Container maxWidth="lg" sx={{ mt: 2, mb: 5 }}>
+                        <Box className="glass-nav" sx={{
+                            position: 'sticky', top: 0, zIndex: 1100, display: 'flex',
+                            justifyContent: 'space-between', alignItems: 'center', py: 2, mb: 0.1,
+                            mx: { xs: -2, sm: -3 }, px: { xs: 2, sm: 3 }, backgroundColor: 'transparent !important'
+                        }}>
+                            <Typography variant="h4" component="h1" sx={{
+                                fontWeight: 800, background: 'linear-gradient(45deg, #6C63FF 30%, #FF6584 90%)',
+                                WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', lineHeight: 1.2,
+                                backdropFilter: 'blur(20px)', borderRadius: '12px', padding: '4px', letterSpacing: '-0.02em'
+                            }}>
+                                Dashboard
+                            </Typography>
+                            <NotificationBell aria-label="Notifications" />
+                        </Box>
+                        <Box sx={{
+                            minHeight: '65vh', display: 'flex', flexDirection: 'column',
+                            alignItems: 'center', justifyContent: 'center', textAlign: 'center',
+                            animation: 'fadeInUp 0.6s ease-out', mt: 2
+                        }}>
+                            <Paper className="glass" sx={{ p: { xs: 4, md: 8 }, borderRadius: 6, maxWidth: 600, width: '100%', position: 'relative', overflow: 'hidden' }}>
+                                <Box sx={{ position: 'absolute', top: -50, right: -50, opacity: 0.05, transform: 'rotate(15deg)' }}>
+                                    <OtherHousesIcon sx={{ fontSize: 250, color: '#6C63FF' }} />
+                                </Box>
+                                <OtherHousesIcon sx={{ fontSize: 80, color: '#6C63FF', mb: 3 }} />
+                                <Typography variant="h4" gutterBottom sx={{ fontWeight: 800, color: 'text.primary' }}>
+                                    Welcome to OurTab
+                                </Typography>
+                                <Typography variant="body1" sx={{ mb: 5, fontSize: '1.1rem', color: 'text.secondary' }}>
+                                    It looks like you haven't joined a household yet. To start tracking expenses, splitting bills, and managing your shared costs, you need to create a new house or join an existing one.
+                                </Typography>
+                                <Box sx={{ display: 'flex', gap: 3, flexWrap: 'wrap', justifyContent: 'center' }}>
+                                    <Button
+                                        variant="contained" size="large" onClick={() => router.push('/profile?action=create-house')}
+                                        sx={{
+                                            borderRadius: 4, px: 4, py: 1.5, fontSize: '1.05rem', fontWeight: 700,
+                                            background: 'linear-gradient(135deg, #6C63FF 0%, #FF6584 100%)',
+                                            boxShadow: '0 8px 25px rgba(108, 99, 255, 0.4)', transition: 'all 0.3s',
+                                            '&:hover': { transform: 'translateY(-3px)', boxShadow: '0 12px 30px rgba(108, 99, 255, 0.6)' }
+                                        }}
+                                    >
+                                        Create a New House
+                                    </Button>
+                                    <Button
+                                        variant="outlined" size="large" onClick={() => router.push('/join')}
+                                        sx={{
+                                            borderRadius: 4, px: 4, py: 1.5, fontSize: '1.05rem', fontWeight: 700, borderWidth: 2,
+                                            borderColor: 'rgba(108, 99, 255, 0.5)', color: '#6C63FF',
+                                            '&:hover': { borderWidth: 2, borderColor: '#6C63FF', transform: 'translateY(-3px)', background: 'rgba(108, 99, 255, 0.05)' },
+                                            transition: 'all 0.3s'
+                                        }}
+                                    >
+                                        Join Existing House
+                                    </Button>
+                                </Box>
+                            </Paper>
+                        </Box>
+                    </Container>
+                    <BottomNav />
+                    <style>{`
+                        @keyframes fadeInUp {
+                            from { opacity: 0; transform: translateY(20px); }
+                            to { opacity: 1; transform: translateY(0); }
+                        }
+                    `}</style>
+                </main>
+            </AuthGuard>
+        );
+    }
+
     return (
         <AuthGuard>
             <main>
@@ -985,9 +1060,8 @@ export default function Dashboard() {
                                 <Box className="stat-icon" sx={{ transition: 'all 0.3s ease', position: 'absolute', top: -15, right: -15, opacity: 0.15, color: 'info.main' }}>
                                     <GroupIcon sx={{ fontSize: 110 }} />
                                 </Box>
-                                {house ? (
-                                    <Box sx={{ position: 'relative', zIndex: 1 }}>
-                                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>
+                                <Box sx={{ position: 'relative', zIndex: 1 }}>
+                                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>
                                             <Typography variant="subtitle2" sx={{ fontWeight: 800, color: 'info.main', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
                                                 Household
                                             </Typography>
@@ -1071,25 +1145,7 @@ export default function Dashboard() {
                                         >
                                             Add Member
                                         </Button>
-                                    </Box>
-                                ) : (
-                                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'start', justifyContent: 'center', flex: 1, position: 'relative', zIndex: 1 }}>
-                                        <Typography variant="h6" color="info.main" sx={{ fontWeight: 800, mb: 1 }}>
-                                            My House
-                                        </Typography>
-                                        <Typography color="text.secondary" sx={{ mb: 3, fontWeight: 500 }}>
-                                            You haven&apos;t joined any household yet.
-                                        </Typography>
-                                        <Button
-                                            variant="contained"
-                                            color="info"
-                                            href="/profile?action=create-house"
-                                            sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 700 }}
-                                        >
-                                            Create House
-                                        </Button>
-                                    </Box>
-                                )}
+                                </Box>
                             </Paper>
                         </Grid>
 
