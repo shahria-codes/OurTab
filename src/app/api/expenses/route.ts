@@ -144,9 +144,20 @@ export async function POST(request: Request) {
 
             const batch = adminDb.batch();
             let batchCount = 0;
+            // Extract clean item names from description like "Salt ৳50.00, Eggs ৳120.00"
+            // Strip price suffix (anything after last space followed by currency symbol + digits)
+            const cleanItemNames = description
+                .split(',')
+                .map((segment: string) => segment.replace(/\s+[\$€£৳$]\d[\d.,]*$/, '').trim().toLowerCase())
+                .filter(Boolean);
+
             for (const todoDoc of todosSnap.docs) {
                 const todo = todoDoc.data();
-                if (description.toLowerCase().includes(todo.itemName.toLowerCase())) {
+                const nameLower = todo.itemName.toLowerCase();
+                const matched = cleanItemNames.some((cleanName: string) =>
+                    cleanName.includes(nameLower) || nameLower.includes(cleanName)
+                );
+                if (matched) {
                     batch.update(todoDoc.ref, {
                         isCompleted: true,
                         completedBy: 'auto',
@@ -186,7 +197,7 @@ export async function GET(request: Request) {
             if (month && /^\d{4}-\d{2}$/.test(month)) {
                 const [yr, mo] = month.split('-').map(Number);
                 const start = new Date(yr, mo - 1, 1).toISOString();
-                const end   = new Date(yr, mo, 1).toISOString();
+                const end = new Date(yr, mo, 1).toISOString();
                 query = query.where('date', '>=', start).where('date', '<', end);
             }
         } else if (userId) {
