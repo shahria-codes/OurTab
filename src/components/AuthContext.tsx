@@ -17,7 +17,6 @@ interface AuthContextType {
     loading: boolean;
     signIn: () => Promise<void>;
     signInWithGoogle: () => Promise<void>;
-    logOut: () => Promise<void>;
     logout: () => Promise<void>;
     updateCurrency: (newCurrency: string) => Promise<void>;
     mutateUser: () => void;
@@ -35,7 +34,6 @@ const AuthContext = createContext<AuthContextType>({
     loading: true,
     signIn: async () => { },
     signInWithGoogle: async () => { },
-    logOut: async () => { },
     logout: async () => { },
     updateCurrency: async () => { },
     mutateUser: () => { },
@@ -246,7 +244,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
     };
 
-    const logOut = async () => {
+    const logout = async () => {
         try {
             // Unregister token from DB so they stop receiving notifications
             if (user?.email) {
@@ -276,8 +274,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             loading,
             signIn,
             signInWithGoogle: signIn,
-            logOut,
-            logout: logOut,
+            logout,
             updateCurrency,
             mutateUser,
             mutateHouse,
