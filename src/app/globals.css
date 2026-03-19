@@ -3,6 +3,8 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  /* Force light mode — prevents OS/browser dark mode override */
+  color-scheme: light;
 }
 
 @theme inline {
@@ -15,6 +17,18 @@
 [data-theme="dark"] {
   --background: #0a0a0a;
   --foreground: #ededed;
+}
+
+/* Prevent OS/Android forced dark mode from overriding our light theme */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="dark"]) {
+    --background: #ffffff;
+    --foreground: #171717;
+    color-scheme: light;
+  }
+  body:not([data-theme="dark"]) {
+    background-image: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  }
 }
 
 body {
