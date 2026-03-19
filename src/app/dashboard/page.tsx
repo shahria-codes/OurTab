@@ -38,6 +38,7 @@ import KeyboardArrowRightIcon from '@mui/icons-material/KeyboardArrowRight';
 import HistoryIcon from '@mui/icons-material/History';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import Tooltip from '@mui/material/Tooltip';
+import InfoIcon from '@mui/icons-material/Info';
 import Stack from '@mui/material/Stack';
 import { useAuth } from '@/components/AuthContext';
 import { useRouter } from 'next/navigation';
@@ -1769,10 +1770,27 @@ export default function Dashboard() {
                         </Box>
                     )}
 
-
                     <Box sx={{ mt: 6 }}>
                         <Typography variant="subtitle1" sx={{ fontWeight: 800, color: 'text.primary', mb: 3, display: 'flex', alignItems: 'center', gap: 1 }}>
                             <FormatListBulletedIcon sx={{ color: 'primary.main' }} /> Expenses for {selectedDate.toLocaleString('default', { month: 'long' })}
+                            <Tooltip
+                                title={
+                                    <Box sx={{ p: 0.5 }}>
+                                        <Typography variant="caption" sx={{ display: 'block', fontWeight: 700, mb: 0.5 }}>
+                                            Deletion:
+                                        </Typography>
+                                        <Typography variant="caption" sx={{ display: 'block', opacity: 0.9 }}>
+                                            You can delete your expense within 48 hours of adding it if you made a mistake. After 48 hours, it becomes permanent for accounting consistency.
+                                        </Typography>
+                                    </Box>
+                                }
+                                arrow
+                                placement="top"
+                                enterTouchDelay={0}
+                                leaveTouchDelay={5000}
+                            >
+                                <InfoIcon sx={{ fontSize: 16, opacity: 0.5, cursor: 'help' }} />
+                            </Tooltip>
                         </Typography>
                         {filteredExpenses.length === 0 ? (
                             <Paper className="glass" sx={{ p: 4, textAlign: 'center', borderRadius: 4, background: 'rgba(0,0,0,0.02)', border: '1px dashed rgba(0,0,0,0.1)' }}>
