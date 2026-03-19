@@ -627,7 +627,7 @@ export default function Dashboard() {
     return (
         <AuthGuard>
             <main>
-                <Container maxWidth="lg" sx={{ mt: 4, mb: 5 }}>
+                <Container maxWidth="lg" sx={{ mt: 2, mb: 5 }}>
                     <Box className="glass-nav" sx={{
                         position: 'sticky',
                         top: 0,
@@ -656,7 +656,7 @@ export default function Dashboard() {
                         </Typography>
                         <NotificationBell aria-label="Notifications" />
                     </Box>
-                    <Typography variant="body1" color="text.secondary" sx={{ opacity: 0.8, fontWeight: 500 }}>
+                    <Typography variant="body1" color="text.secondary" sx={{ opacity: 0.8, fontWeight: 500, mb: 1 }}>
                         Overview of your household finances and expenses
                     </Typography>
 

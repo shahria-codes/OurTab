@@ -149,7 +149,7 @@ export default function MealsPage() {
     return (
         <AuthGuard>
             <main>
-                <Container maxWidth="lg" sx={{ mt: 4, pb: 10 }}>
+                <Container maxWidth="lg" sx={{ mt: 2, pb: 10 }}>
                     {/* Header Section */}
                     <Box className="glass-nav" sx={{
                         position: 'sticky',
@@ -164,24 +164,24 @@ export default function MealsPage() {
                         px: { xs: 2, sm: 3 },
                         backgroundColor: 'transparent !important',
                     }}>
-                        <Box>
-                            <Typography variant="h4" component="h1" sx={{
-                                fontWeight: 800,
-                                background: 'linear-gradient(45deg, #6C63FF 30%, #FF6584 90%)',
-                                WebkitBackgroundClip: 'text',
-                                WebkitTextFillColor: 'transparent',
-                                backdropFilter: 'blur(20px)',
-                                borderRadius: '12px',
-                                padding: '4px',
-                                mb: 0.5,
-                                letterSpacing: '-0.02em'
-                            }}>
-                                Meal Tracking
-                            </Typography>
-                        </Box>
+
+                        <Typography variant="h4" component="h1" sx={{
+                            fontWeight: 800,
+                            background: 'linear-gradient(45deg, #6C63FF 30%, #FF6584 90%)',
+                            WebkitBackgroundClip: 'text',
+                            WebkitTextFillColor: 'transparent',
+                            backdropFilter: 'blur(20px)',
+                            borderRadius: '12px',
+                            padding: '4px',
+                            mb: 0.5,
+                            letterSpacing: '-0.02em'
+                        }}>
+                            Meal Tracking
+                        </Typography>
+
 
                     </Box>
-                    <Typography variant="body1" color="text.secondary" sx={{ opacity: 0.8, fontWeight: 500 }}>
+                    <Typography variant="body1" color="text.secondary" sx={{ opacity: 0.8, fontWeight: 500, mb: 1 }}>
                         View and monitor household meal consumption
                     </Typography>
 

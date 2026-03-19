@@ -533,39 +533,7 @@ function ProfileContent() {
         <AuthGuard>
             <main>
 
-                {/* ── Premium Background Elements ── */}
-                <Box sx={{
-                    position: 'fixed',
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    zIndex: -1,
-                    overflow: 'hidden',
-                    pointerEvents: 'none'
-                }}>
-                    <Box className="animate-blob" sx={{
-                        position: 'absolute',
-                        top: '-10%',
-                        left: '-10%',
-                        width: '40vw',
-                        height: '40vw',
-                        background: 'radial-gradient(circle, rgba(124, 77, 255, 0.15) 0%, transparent 70%)',
-                        filter: 'blur(50px)'
-                    }} />
-                    <Box className="animate-blob" sx={{
-                        position: 'absolute',
-                        bottom: '10%',
-                        right: '-5%',
-                        width: '35vw',
-                        height: '35vw',
-                        background: 'radial-gradient(circle, rgba(0, 184, 212, 0.15) 0%, transparent 70%)',
-                        filter: 'blur(50px)',
-                        animationDelay: '2s'
-                    }} />
-                </Box>
-
-                <Container maxWidth="sm" sx={{ mt: 3, mb: 5, display: 'flex', flexDirection: 'column' }}>
+                <Container maxWidth="sm" sx={{ mt: 2, mb: 5, display: 'flex', flexDirection: 'column' }}>
 
                     <Box className="glass-nav" sx={{
                         position: 'sticky',
@@ -594,7 +562,7 @@ function ProfileContent() {
                             Profile
                         </Typography>
                     </Box>
-                    <Typography variant="body1" color="text.secondary" sx={{ opacity: 0.8, fontWeight: 500, mb: 3 }}>
+                    <Typography variant="body1" color="text.secondary" sx={{ opacity: 0.8, fontWeight: 500, mb: 1 }}>
                         Manage your personal profile and house settings
                     </Typography>
 

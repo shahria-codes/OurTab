@@ -368,14 +368,14 @@ export default function NotificationsPage() {
     return (
         <AuthGuard>
             <main style={{ minHeight: '100vh', position: 'relative' }}>
-                <Container maxWidth="sm" sx={{ mt: 3, mb: 20, position: 'relative', zIndex: 1 }}>
+                <Container maxWidth="sm" sx={{ mt: 2, mb: 20, position: 'relative', zIndex: 1 }}>
                     {/* --- Header Section --- */}
                     <Box className="glass-nav" sx={{
                         position: 'sticky',
                         top: 0,
                         zIndex: 1100,
                         py: 2,
-                        mb: 2,
+                        mb: 0.5,
                         mx: { xs: -2, sm: -3 },
                         px: { xs: 2, sm: 3 },
                         animation: 'fadeInDown 0.8s ease-out',
@@ -429,7 +429,7 @@ export default function NotificationsPage() {
                         </Box>
                     </Box>
 
-                    <Typography variant="body2" sx={{ color: 'text.secondary', marginBottom: 2, fontWeight: 600, letterSpacing: '0.05em', textTransform: 'uppercase', fontSize: '0.7rem', opacity: 0.7 }}>
+                    <Typography variant="body2" sx={{ color: 'text.secondary', marginBottom: 1, fontWeight: 600, letterSpacing: '0.05em', textTransform: 'uppercase', fontSize: '0.7rem', opacity: 0.7 }}>
                         Stay updated with your house
                     </Typography>
 

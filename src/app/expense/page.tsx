@@ -1159,7 +1159,7 @@ export default function ExpensePage() {
     return (
         <AuthGuard>
             <main>
-                <Container maxWidth="sm" sx={{ mt: 4, mb: 10 }}>
+                <Container maxWidth="sm" sx={{ mt: 2, mb: 10 }}>
                     <Box className="glass-nav" sx={{
                         position: 'sticky',
                         top: 0,
@@ -1419,11 +1419,11 @@ export default function ExpensePage() {
                                 </AccordionSummary>
                                 <AccordionDetails sx={{ px: 2, pb: 1.5, pt: 0 }}>
                                     <Box sx={{ mb: 1 }}>
-                                        <Typography 
-                                            variant="caption" 
-                                            color="text.secondary" 
-                                            sx={{ 
-                                                mb: 1, 
+                                        <Typography
+                                            variant="caption"
+                                            color="text.secondary"
+                                            sx={{
+                                                mb: 1,
                                                 display: 'block',
                                                 animation: 'pulseAnimation 3s ease-in-out infinite',
                                                 '@keyframes pulseAnimation': {

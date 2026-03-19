@@ -9,9 +9,8 @@ import Paper from '@mui/material/Paper';
 import IconButton from '@mui/material/IconButton';
 import DeleteIcon from '@mui/icons-material/Delete';
 import List from '@mui/material/List';
-import ListItem from '@mui/material/ListItem';
-import ListItemText from '@mui/material/ListItemText';
 import Avatar from '@mui/material/Avatar';
+
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked';
@@ -24,12 +23,16 @@ import AuthGuard from '@/components/AuthGuard';
 import { useExpenseTodos, ExpenseTodo } from '@/hooks/useExpenseTodos';
 import Loader from '@/components/Loader';
 import { formatTimeLocale, formatDateLocale } from '@/utils/date';
+import CircularProgress from '@mui/material/CircularProgress';
+
 
 export default function Todos() {
     const { user, house } = useAuth();
     const { todos, loading: todosLoading, addTodosBatch, toggleTodo, deleteTodo } = useExpenseTodos();
     const [todoInput, setTodoInput] = useState('');
     const [pendingItems, setPendingItems] = useState<string[]>([]);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
 
     const handleAddPendingItem = (e: React.FormEvent) => {
         e.preventDefault();
@@ -44,11 +47,17 @@ export default function Todos() {
     };
 
     const handleSubmitBatch = async () => {
-        if (pendingItems.length > 0 && user?.email) {
-            await addTodosBatch(pendingItems, user.email);
-            setPendingItems([]);
+        if (pendingItems.length > 0 && user?.email && !isSubmitting) {
+            setIsSubmitting(true);
+            try {
+                await addTodosBatch(pendingItems, user.email);
+                setPendingItems([]);
+            } finally {
+                setIsSubmitting(false);
+            }
         }
     };
+
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const val = e.target.value;
@@ -148,7 +157,7 @@ export default function Todos() {
                 position: 'relative'
             }}>
 
-                <Container maxWidth="sm" sx={{ mt: 3, mb: 20, position: 'relative', zIndex: 1 }}>
+                <Container maxWidth="sm" sx={{ mt: 2, mb: 20, position: 'relative', zIndex: 1 }}>
                     {/* --- Header Section --- */}
                     <Box className="glass-nav" sx={{
                         position: 'sticky',
@@ -168,7 +177,7 @@ export default function Todos() {
                         <Typography
                             variant="h4"
                             sx={{
-                                fontWeight: 900,
+                                fontWeight: 800,
                                 background: 'linear-gradient(45deg, #6C63FF 30%, #FF6584 90%)',
                                 WebkitBackgroundClip: 'text',
                                 WebkitTextFillColor: 'transparent',
@@ -427,7 +436,8 @@ export default function Todos() {
                                     size="small"
                                     variant="contained"
                                     onClick={handleSubmitBatch}
-                                    startIcon={<DoneAllIcon sx={{ fontSize: '1rem !important' }} />}
+                                    disabled={isSubmitting}
+                                    startIcon={isSubmitting ? <CircularProgress size={16} color="inherit" /> : <DoneAllIcon sx={{ fontSize: '1rem !important' }} />}
                                     sx={{
                                         borderRadius: '12px',
                                         py: 0.5,
@@ -435,12 +445,17 @@ export default function Todos() {
                                         textTransform: 'none',
                                         fontWeight: 800,
                                         fontSize: '0.75rem',
-                                        background: 'linear-gradient(135deg, #6C63FF 0%, #4f46e5 100%)',
-                                        boxShadow: '0 4px 12px rgba(108, 99, 255, 0.2)',
+                                        background: isSubmitting ? 'rgba(0,0,0,0.1)' : 'linear-gradient(135deg, #6C63FF 0%, #4f46e5 100%)',
+                                        boxShadow: isSubmitting ? 'none' : '0 4px 12px rgba(108, 99, 255, 0.2)',
+                                        '&.Mui-disabled': {
+                                            color: 'rgba(255, 255, 255, 0.7)',
+                                            background: 'rgba(108, 99, 255, 0.4)',
+                                        }
                                     }}
                                 >
-                                    Push all
+                                    {isSubmitting ? 'Pushing...' : 'Push all'}
                                 </Button>
+
                             </Box>
                             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, justifyContent: 'flex-start' }}>
                                 {pendingItems.map((item, index) => (
@@ -493,7 +508,7 @@ export default function Todos() {
                             placeholder="Add item..."
                             value={todoInput}
                             onChange={handleInputChange}
-                            onKeyPress={(e) => e.key === 'Enter' && handleAddPendingItem(e as any)}
+                            onKeyPress={(e) => e.key === 'Enter' && handleAddPendingItem(e)}
                             variant="standard"
                             autoComplete="off"
                             sx={{
