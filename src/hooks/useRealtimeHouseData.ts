@@ -71,9 +71,25 @@ let lastCachedUserEmail: string | null = null;
 export function useRealtimeHouseData(): RealtimeHouseData {
     const { user } = useAuth();
 
-    // Prevent cross-user data leakage by clearing cache if the user has changed 
-    // since the last time this hook was used (e.g. logout/login cycle).
-    if (user?.email !== lastCachedUserEmail) {
+    const [houseId, setHouseId] = useState<string | null>(globalHouseIdCache);
+    const [house, setHouse] = useState<House | null>(globalHouseDataCache);
+    const [expenses, setExpenses] = useState<Expense[]>(globalExpensesCache);
+    const [todos, setTodos] = useState<ExpenseTodo[]>(globalTodosCache);
+    const [fundDeposits, setFundDeposits] = useState<any[]>(globalDepositsCache);
+    const [meals, setMeals] = useState<any[]>(globalMealsCache);
+    const [settlements, setSettlements] = useState<Settlement[]>(globalSettlementsCache);
+    const [loadingState, setLoadingState] = useState(!globalHouseDataCache);
+    const [error, setError] = useState<Error | null>(null);
+
+    // If the user changed, we want to treat the data as loading if a user exists
+    // but the cache was just cleared.
+    const isUserMismatched = user?.email !== lastCachedUserEmail;
+    
+    // Instead of relying purely on state, derived loading status based on user presence
+    // and if we are fetching.
+    const loading = isUserMismatched ? !!user?.email : loadingState;
+
+    if (isUserMismatched) {
         globalHouseIdCache = null;
         globalHouseDataCache = null;
         globalExpensesCache = [];
@@ -82,17 +98,17 @@ export function useRealtimeHouseData(): RealtimeHouseData {
         globalMealsCache = [];
         globalSettlementsCache = [];
         lastCachedUserEmail = user?.email || null;
+        
+        // Update states to reflect flushed cache synchronously (React 18 allowed during render)
+        if (houseId !== null) setHouseId(null);
+        if (house !== null) setHouse(null);
+        if (expenses.length > 0) setExpenses([]);
+        if (todos.length > 0) setTodos([]);
+        if (fundDeposits.length > 0) setFundDeposits([]);
+        if (meals.length > 0) setMeals([]);
+        if (settlements.length > 0) setSettlements([]);
+        if (!loadingState && !!user?.email) setLoadingState(true);
     }
-
-    const [houseId, setHouseId] = useState<string | null>(globalHouseIdCache);
-    const [house, setHouse] = useState<House | null>(globalHouseDataCache);
-    const [expenses, setExpenses] = useState<Expense[]>(globalExpensesCache);
-    const [todos, setTodos] = useState<ExpenseTodo[]>(globalTodosCache);
-    const [fundDeposits, setFundDeposits] = useState<any[]>(globalDepositsCache);
-    const [meals, setMeals] = useState<any[]>(globalMealsCache);
-    const [settlements, setSettlements] = useState<Settlement[]>(globalSettlementsCache);
-    const [loading, setLoading] = useState(!globalHouseDataCache);
-    const [error, setError] = useState<Error | null>(null);
 
     // Cache member profiles so we don't re-fetch on every house snapshot
     const memberProfileCache = useRef<MemberProfileCache>({});
@@ -105,11 +121,11 @@ export function useRealtimeHouseData(): RealtimeHouseData {
         if (!user?.email) {
             setHouseId(null);
             setHouse(null);
-            setLoading(false);
+            setLoadingState(false);
             return;
         }
 
-        if (!globalHouseDataCache) setLoading(true);
+        if (!globalHouseDataCache) setLoadingState(true);
 
         getDoc(doc(db, 'users', user.email))
             .then((snap: any) => {
@@ -118,16 +134,16 @@ export function useRealtimeHouseData(): RealtimeHouseData {
                     const resolvedId: string | null = data.houseId || data.groupId || null;
                     setHouseId(resolvedId);
                     globalHouseIdCache = resolvedId;
-                    if (!resolvedId) setLoading(false);
+                    if (!resolvedId) setLoadingState(false);
                 } else {
                     setHouseId(null);
                     globalHouseIdCache = null;
-                    setLoading(false);
+                    setLoadingState(false);
                 }
             })
             .catch((err: Error) => {
                 setError(err);
-                setLoading(false);
+                setLoadingState(false);
             });
     }, [user?.email]);
 
@@ -204,7 +220,7 @@ export function useRealtimeHouseData(): RealtimeHouseData {
 
             setHouse(finalHouse);
             globalHouseDataCache = finalHouse;
-            setLoading(false);
+            setLoadingState(false);
         };
 
         const unsubHouse = onSnapshot(
