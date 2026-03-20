@@ -73,8 +73,26 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
-      <body className={`${outfit.className} ${outfit.variable}`}>
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              try {
+                var mode = localStorage.getItem('themeMode') || 'dark';
+                document.documentElement.setAttribute('data-theme', mode);
+                var bg = mode === 'light' ? '#faf9ff' : '#0f172a';
+                var bgImg = mode === 'light' ? 'linear-gradient(135deg, #faf9ff 0%, #f0ebff 100%)' : 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)';
+                var style = document.createElement('style');
+                style.id = 'theme-init-style';
+                style.textContent = 'body { background-color: ' + bg + ' !important; background-image: ' + bgImg + ' !important; transition: none !important; }';
+                document.head.appendChild(style);
+              } catch (e) {}
+            `,
+          }}
+        />
+      </head>
+      <body className={`${outfit.className} ${outfit.variable}`} suppressHydrationWarning>
         <ThemeRegistry>
           <AuthProvider>
             <ToastProvider>

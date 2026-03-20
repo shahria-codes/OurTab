@@ -26,8 +26,8 @@ const applyThemeToDOM = (nextMode: PaletteMode) => {
   }
   root.style.colorScheme = nextMode;
 
-  // Directly apply background to body because Tailwind/MUI CssBaseline
-  // can override CSS variables from the cascade
+  // Background is handled by globals.css CSS variables now,
+  // but we can ensure styles are applied directly to body to avoid Tailwind conflicts if needed.
   if (nextMode === 'dark') {
     body.style.backgroundColor = '#0f172a';
     body.style.backgroundImage = 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)';
@@ -37,14 +37,29 @@ const applyThemeToDOM = (nextMode: PaletteMode) => {
   }
 };
 
-// Immediately read from localStorage + apply to DOM before first render
 const getInitialMode = (): PaletteMode => {
-  if (typeof window === 'undefined') return 'dark';
-  return (localStorage.getItem('themeMode') as PaletteMode) || 'dark';
+  // Always return 'dark' initially to match SSR and prevent hydration mismatches.
+  // We will switch to the user's preferred theme in a useEffect after mounting.
+  return 'dark';
 };
 
 export const ThemeContextProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [mode, setMode] = useState<PaletteMode>(getInitialMode);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+    const savedMode = (localStorage.getItem('themeMode') as PaletteMode) || 'dark';
+    if (savedMode !== 'dark') {
+      setMode(savedMode);
+    }
+    
+    // Remove the blocking injected style so dynamic toggling and CSS transitions work again
+    const initStyle = document.getElementById('theme-init-style');
+    if (initStyle) {
+      setTimeout(() => initStyle.remove(), 10);
+    }
+  }, []);
 
   const toggleTheme = () => {
     const newMode = mode === 'light' ? 'dark' : 'light';
@@ -53,18 +68,30 @@ export const ThemeContextProvider: React.FC<{ children: React.ReactNode }> = ({ 
     applyThemeToDOM(newMode);
   };
 
+
   const theme = useMemo(() => createAppTheme(mode), [mode]);
 
   // Apply DOM classes whenever mode changes (covers initial load too)
   useEffect(() => {
-    applyThemeToDOM(mode);
-  }, [mode]);
+    if (mounted) {
+      applyThemeToDOM(mode);
+    }
+  }, [mode, mounted]);
 
   return (
     <ThemeContext.Provider value={{ mode, toggleTheme }}>
       <ThemeProvider theme={theme}>
         <CssBaseline />
-        {children}
+        <div style={{
+          opacity: mounted ? 1 : 0,
+          transition: 'opacity 0.3s ease-in-out',
+          display: 'flex',
+          flexDirection: 'column',
+          minHeight: '100vh',
+          width: '100%'
+        }}>
+          {children}
+        </div>
       </ThemeProvider>
     </ThemeContext.Provider>
   );
