@@ -55,7 +55,7 @@ import DialogContent from '@mui/material/DialogContent';
 import DialogContentText from '@mui/material/DialogContentText';
 import DialogActions from '@mui/material/DialogActions';
 import AuthGuard from '@/components/AuthGuard';
-import ThemeToggle from '@/components/ThemeToggle';
+
 import { formatDetailedDateTime } from '@/utils/date';
 
 function ProfileContent() {
@@ -562,7 +562,6 @@ function ProfileContent() {
                         }}>
                             Profile
                         </Typography>
-                        <ThemeToggle />
                     </Box>
                     <Typography variant="body1" color="text.secondary" sx={{ opacity: 0.8, fontWeight: 500, mb: 1 }}>
                         Manage your personal profile and house settings

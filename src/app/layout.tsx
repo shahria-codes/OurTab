@@ -79,7 +79,7 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{
             __html: `
               try {
-                var mode = localStorage.getItem('themeMode') || 'dark';
+                var mode = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
                 document.documentElement.setAttribute('data-theme', mode);
                 var bg = mode === 'light' ? '#faf9ff' : '#0f172a';
                 var bgImg = mode === 'light' ? 'linear-gradient(135deg, #faf9ff 0%, #f0ebff 100%)' : 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)';

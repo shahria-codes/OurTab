@@ -49,9 +49,20 @@ export const ThemeContextProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
   useEffect(() => {
     setMounted(true);
-    const savedMode = (localStorage.getItem('themeMode') as PaletteMode) || 'dark';
-    if (savedMode !== 'dark') {
-      setMode(savedMode);
+    
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    
+    setMode(mediaQuery.matches ? 'dark' : 'light');
+    
+    const handleChange = (e: MediaQueryListEvent) => {
+      setMode(e.matches ? 'dark' : 'light');
+    };
+    
+    if (mediaQuery.addEventListener) {
+      mediaQuery.addEventListener('change', handleChange);
+    } else {
+      // Fallback for older browsers
+      mediaQuery.addListener(handleChange);
     }
     
     // Remove the blocking injected style so dynamic toggling and CSS transitions work again
@@ -59,13 +70,19 @@ export const ThemeContextProvider: React.FC<{ children: React.ReactNode }> = ({ 
     if (initStyle) {
       setTimeout(() => initStyle.remove(), 10);
     }
+    
+    return () => {
+      if (mediaQuery.removeEventListener) {
+        mediaQuery.removeEventListener('change', handleChange);
+      } else {
+        mediaQuery.removeListener(handleChange);
+      }
+    };
   }, []);
 
   const toggleTheme = () => {
-    const newMode = mode === 'light' ? 'dark' : 'light';
-    setMode(newMode);
-    localStorage.setItem('themeMode', newMode);
-    applyThemeToDOM(newMode);
+    // This is no longer used but kept for context type compatibility.
+    // The app strictly follows the system theme now.
   };
 
 
