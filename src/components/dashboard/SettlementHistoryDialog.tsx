@@ -36,7 +36,7 @@ export default function SettlementHistoryDialog({
     user,
     displayCurrency
 }: SettlementHistoryDialogProps) {
-    
+
     const relevantSettlements = expenses
         .filter(exp => exp.isSettlementPayment && (exp.userId === user?.email || exp.settlementBetween?.includes(user?.email || '')))
         .sort((a, b) => new Date(b.createdAt || b.date).getTime() - new Date(a.createdAt || a.date).getTime());
@@ -66,8 +66,9 @@ export default function SettlementHistoryDialog({
                                     p: 1.5,
                                     position: 'relative',
                                     overflow: 'hidden',
-                                    border: '1px solid rgba(0,0,0,0.06)',
-                                    bgcolor: 'rgba(0,0,0,0.01)',
+                                    border: '1px solid',
+                                    borderColor: 'divider',
+                                    bgcolor: 'background.default',
                                     borderRadius: 2
                                 }}>
                                     {/* Watermark Tag */}
@@ -93,9 +94,9 @@ export default function SettlementHistoryDialog({
                                                 {fromEmail === user?.email ? 'You' : (fromMember?.name?.split(' ')[0] || fromEmail.split('@')[0])}
                                             </Typography>
                                         </Box>
-                                        
+
                                         <ArrowForwardIosIcon color="disabled" sx={{ fontSize: 12 }} />
-                                        
+
                                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                                             <Avatar src={toMember?.photoUrl} alt={toMember?.name} sx={{ width: 32, height: 32 }} />
                                             <Typography variant="body2" fontWeight="500">
@@ -110,15 +111,16 @@ export default function SettlementHistoryDialog({
                                         </Box>
                                     </Box>
 
-                                    <Box sx={{ 
-                                        display: 'flex', 
-                                        justifyContent: 'space-between', 
-                                        alignItems: 'center', 
-                                        mt: 1, 
+                                    <Box sx={{
+                                        display: 'flex',
+                                        justifyContent: 'space-between',
+                                        alignItems: 'center',
+                                        mt: 1,
                                         pt: 0.75,
-                                        borderTop: '1px dashed rgba(0,0,0,0.06)',
-                                        position: 'relative', 
-                                        zIndex: 1 
+                                        borderTop: '1px dashed',
+                                        borderTopColor: 'divider',
+                                        position: 'relative',
+                                        zIndex: 1
                                     }}>
                                         <Typography variant="caption" color="text.secondary" sx={{ display: 'flex', alignItems: 'center', gap: 0.5, fontSize: '0.65rem', opacity: 0.8 }}>
                                             <ArrowForwardIcon sx={{ fontSize: 11 }} /> {formattedCreatedDate}

@@ -623,7 +623,7 @@ export default function ExpensePage() {
                             contributorTotal += c.amount;
                         });
                         const remainder = amount - contributorTotal;
-                        if (remainder > 0.01) {
+                        if (Math.abs(remainder) > 0.001) {
                             if (memberBalances[payer] !== undefined) {
                                 memberBalances[payer] += remainder;
                             } else {
@@ -1027,7 +1027,13 @@ export default function ExpensePage() {
                     }
                 });
 
-                const tableFinalY = (doc as any).lastAutoTable?.finalY + 15;
+                let tableFinalY = (doc as any).lastAutoTable?.finalY + 15;
+                const pageHeight = doc.internal.pageSize.height;
+
+                if (tableFinalY > pageHeight - 75) { // Needs more space for the summary list
+                    doc.addPage();
+                    tableFinalY = 20;
+                }
 
                 // House Totals Summary Section in PDF
                 doc.setFontSize(14);
@@ -1082,7 +1088,13 @@ export default function ExpensePage() {
 
             // --- SETTLEMENT SECTION (For Standard Shared Houses) ---
             if (currentHouseData?.typeOfHouse !== 'meals_and_expenses') {
-                const finalY = (doc as any).lastAutoTable?.finalY + 15;
+                let finalY = (doc as any).lastAutoTable?.finalY + 15;
+                const pageHeight = doc.internal.pageSize.height;
+
+                if (finalY > pageHeight - 25) {
+                    doc.addPage();
+                    finalY = 20;
+                }
 
                 doc.setFontSize(14);
                 doc.setFont('abril', 'bold');
@@ -1094,14 +1106,23 @@ export default function ExpensePage() {
                     let settleY = finalY + 8;
 
                     settlements.forEach((s) => {
+                        if (settleY > pageHeight - 20) {
+                            doc.addPage();
+                            settleY = 20;
+                        }
                         const text = `${s.creditorName} will get ${currentHouseData?.currency} ${s.amountStr} from ${s.debtorName}`;
                         doc.text(text, 14, settleY);
                         settleY += 6;
                     });
                 } else {
+                    let settleY = finalY + 8;
+                    if (settleY > pageHeight - 20) {
+                        doc.addPage();
+                        settleY = 20;
+                    }
                     doc.setFontSize(10);
                     doc.setFont('helvetica', 'normal');
-                    doc.text("All settled! Everyone paid their share.", 14, finalY + 8);
+                    doc.text("All settled! Everyone paid their share.", 14, settleY);
                 }
             }
 

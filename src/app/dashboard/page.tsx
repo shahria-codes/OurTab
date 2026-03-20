@@ -522,8 +522,8 @@ export default function Dashboard() {
                 // Settlement Payment Logic
                 if (exp.isSettlementPayment && exp.settlementBetween && exp.settlementBetween.length === 2) {
                     const [p, r] = [exp.userId, exp.settlementBetween.find(e => e !== exp.userId)!];
-                    if (memberBalances[p] !== undefined) memberBalances[p] = Math.round((memberBalances[p] + amount) * 100) / 100;
-                    if (memberBalances[r] !== undefined) memberBalances[r] = Math.round((memberBalances[r] - amount) * 100) / 100;
+                    if (memberBalances[p] !== undefined) memberBalances[p] += amount;
+                    if (memberBalances[r] !== undefined) memberBalances[r] -= amount;
                     return;
                 }
 
@@ -532,31 +532,28 @@ export default function Dashboard() {
                     let contributorTotal = 0;
                     exp.contributors.forEach(contributor => {
                         if (memberBalances[contributor.email] !== undefined) {
-                            memberBalances[contributor.email] = Math.round((memberBalances[contributor.email] + contributor.amount) * 100) / 100;
+                            memberBalances[contributor.email] += contributor.amount;
                         }
                         contributorTotal += contributor.amount;
                     });
-                    const remainingToPayer = Math.round((amount - contributorTotal) * 100) / 100;
-                    if (remainingToPayer > 0) {
+                    const remainingToPayer = amount - contributorTotal;
+                    if (Math.abs(remainingToPayer) > 0.001) {
                         if (memberBalances[payer] !== undefined) {
-                            memberBalances[payer] = Math.round((memberBalances[payer] + remainingToPayer) * 100) / 100;
+                            memberBalances[payer] += remainingToPayer;
                         }
                     }
                 } else {
                     if (memberBalances[payer] !== undefined) {
-                        memberBalances[payer] = Math.round((memberBalances[payer] + amount) * 100) / 100;
+                        memberBalances[payer] += amount;
                     }
                 }
 
-                // Divide the expense among active members using cent-based math to handle remainders fairly
-                const amountInCents = Math.round(amount * 100);
-                const shareInCents = Math.floor(amountInCents / relevantMembers.length);
-                const remainderCents = amountInCents % relevantMembers.length;
-
-                relevantMembers.forEach((m, index) => {
-                    const extraCent = index < remainderCents ? 1 : 0;
-                    const memberShare = (shareInCents + extraCent) / 100;
-                    memberBalances[m.email] = Math.round((memberBalances[m.email] - memberShare) * 100) / 100;
+                // Divide the expense among active members exactly
+                const sharePerPerson = amount / relevantMembers.length;
+                relevantMembers.forEach((m) => {
+                    if (memberBalances[m.email] !== undefined) {
+                        memberBalances[m.email] -= sharePerPerson;
+                    }
                 });
             });
         }
@@ -730,7 +727,7 @@ export default function Dashboard() {
                             Dashboard
                         </Typography>
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <NotificationBell aria-label="Notifications" />
+                            <NotificationBell aria-label="Notifications" />
                         </Box>
                     </Box>
                     <Typography variant="body1" color="text.secondary" sx={{ opacity: 0.8, fontWeight: 500, mb: 1 }}>
@@ -1061,89 +1058,89 @@ export default function Dashboard() {
                                 </Box>
                                 <Box sx={{ position: 'relative', zIndex: 1 }}>
                                     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>
-                                            <Typography variant="subtitle2" sx={{ fontWeight: 800, color: 'info.main', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
-                                                Household
-                                            </Typography>
-                                            <Tooltip title="Share Invitation Link">
-                                                <IconButton
-                                                    onClick={handleShareHouse}
-                                                    size="small"
+                                        <Typography variant="subtitle2" sx={{ fontWeight: 800, color: 'info.main', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+                                            Household
+                                        </Typography>
+                                        <Tooltip title="Share Invitation Link">
+                                            <IconButton
+                                                onClick={handleShareHouse}
+                                                size="small"
+                                                sx={{
+                                                    background: 'linear-gradient(135deg, #6C63FF 0%, #FF6584 100%)',
+                                                    color: 'white',
+                                                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                                                    boxShadow: '0 4px 10px rgba(108, 99, 255, 0.3)',
+                                                    '&:hover': {
+                                                        transform: 'scale(1.15) rotate(5deg)',
+                                                        boxShadow: '0 6px 15px rgba(108, 99, 255, 0.4)',
+                                                        filter: 'brightness(1.1)'
+                                                    }
+                                                }}
+                                            >
+                                                <IosShareIcon fontSize="small" />
+                                            </IconButton>
+                                        </Tooltip>
+                                    </Box>
+
+                                    <Typography variant="h4" sx={{
+                                        fontWeight: 900,
+                                        background: 'linear-gradient(45deg, #0288d1 30%, #26c6da 90%)',
+                                        WebkitBackgroundClip: 'text',
+                                        WebkitTextFillColor: 'transparent',
+                                        mb: 0.5,
+                                        lineHeight: 1.2
+                                    }}>
+                                        {house.name}
+                                    </Typography>
+
+                                    <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600, fontStyle: 'italic', display: 'block', mb: 2.5 }}>
+                                        {house.typeOfHouse === 'meals_and_expenses' ? 'Meals and Expenses Tracking' : 'Shared Expenses Tracking'}
+                                    </Typography>
+
+                                    <Box sx={{ display: 'flex', flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 1, mb: 3 }}>
+                                        {house.members?.map((member) => (
+                                            <Tooltip key={member.email} title={member.name || member.email.split('@')[0]}>
+                                                <Avatar
+                                                    alt={member.name}
+                                                    src={member.photoUrl}
+                                                    onClick={() => handleMemberClick(member)}
                                                     sx={{
-                                                        background: 'linear-gradient(135deg, #6C63FF 0%, #FF6584 100%)',
-                                                        color: 'white',
-                                                        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                                                        boxShadow: '0 4px 10px rgba(108, 99, 255, 0.3)',
-                                                        '&:hover': {
-                                                            transform: 'scale(1.15) rotate(5deg)',
-                                                            boxShadow: '0 6px 15px rgba(108, 99, 255, 0.4)',
-                                                            filter: 'brightness(1.1)'
-                                                        }
+                                                        width: 32,
+                                                        height: 32,
+                                                        cursor: 'pointer',
+                                                        border: '2px solid rgba(255,255,255,0.2)',
+                                                        transition: 'transform 0.2s',
+                                                        '&:hover': { transform: 'scale(1.1) translateY(-2px)', borderColor: 'info.main' }
                                                     }}
-                                                >
-                                                    <IosShareIcon fontSize="small" />
-                                                </IconButton>
+                                                />
                                             </Tooltip>
-                                        </Box>
+                                        ))}
+                                    </Box>
 
-                                        <Typography variant="h4" sx={{
-                                            fontWeight: 900,
-                                            background: 'linear-gradient(45deg, #0288d1 30%, #26c6da 90%)',
-                                            WebkitBackgroundClip: 'text',
-                                            WebkitTextFillColor: 'transparent',
-                                            mb: 0.5,
-                                            lineHeight: 1.2
-                                        }}>
-                                            {house.name}
-                                        </Typography>
-
-                                        <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600, fontStyle: 'italic', display: 'block', mb: 2.5 }}>
-                                            {house.typeOfHouse === 'meals_and_expenses' ? 'Meals and Expenses Tracking' : 'Shared Expenses Tracking'}
-                                        </Typography>
-
-                                        <Box sx={{ display: 'flex', flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 1, mb: 3 }}>
-                                            {house.members?.map((member) => (
-                                                <Tooltip key={member.email} title={member.name || member.email.split('@')[0]}>
-                                                    <Avatar
-                                                        alt={member.name}
-                                                        src={member.photoUrl}
-                                                        onClick={() => handleMemberClick(member)}
-                                                        sx={{
-                                                            width: 32,
-                                                            height: 32,
-                                                            cursor: 'pointer',
-                                                            border: '2px solid rgba(255,255,255,0.2)',
-                                                            transition: 'transform 0.2s',
-                                                            '&:hover': { transform: 'scale(1.1) translateY(-2px)', borderColor: 'info.main' }
-                                                        }}
-                                                    />
-                                                </Tooltip>
-                                            ))}
-                                        </Box>
-
-                                        <Button
-                                            variant="contained"
-                                            color="info"
-                                            fullWidth
-                                            startIcon={<PersonAddIcon />}
-                                            onClick={() => setOpenAddMember(true)}
-                                            sx={{
-                                                mt: 'auto',
-                                                borderRadius: 3,
-                                                py: 1.2,
-                                                textTransform: 'none',
-                                                fontWeight: 700,
-                                                boxShadow: '0 4px 15px rgba(2, 136, 209, 0.2)',
-                                                bgcolor: 'rgba(2, 136, 209, 0.1)',
-                                                color: 'info.main',
-                                                '&:hover': {
-                                                    bgcolor: 'rgba(2, 136, 209, 0.2)',
-                                                    transform: 'translateY(-2px)'
-                                                },
-                                                transition: 'all 0.2s ease'
-                                            }}
-                                        >
-                                            Add Member
-                                        </Button>
+                                    <Button
+                                        variant="contained"
+                                        color="info"
+                                        fullWidth
+                                        startIcon={<PersonAddIcon />}
+                                        onClick={() => setOpenAddMember(true)}
+                                        sx={{
+                                            mt: 'auto',
+                                            borderRadius: 3,
+                                            py: 1.2,
+                                            textTransform: 'none',
+                                            fontWeight: 700,
+                                            boxShadow: '0 4px 15px rgba(2, 136, 209, 0.2)',
+                                            bgcolor: 'rgba(2, 136, 209, 0.1)',
+                                            color: 'info.main',
+                                            '&:hover': {
+                                                bgcolor: 'rgba(2, 136, 209, 0.2)',
+                                                transform: 'translateY(-2px)'
+                                            },
+                                            transition: 'all 0.2s ease'
+                                        }}
+                                    >
+                                        Add Member
+                                    </Button>
                                 </Box>
                             </Paper>
                         </Grid>
@@ -1717,7 +1714,7 @@ export default function Dashboard() {
                     {/* Settlements Widget */}
                     {house?.typeOfHouse !== 'meals_and_expenses' && house && expenses.length > 0 && house.members && house.members.length > 1 && (
                         <Box sx={{ mt: 4 }}>
-                            <Typography variant="h6" gutterBottom>Settlements (Who owes whom)</Typography>
+                            <Typography variant="h6" gutterBottom sx={{ color: 'text.primary' }}>Settlements (Who owes whom)</Typography>
                             <Grid container spacing={2}>
                                 {settlements.length === 0 ? (
                                     <Grid size={{ xs: 12 }}>
