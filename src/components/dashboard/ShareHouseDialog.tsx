@@ -200,7 +200,7 @@ export default function ShareHouseDialog({
                 </Box>
 
                 {/* Social share buttons */}
-                <Grid container spacing={2} sx={{ mb: typeof navigator !== 'undefined' && navigator.share ? 2 : 0 }}>
+                <Grid container spacing={2} sx={{ mb: typeof navigator !== 'undefined' && 'share' in navigator ? 2 : 0 }}>
                     {shareOptions.map((opt) => (
                         <Grid size={4} key={opt.label}>
                             <Stack alignItems="center" spacing={0.75}>
@@ -228,7 +228,7 @@ export default function ShareHouseDialog({
                 </Grid>
 
                 {/* System share button */}
-                {typeof navigator !== 'undefined' && navigator.share && (
+                {typeof navigator !== 'undefined' && 'share' in navigator && (
                     <Button
                         fullWidth
                         variant="outlined"
