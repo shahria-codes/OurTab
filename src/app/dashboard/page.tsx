@@ -46,8 +46,8 @@ import { useRouter } from 'next/navigation';
 import { useHouseData } from '@/hooks/useHouseData';
 import { useToast } from '@/components/ToastContext';
 import { calculateMemberFundAccounting } from '@/utils/accounting';
-import Loader from '@/components/Loader';
 import BottomNav from '@/components/BottomNav';
+import DashboardSkeleton from '@/components/dashboard/DashboardSkeleton';
 import AuthGuard from '@/components/AuthGuard';
 import Avatar from '@mui/material/Avatar';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
@@ -619,7 +619,7 @@ export default function Dashboard() {
     }, [settlements, user]);
 
     if (loading) {
-        return <Loader />;
+        return <DashboardSkeleton />;
     }
 
     if (!house) {

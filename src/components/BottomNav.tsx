@@ -17,6 +17,11 @@ export default function BottomNav() {
     const pathname = usePathname();
     const { user, house } = useAuth();
     const [isVisible, setIsVisible] = useState(true);
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
 
     useEffect(() => {
         // Detect keyboard on mobile
@@ -56,16 +61,23 @@ export default function BottomNav() {
     if (!isVisible) return null;
 
     return (
-        <Paper sx={{ 
-            position: 'fixed', 
-            bottom: 0, 
-            left: 0, 
-            right: 0, 
-            zIndex: 1000, 
+        <Paper sx={{
+            position: 'fixed',
+            bottom: 0,
+            left: 0,
+            right: 0,
+            zIndex: 1000,
             pb: 'calc(env(safe-area-inset-bottom) + 8px)',
-            bgcolor: 'background.paper',
-            backgroundImage: 'none'
-        }} elevation={3} className="glass-bottom-nav">
+            backgroundImage: 'none',
+            bgcolor: (theme) => theme.palette.mode === 'dark'
+                ? 'rgba(10, 15, 30, 0.7)'
+                : 'background.paper',
+            backdropFilter: (theme) => theme.palette.mode === 'dark' ? 'blur(12px)' : 'none',
+            WebkitBackdropFilter: (theme) => theme.palette.mode === 'dark' ? 'blur(12px)' : 'none',
+            borderTop: (theme) => theme.palette.mode === 'dark'
+                ? '1px solid rgba(255,255,255,0.08)'
+                : '1px solid rgba(0,0,0,0.06)',
+        }} elevation={0} className="glass-bottom-nav">
             <BottomNavigation
                 showLabels
                 value={pathname}
@@ -89,7 +101,7 @@ export default function BottomNav() {
             >
                 <BottomNavigationAction label="Dashboard" value="/dashboard" icon={<DashboardIcon />} />
                 <BottomNavigationAction label="Buy List" value="/buy-list" icon={<ShoppingCartIcon />} />
-                {house?.typeOfHouse === 'meals_and_expenses' && (
+                {mounted && house?.typeOfHouse === 'meals_and_expenses' && (
                     <BottomNavigationAction label="Meals" value="/meals" icon={<RestaurantMenuIcon />} />
                 )}
                 <BottomNavigationAction label="Expense" value="/expense" icon={<FormatListBulletedIcon />} />
