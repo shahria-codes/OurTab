@@ -64,10 +64,10 @@ const ConfirmPaymentDialog: React.FC<ConfirmPaymentDialogProps> = ({
                             if (val === '' || Number(val) <= max) {
                                 setPayAmount(val);
                             } else {
-                                setPayAmount(String(max));
+                                setPayAmount(Number(max).toFixed(2));
                             }
                         }}
-                        inputProps={{ min: 0.01, step: '0.01', max: paySettlement?.amount }}
+                        inputProps={{ min: 0.01, step: '0.01', max: paySettlement?.amount != null ? Number(paySettlement.amount).toFixed(2) : undefined }}
                         helperText={`Max: ${displayCurrency}${paySettlement?.amount.toFixed(2)}`}
                         InputProps={{
                             startAdornment: (
@@ -109,7 +109,7 @@ const ConfirmPaymentDialog: React.FC<ConfirmPaymentDialogProps> = ({
                     variant="contained"
                     color="success"
                     startIcon={<PaymentsIcon />}
-                    disabled={!payAmount || Number(payAmount) <= 0 || Number(payAmount) > (paySettlement?.amount ?? Infinity)}
+                    disabled={!payAmount || Number(payAmount) <= 0 || Number(payAmount) > parseFloat((paySettlement?.amount ?? Infinity).toFixed(2))}
                     onClick={onConfirm}
                 >
                     Confirm Payment
