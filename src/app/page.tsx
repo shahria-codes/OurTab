@@ -147,7 +147,7 @@ export default function Home() {
             )}
           </Box>
 
-          <Typography variant="caption" sx={{ mt: 4, opacity: 0.4, fontWeight: 500, px: 2, display: 'block' }}>
+          <Typography variant="caption" sx={{ color: 'text.secondary', mt: 4, opacity: 0.4, fontWeight: 500, px: 2, display: 'block' }}>
             Securely login with your Google account to get started
           </Typography>
         </Box>
