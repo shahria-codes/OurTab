@@ -28,8 +28,8 @@ export async function POST(request: Request) {
         const totalAmount = parseFloat(amount);
 
         if (contributors && Array.isArray(contributors)) {
-            const contributorTotal = contributors.reduce((sum: number, c: { email: string; amount?: number | string }) => sum + parseFloat(String(c.amount ?? 0)), 0);
-            if (contributorTotal > totalAmount) {
+            const contributorTotal = Math.round(contributors.reduce((sum: number, c: { email: string; amount?: number | string }) => sum + parseFloat(String(c.amount ?? 0)), 0) * 100) / 100;
+            if (contributorTotal > Math.round(totalAmount * 100) / 100 + 0.01) {
                 return NextResponse.json({ error: 'Total contributor amounts cannot exceed expense amount' }, { status: 400 });
             }
             const validContributors = contributors.every((c: { email?: string; amount?: unknown }) => c.email && c.amount !== undefined);
