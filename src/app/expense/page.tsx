@@ -586,20 +586,26 @@ export default function ExpensePage() {
             const totalGroupExpense = expenses.reduce((sum: number, exp: Expense) => sum + exp.amount, 0);
             void totalGroupExpense;
 
-            // For meals_and_expenses houses, fetch fresh data (don't rely on stale React state)
-            // allExpenses is a stale closure — always fetch fresh for accurate accounting.
+            // Always fetch fresh data — allExpenses React state is stale (only has months
+            // the user has expanded in the history panel), so settlement carry-over would be wrong.
             let freshMealsList: any[] = [];
             let freshFundsList: any[] = [];
             let freshAllExpenses: Expense[] = [];
-            if (currentHouseData?.typeOfHouse === 'meals_and_expenses' && currentHouseData?.id) {
-                const [freshMealsRes, freshFundsRes, freshExpensesRes] = await Promise.all([
-                    fetch(`/api/meals?houseId=${currentHouseData.id}`),
-                    fetch(`/api/fund-deposits?houseId=${currentHouseData.id}`),
-                    fetch(`/api/expenses?houseId=${currentHouseData.id}`) // all months, no filter
-                ]);
-                freshMealsList = await freshMealsRes.json();
-                freshFundsList = await freshFundsRes.json();
-                freshAllExpenses = await freshExpensesRes.json();
+            if (currentHouseData?.id) {
+                if (currentHouseData?.typeOfHouse === 'meals_and_expenses') {
+                    const [freshMealsRes, freshFundsRes, freshExpensesRes] = await Promise.all([
+                        fetch(`/api/meals?houseId=${currentHouseData.id}`),
+                        fetch(`/api/fund-deposits?houseId=${currentHouseData.id}`),
+                        fetch(`/api/expenses?houseId=${currentHouseData.id}`) // all months, no filter
+                    ]);
+                    freshMealsList = await freshMealsRes.json();
+                    freshFundsList = await freshFundsRes.json();
+                    freshAllExpenses = await freshExpensesRes.json();
+                } else {
+                    // Standard Expense Tracking: fetch all expenses for accurate cumulative settlement
+                    const freshExpensesRes = await fetch(`/api/expenses?houseId=${currentHouseData.id}`);
+                    freshAllExpenses = await freshExpensesRes.json();
+                }
             }
 
             // --- SETTLEMENT LOGIC --- (Follows Dashboard logic using allExpenses)
@@ -610,7 +616,9 @@ export default function ExpensePage() {
                 });
                 const allMembers = Array.from(membersMap.values());
                 allMembers.forEach((m: HouseMember) => { memberBalances[m.email] = 0; });
-                allExpenses.forEach((exp: Expense) => {
+                // Use freshly fetched full history so carry-over balances from previous months are correct
+                const allExpensesForSettlement = freshAllExpenses.length > 0 ? freshAllExpenses : allExpenses;
+                allExpensesForSettlement.forEach((exp: Expense) => {
                     const amount = exp.amount;
                     const payer = exp.userId;
 
