@@ -587,15 +587,19 @@ export default function ExpensePage() {
             void totalGroupExpense;
 
             // For meals_and_expenses houses, fetch fresh data (don't rely on stale React state)
+            // allExpenses is a stale closure — always fetch fresh for accurate accounting.
             let freshMealsList: any[] = [];
             let freshFundsList: any[] = [];
+            let freshAllExpenses: Expense[] = [];
             if (currentHouseData?.typeOfHouse === 'meals_and_expenses' && currentHouseData?.id) {
-                const [freshMealsRes, freshFundsRes] = await Promise.all([
+                const [freshMealsRes, freshFundsRes, freshExpensesRes] = await Promise.all([
                     fetch(`/api/meals?houseId=${currentHouseData.id}`),
-                    fetch(`/api/fund-deposits?houseId=${currentHouseData.id}`)
+                    fetch(`/api/fund-deposits?houseId=${currentHouseData.id}`),
+                    fetch(`/api/expenses?houseId=${currentHouseData.id}`) // all months, no filter
                 ]);
                 freshMealsList = await freshMealsRes.json();
                 freshFundsList = await freshFundsRes.json();
+                freshAllExpenses = await freshExpensesRes.json();
             }
 
             // --- SETTLEMENT LOGIC --- (Follows Dashboard logic using allExpenses)
@@ -950,7 +954,10 @@ export default function ExpensePage() {
                 // month is already in YYYY-MM format — use targetMonth directly
 
                 // Use freshly fetched data instead of stale React state (fixes iOS issue)
-                const accountingResult = calculateMemberFundAccounting(currentHouseData, allExpenses, freshFundsList, freshMealsList, targetMonth);
+                // Use freshAllExpenses (all months, freshly fetched) — stale allExpenses state
+                // only has data for months the user has expanded in the history panel.
+                const accountingExpenses = freshAllExpenses.length > 0 ? freshAllExpenses : allExpenses;
+                const accountingResult = calculateMemberFundAccounting(currentHouseData, accountingExpenses, freshFundsList, freshMealsList, targetMonth);
                 const accounting = accountingResult.members;
                 const summary = accountingResult.summary;
                 const finalY = (doc as any).lastAutoTable?.finalY || titleY + 20;
