@@ -87,6 +87,7 @@ export default function Home() {
               src="/icon.png"
               alt="OurTab Icon"
               fill
+              sizes="(max-width: 900px) 80px, 100px"
               style={{ objectFit: 'cover' }}
               priority
             />
