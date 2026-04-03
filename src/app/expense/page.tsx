@@ -548,9 +548,27 @@ export default function ExpensePage() {
             const currentHouseData = house;
 
 
-            const monthExpenses = monthlyExpenses[month];
+            // Fetch month data on-demand if not already loaded
+            if (!monthlyExpenses[month] && house?.id) {
+                await fetchMonthData(house.id, month, house.typeOfHouse);
+            }
+
+            // Re-read from state after potential fetch — use a local ref since state
+            // updates are async; fetchMonthData updates via setMonthlyExpenses so we
+            // need to read from a direct fetch result. Re-fetch inline to get the value.
+            let monthExpenses = monthlyExpenses[month];
             if (!monthExpenses) {
-                console.error('No expenses found for month:', month);
+                // fetchMonthData updates React state asynchronously, so fetch directly here
+                try {
+                    const res = await fetch(`/api/expenses?houseId=${house?.id}&month=${month}`);
+                    monthExpenses = await res.json();
+                } catch {
+                    showToast('Failed to load expenses for this month.', 'error');
+                    return;
+                }
+            }
+            if (!monthExpenses) {
+                showToast('No expense data found for this month.', 'warning');
                 return;
             }
 
